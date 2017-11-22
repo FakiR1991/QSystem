@@ -1,0 +1,105 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <script>
+function startTime() {
+    var today = new Date();
+    var h = today.getHours();
+    var m = today.getMinutes();
+    var s = today.getSeconds();
+    var d = today.getDate();
+    var month = today.getMonth()+1;
+    var year = today.getFullYear();
+    d = checkTime(d);
+    month = checkTime(month);
+    document.getElementById('date').innerHTML = 
+    d + "." + month + "." + year;
+    m = checkTime(m);
+    s = checkTime(s);
+    document.getElementById('txt').innerHTML = 
+    h + ":" + m + ":" + s;
+    var t = setTimeout(startTime, 500);
+}
+function checkTime(i) {
+    if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+    return i;
+}
+</script>
+    <meta http-equiv="refresh" content="600">
+        <title>QSystem board</title>
+        <link rel="stylesheet" href="jquery-ui.css" />
+        <script src="jquery-1.9.1.js"></script>
+        <script src="jquery-ui.js"></script>
+
+        <style>
+           
+ header, nav, main, footer {
+        max-width: 1200px;
+        margin: 0px auto;
+      }
+      body {
+        background-color:#cce6ff;
+      }
+      .logo {
+        background-repeat: no-repeat;
+        background-position: center;
+        text-align: center;
+        padding-top: 0px;
+        margin-top: 25px;
+        background-attachment:fixed;
+      }
+      .logo_text {
+        font-family: Arial;
+        float:right;
+        padding-bottom:0;
+        margin-bottom:0;
+        padding-top: 0px;
+        margin-top: 25px;
+        text-align: right;
+        margin-right: 100px;
+        font-size: 44px;
+        color: #3b6bb3;
+        width: 100px
+        font-weight: bold;
+        background-attachment:fixed;
+      }
+      .date_text {
+        font-family: Arial;
+        float:left;
+        padding-bottom:0;
+        margin-bottom:0;
+        padding-top: 0px;
+        margin-top: 25px;
+        text-align: left;
+        margin-left: 100px;
+        color: #3b6bb3;
+        font-size: 44px;
+        width: 100px
+        font-weight: bold;
+        background-attachment:fixed;
+      }
+      @media (min-width: 1200px) {
+        .full-screen {
+          width: 50vw;
+          margin-left: 50%;
+        }
+        .full-screen > div {
+          width: 100vw;
+          margin-left: -100%;
+        }
+        .full-screen img {
+          display: block;
+          max-width: 100%;
+          height: auto;
+          margin: 0 auto;
+        }
+
+      }
+      </style> 
+    </head>
+    <body onload="startTime()">
+       <div  id= "date" class="date_text"><br> 24.09.2017</div>
+       <div id="txt" class="logo_text"><br> Выбор услуг</div>
+       <div class="logo"> <img src="img/idc_logo.png"/></div>
+  </body>
+<html>

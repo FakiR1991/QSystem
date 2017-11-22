@@ -1,0 +1,34 @@
+Manifest-Version: 1.0
+Class-Path: lib/jcalendar-1.4.1.v201109071408.jar lib/AbsoluteLayout.j
+ ar lib/org-netbeans-modules-java-j2seproject-copylibstask.jar lib/RXT
+ Xcomm.jar lib/RXTXLibrary.jar lib/junit-3.8.2.jar lib/junit-4.5-src.j
+ ar lib/junit-4.5.jar lib/qcontext.jar lib/qresources.jar lib/appframe
+ work-1.0.3.jar lib/swing-worker-1.1.jar lib/mysql-connector-java-5.1.
+ 33.jar lib/h2-1.4.185.jar lib/spring-core-4.0.0.RELEASE.jar lib/sprin
+ g-beans-4.0.0.RELEASE.jar lib/spring-context-4.0.0.RELEASE.jar lib/sp
+ ring-jdbc-4.0.0.RELEASE.jar lib/spring-expression-4.0.0.RELEASE.jar l
+ ib/spring-tx-4.0.0.RELEASE.jar lib/spring-orm-4.0.0.RELEASE.jar lib/h
+ ibernate-c3p0-4.3.6.Final.jar lib/hibernate-core-4.3.6.Final.jar lib/
+ hibernate-commons-annotations-4.0.5.Final.jar lib/jboss-logging-3.1.4
+ .GA.jar lib/c3p0-0.9.1.2.jar lib/hibernate-jpa-2.1-api-1.0.0.Final.ja
+ r lib/slf4j-api-1.6.1.jar lib/jta-1.1.jar lib/javassist-3.21.0-GA.jar
+  lib/dom4j-1.6.1.jar lib/antlr-2.7.7.jar lib/jcl-over-slf4j-1.6.1.jar
+  lib/log4j-1.2.15.jar lib/itext-4.2.1.jar lib/beansbinding-1.2.1.jar 
+ lib/barbecue-1.5-beta1.jar lib/core-2.2.jar lib/commons-collections-3
+ .2.1.jar lib/commons-logging-1.1.1.jar lib/commons-pool-1.6.jar lib/c
+ ommons-lang3-3.4.jar lib/commons-beanutils-1.9.2.jar lib/commons-dige
+ ster-2.1.jar lib/commons-dbcp-1.4.jar lib/commons-configuration2-2.0.
+ jar lib/commons-codec-1.9.jar lib/commons-cli-1.3.1.jar lib/jcommon-1
+ .0.16.jar lib/jfreechart-1.0.13.jar lib/javahelp-2.0.05.jar lib/sli4j
+ -slf4j-log4j-2.0.jar lib/httpcore-4.1.jar lib/httpcore-nio-4.1.jar li
+ b/jasperreports-5.2.0.jar lib/jasperreports-fonts-4.0.0.jar lib/gson-
+ 2.3.jar lib/jetty-server-9.0.4.v20130625.jar lib/jetty-util-9.0.4.v20
+ 130625.jar lib/jetty-continuation-9.0.4.v20130625.jar lib/jetty-http-
+ 9.0.4.v20130625.jar lib/jetty-io-9.0.4.v20130625.jar lib/jetty-servle
+ t-9.0.4.v20130625.jar lib/jetty-servlets-9.0.4.v20130625.jar lib/jett
+ y-security-9.0.4.v20130625.jar lib/jetty-webapp-9.0.4.v20130625.jar l
+ ib/jetty-jsp-9.0.4.v20130625.jar lib/jetty-runner-9.0.4.v20130625.jar
+  lib/jetty-xml-9.0.4.v20130625.jar lib/jetty-annotations-9.0.4.v20130
+ 625.jar lib/javax.servlet-3.0.jar lib/mail-1.4.5.jar
+Main-Class: ru.apertum.qsystem.client.forms.FAdmin
+
