@@ -175,6 +175,18 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
     @SerializedName("pass")
     private String password = "";
 
+    // temp время чтобы не возникало коллизий, когда заквершили обслуживание, и далее идет idle
+    @Expose
+    @Transient
+    private Date cust_finish_time;
+    public void setCustFinishTime(Date dt) {
+        cust_finish_time = dt;
+    }
+    
+    @Transient
+    public Date getCustFinishTime() {
+        return cust_finish_time;
+    }
     /**
      * Расшифрует
      *

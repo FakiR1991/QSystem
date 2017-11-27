@@ -41,7 +41,7 @@
             <props merge="default">
                 <!--prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop-->
                 <prop key="hibernate.dialect">org.hibernate.dialect.H2Dialect</prop>
-                <prop key="hibernate.show_sql">false</prop>
+                <prop key="hibernate.show_sql">true</prop>
                 <prop key="hibernate.format_sql">true</prop>
             </props>
         </property>

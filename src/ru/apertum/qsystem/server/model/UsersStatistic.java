@@ -24,9 +24,11 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Type;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -49,6 +51,7 @@ public class UsersStatistic {
     
     Date dt;
     @Column(name = "dt")
+    @Temporal(TemporalType.TIMESTAMP)
     public Date getDt(){
         return dt; 
     }
@@ -67,12 +70,15 @@ public class UsersStatistic {
     
     Date dt_start;
     @Column(name = "dt_start")
+   // @Temporal(TemporalType.TIMESTAMP)
+    @Type(type="timestamp")
     public Date getDtStart() {
         return dt_start;
     }
     
     Date dt_stop;
     @Column(name = "dt_stop")
+    @Temporal(TemporalType.TIMESTAMP)
     public Date getDtStop() {
         return dt_stop;
     }
@@ -95,6 +101,15 @@ public class UsersStatistic {
         return client_id;
     }
     
+    String place_id;
+    @Column(name = "place_id")
+    public String getPlaceId() {
+        return place_id;
+    }
+    
+    public void setPlaceId(String place) {
+        place_id = place;
+    }
     
     public void setDt(Date date){
         dt = date;

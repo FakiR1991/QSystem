@@ -215,6 +215,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 QLog.l().logger().debug("Статус: С кастомером с номером \"" + getPrefix() + getNumber() + "\" закончили работать");
                 getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
                 setFinishTime(new Date());
+                 QLog.l().logger().debug(getFinishTime() + "FINISH TIME ++++ DEBUG");
                 // сохраним кастомера в базе
                 saveToSelfDB();
                 break;

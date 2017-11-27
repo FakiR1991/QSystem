@@ -53,6 +53,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetAdvanceCustomer;
 import ru.apertum.qsystem.common.cmd.RpcGetAllServices;
 import ru.apertum.qsystem.common.cmd.RpcGetAuthorizCustomer;
 import ru.apertum.qsystem.common.cmd.RpcGetBool;
+import ru.apertum.qsystem.common.cmd.RpcGetDateTime;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfWeek;
 import ru.apertum.qsystem.common.cmd.RpcGetInfoTree;
@@ -1657,6 +1658,7 @@ public class NetCommander {
         params.oper_id = st.getOperationId();
         params.serviceId = st.getServiceId();
         params.state_in = st.getStateIn();
+        params.comments = st.getPlaceId();
         // загрузим ответ
         final String res;
         try {
@@ -1676,6 +1678,36 @@ public class NetCommander {
         return rpc.getResult();
     }
     
+         /**
+     *Сохранение статистики юзера
+     *
+     * @param netProperty
+     * @param userId id юзера который вызывает
+     * @return
+     */
+    public static Date getServerTime(INetProperty netProperty, long userId, Integer operId) {
+        QLog.l().logger().info("Сохранить статистику юзера");
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.oper_id = operId;
+
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_GET_SERVER_TIME, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetDateTime rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetDateTime.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
     /**
      * Получить параметры из ДБ из сервера
      *

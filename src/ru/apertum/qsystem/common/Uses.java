@@ -298,6 +298,7 @@ public final class Uses {
     public static final String TASK_GET_STANDARDS = "Получить нормативы";
     public static final String TASK_SET_BUSSY = "Перерыв оператора";
     public static final String TASK_SAVE_USER_STAT = "Сохранить статистику юзера";
+    public static final String TASK_GET_SERVER_TIME = "Получить время сервера";
     public static final String TASK_GET_PROPERTIES = "Все параметры из БД";
     public static final String TASK_SAVE_PROPERTIES = "Сохранить все параметры в БД";
     public static final String TASK_INIT_PROPERTIES = "Создать все параметры в БД";

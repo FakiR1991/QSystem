@@ -65,6 +65,7 @@ import ru.apertum.qsystem.common.cmd.RpcInviteCustomer;
 import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.cmd.RpcBanList;
+import ru.apertum.qsystem.common.cmd.RpcGetDateTime;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
 import ru.apertum.qsystem.common.cmd.RpcGetProperties;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
@@ -941,6 +942,7 @@ public final class Executer {
             KILLED_CUSTOMERS.put(user.getCustomer().getFullNumber().toUpperCase(), new Date());
             user.getCustomer().setState(CustomerState.STATE_DEAD);
             try {
+                user.setCustFinishTime(user.getCustomer().getFinishTime());
                 user.setCustomer(null);//бобик сдох и медальки не осталось
                 // сохраняем состояния очередей.
                 QServer.savePool();
@@ -1017,6 +1019,7 @@ public final class Executer {
             // кастомер переходит в состояние "Завершенности", но не "мертвости"
             customer.setState(CustomerState.STATE_POSTPONED);
             try {
+                user.setCustFinishTime(customer.getFinishTime());
                 user.setCustomer(null);//бобик сдох но медалька осталось, отправляем в пулл
                 customer.setUser(null);
                 QPostponedList.getInstance().addElement(customer);
@@ -1120,6 +1123,7 @@ public final class Executer {
                 customer.setFinishTime(new Date());
                 // кастомер переходит в состояние "Завершенности", но не "мертвости"
                 customer.setState(CustomerState.STATE_FINISH);
+                user.setCustFinishTime(customer.getFinishTime());
                 // дело такое, кастомер может идти по списку услуг, т.е. есть набор услуг, юзер завершает работу, а система его ведет по списку услуг
                 // тут посмотрим может его уже провели по списку комплексных услуг, если у него вообще они были
                 // если провели то у него статус другой STATE_WAIT_COMPLEX_SERVICE
@@ -1212,6 +1216,7 @@ public final class Executer {
             }
             customer.setResult(result);
             customer.setState(CustomerState.STATE_REDIRECT, cmdParams.serviceId);// есть все еще старая услуга и новую как ID передали
+            user.setCustFinishTime(customer.getFinishTime());
             // надо кастомера инициализить др. услугой
             // юзер в другой очереди наверное другой
             customer.setUser(null);
@@ -2042,7 +2047,7 @@ public final class Executer {
         }
     };
     /**
-     * Поставить время логина юзеру
+     * Сохранить статистику
      */
     final Task saveUsersStat = new Task(Uses.TASK_SAVE_USER_STAT) {
 
@@ -2052,13 +2057,14 @@ public final class Executer {
             try {
                   UsersStatistic st = new UsersStatistic();
                   st.setClientId(cmdParams.client_id);
-                  st.setDt(new Date());
+                  st.setDt(cmdParams.dt);
                   st.setDtStart(cmdParams.dt_start);
                   st.setDtStop(cmdParams.dt_stop);
                   st.setOperationId(cmdParams.oper_id); 
                   st.setServiceId(cmdParams.serviceId);
                   st.setStateIn(cmdParams.state_in);
                   st.setUserId(cmdParams.userId);
+                  st.setPlaceId(cmdParams.comments);
                   
                   st.Save();
                   return new RpcGetBool(true);
@@ -2067,6 +2073,28 @@ public final class Executer {
             {
                   return new RpcGetBool(false);
             }
+        }
+    };
+    
+        /**
+     * Поставить паузу у пользователя.
+     */
+    final Task setDateTime = new Task(Uses.TASK_GET_SERVER_TIME) {
+
+        @Override
+        public RpcGetDateTime process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+           // QUserList.getInstance().getById(cmdParams.userId)
+           if(cmdParams.oper_id != null)
+           {
+              /* if(cmdParams.oper_id == 6 || cmdParams.oper_id == 4 && QUserList.getInstance().getById(cmdParams.userId).getCustFinishTime() != null)
+               { 
+                   RpcGetDateTime tmp =  new RpcGetDateTime(QUserList.getInstance().getById(cmdParams.userId).getCustFinishTime());
+                   QUserList.getInstance().getById(cmdParams.userId).setCustFinishTime(null);
+                   return tmp;
+               }*/
+           }
+            return new RpcGetDateTime(new Date());
         }
     };
     /**
