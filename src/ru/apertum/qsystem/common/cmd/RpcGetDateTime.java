@@ -19,7 +19,7 @@ public class RpcGetDateTime extends JsonRPC20{
     }
     
     @Expose
-    @SerializedName("result")
+    @SerializedName("date")
     private Date date;
 
     public void setResult(Date result) {

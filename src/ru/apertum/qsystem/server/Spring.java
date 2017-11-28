@@ -19,7 +19,9 @@ package ru.apertum.qsystem.server;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
@@ -123,6 +125,42 @@ public class Spring {
             ses.save(object);
         });
         ses.flush();
+    }
+    
+    public Long executeSelectQuery(String q, Object obj, String q2) {
+        final Session ses = getTxManager().getSessionFactory().getCurrentSession();  
+        Query  query = ses.createQuery(q);
+        query.setDate("today", new Date());
+        Long id = (Long) query.list().get(0);
+     //   System.out.println(query.list());
+      //  String replace = q2.replace("*id*", query.list().get(0).toString());
+      //  System.out.println(replace);
+      //  query = ses.createQuery(replace);
+        
+        
+       /* List<Object[]> l = query.list();
+        for(Object[] result: l) {
+            System.out.println(result[0]);
+        }*/
+        ses.flush();
+        
+        return id;
+       // obj.stream().forEach((object) -> {
+       //  Query  query = ses.createQuery(q);
+        // System.out.println(query.list());
+      // });
+       // ses.flush();
+       // return query.list();
+        
+    }
+    
+       public void executeUpdateQuery(String q, Date dt) {
+        final Session ses = getTxManager().getSessionFactory().getCurrentSession();  
+        Query query = ses.createQuery(q);
+        int result = query.executeUpdate();
+        ses.flush();
+
+        
     }
 
     public void saveOrUpdateAll(Collection list) {

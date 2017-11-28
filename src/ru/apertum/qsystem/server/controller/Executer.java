@@ -2077,7 +2077,7 @@ public final class Executer {
     };
     
         /**
-     * Поставить паузу у пользователя.
+     *  Получить серверное время
      */
     final Task setDateTime = new Task(Uses.TASK_GET_SERVER_TIME) {
 
@@ -2095,6 +2095,23 @@ public final class Executer {
                }*/
            }
             return new RpcGetDateTime(new Date());
+        }
+    };
+            /**
+     * Сохранить операцию date_stop у операции 1
+     */
+    final Task setDateStopOperation1 = new Task(Uses.TASK_SET_DATE_STOP_1) {
+
+        @Override
+        public RpcGetBool process (CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+           
+            UsersStatistic st = new UsersStatistic();
+            st.setOperationId(cmdParams.oper_id);
+            st.setUserId(cmdParams.userId);
+            st.setDtStop(cmdParams.dt_stop);
+            st.saveOperation1();
+            return new RpcGetBool(true);
         }
     };
     /**

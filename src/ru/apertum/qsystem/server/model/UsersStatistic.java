@@ -8,6 +8,8 @@ import com.google.gson.annotations.Expose;
 
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -34,6 +36,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.Spring;
@@ -144,7 +147,7 @@ public class UsersStatistic {
     }
     
     
-        private void saveToSelfDB() {
+    private void saveToSelfDB() {
         // сохраним кастомера в базе
         final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("SomeTxName");
@@ -164,9 +167,36 @@ public class UsersStatistic {
         QLog.l().logger().debug("Сохранили. " + getOperationId());
     }
         
-        public void Save() {
+        
+    public void Save() {
             saveToSelfDB();
         }
+    
+    public void saveOperation1() {
+        
+        final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setName("SomeTxName");
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+        //DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
+        String query = "select max(id) from UsersStatistic where user_id ="+ user_id + " and operation_id =" + Uses.WORK_STAT + " and dt >= :today"; // + " and dt >= '"+ df.format(new Date()) + "' and operation_id =" + Uses.WORK_STAT
+        Long id = Spring.getInstance().executeSelectQuery(query, this,query);
+        SaveOp(id);
+        Spring.getInstance().getTxManager().commit(status);
+       // System.out.println("++++++++++++++++++++++++++");
+       // System.out.println(obj.size());
+    }
+    
+    private void SaveOp(Long id) {
+        final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setName("SomeTxName1");
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String q2 = "update UsersStatistic set dt_stop='"+ df.format(dt_stop) +"', dt='"+ df.format(dt_stop) +"' where id=" + id;
+        Spring.getInstance().executeUpdateQuery(q2, dt_stop);
+        Spring.getInstance().getTxManager().commit(status);
+    }
         
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

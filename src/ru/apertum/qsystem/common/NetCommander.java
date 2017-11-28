@@ -1678,6 +1678,40 @@ public class NetCommander {
         return rpc.getResult();
     }
     
+                /**
+     *Сохранение статистики юзера
+     *
+     * @param netProperty
+     * @param userId id юзера который вызывает
+     * @return
+     */
+    public static boolean sendWorkTimeForSave(INetProperty netProperty, long userId, UsersStatistic st) {
+        QLog.l().logger().info("Сохранить dt_stop юзера");
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        
+        params.dt = st.getDt();
+        params.dt_stop = st.getDtStop();
+        params.oper_id = st.getOperationId();
+        // загрузим ответ
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_SET_DATE_STOP_1, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetBool rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetBool.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
          /**
      *Сохранение статистики юзера
      *
@@ -1685,11 +1719,10 @@ public class NetCommander {
      * @param userId id юзера который вызывает
      * @return
      */
-    public static Date getServerTime(INetProperty netProperty, long userId, Integer operId) {
-        QLog.l().logger().info("Сохранить статистику юзера");
+    public static Date getServerTime(INetProperty netProperty, long userId) {
+        QLog.l().logger().info("Получить серверное время");
         final CmdParams params = new CmdParams();
         params.userId = userId;
-        params.oper_id = operId;
 
         final String res;
         try {

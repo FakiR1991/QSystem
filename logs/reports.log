@@ -2113,3 +2113,104 @@ ru.apertum.qsystem.common.exceptions.ReportException: Ошибка при создании сервер
 2017-11-24 18:37:10,912 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
 2017-11-24 18:48:19,738 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
 2017-11-24 18:48:22,477 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 13:49:11,438 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 13:49:15,756 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 13:53:56,230 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 13:54:06,921 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 13:58:13,211 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 13:58:15,669 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:00:01,477 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:00:03,835 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:05:24,833 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:05:27,329 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:07:50,223 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:07:52,614 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:09:08,850 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:09:11,272 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:10:17,460 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:10:20,356 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:17:57,323 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:17:59,726 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:20:08,201 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:20:10,912 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:20:57,477 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:21:00,494 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:22:13,485 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:22:16,323 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:24:13,516 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:24:16,074 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:36:42,326 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:36:44,727 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:42:45,835 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:42:48,263 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:44:08,575 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:44:10,963 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:50:29,914 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:50:32,542 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:51:34,312 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:51:36,649 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:52:26,769 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:52:29,234 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:54:54,833 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:54:57,275 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:56:06,761 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:56:09,184 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:56:56,844 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:56:59,330 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 14:58:58,165 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 14:59:00,505 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:01:26,094 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:01:28,572 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:06:38,165 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:06:40,515 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:08:10,706 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:08:13,255 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:10:09,863 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:10:12,265 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:11:25,636 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:11:27,988 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:13:15,234 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:13:17,638 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:17:14,252 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:17:16,622 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:18:09,517 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:18:11,894 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:21:14,200 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:21:16,719 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:21:51,319 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:21:53,854 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:28:24,251 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:28:26,605 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:30:18,392 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:30:20,769 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:34:25,255 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:34:27,677 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:35:32,798 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:35:35,125 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:51:49,448 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:51:51,772 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:52:54,366 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:53:05,717 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:54:21,617 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:54:24,085 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:56:20,085 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:56:22,995 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 15:58:19,496 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 15:58:21,963 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 16:01:52,005 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:01:54,422 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 16:03:27,078 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:03:29,523 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 16:04:57,875 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:05:00,531 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 16:06:04,075 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:06:06,986 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 16:07:40,614 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:07:43,494 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 16:09:30,508 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:09:33,551 [ERROR] Error! at {ru.apertum.qsystem.common.exceptions.ReportException.<init>(ReportException.java:34)}
+ru.apertum.qsystem.common.exceptions.ReportException: Ошибка при создании серверного сокета для вэбсервера: java.net.BindException: Address already in use: JVM_Bind
+	at ru.apertum.qsystem.reports.model.WebServer.startWebServer(WebServer.java:79)
+	at ru.apertum.qsystem.server.QServer.main(QServer.java:157)
+2017-11-28 16:10:25,891 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:10:28,774 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
