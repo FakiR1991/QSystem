@@ -2785,3 +2785,42 @@ Caused by: java.net.ConnectException: Connection refused: connect
 	at java.net.Socket.connect(Socket.java:589)
 	at ru.apertum.qsystem.common.NetCommander.sendRpc(NetCommander.java:136)
 	... 20 more
+2017-11-28 16:20:50,660 [ERROR] Не загрузились пользователи.  at {ru.apertum.qsystem.client.forms.FReception.load(FReception.java:1959)}
+ru.apertum.qsystem.common.exceptions.ClientException: Проблема с командой. 
+	at ru.apertum.qsystem.common.NetCommander.getStandards(NetCommander.java:1566)
+	at ru.apertum.qsystem.client.forms.FReception.load(FReception.java:1955)
+	at ru.apertum.qsystem.client.forms.FReception.lambda$new$3(FReception.java:164)
+	at javax.swing.Timer.fireActionPerformed(Timer.java:313)
+	at javax.swing.Timer$DoPostEvent.run(Timer.java:245)
+	at java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:311)
+	at java.awt.EventQueue.dispatchEventImpl(EventQueue.java:756)
+	at java.awt.EventQueue.access$500(EventQueue.java:97)
+	at java.awt.EventQueue$3.run(EventQueue.java:709)
+	at java.awt.EventQueue$3.run(EventQueue.java:703)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:76)
+	at java.awt.EventQueue.dispatchEvent(EventQueue.java:726)
+	at java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:201)
+	at java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:116)
+	at java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:105)
+	at java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:93)
+	at java.awt.EventDispatchThread.run(EventDispatchThread.java:82)
+Caused by: ru.apertum.qsystem.common.exceptions.QException: Невозможно получить ответ от сервера.
+	at ru.apertum.qsystem.common.NetCommander.sendRpc(NetCommander.java:164)
+	at ru.apertum.qsystem.common.NetCommander.send(NetCommander.java:117)
+	at ru.apertum.qsystem.common.NetCommander.getStandards(NetCommander.java:1564)
+	... 18 more
+Caused by: ru.apertum.qsystem.common.exceptions.QException: Невозможно подключиться к серверу.
+	at ru.apertum.qsystem.common.NetCommander.sendRpc(NetCommander.java:139)
+	... 20 more
+Caused by: java.net.ConnectException: Connection refused: connect
+	at java.net.DualStackPlainSocketImpl.waitForConnect(Native Method)
+	at java.net.DualStackPlainSocketImpl.socketConnect(DualStackPlainSocketImpl.java:85)
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:350)
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206)
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188)
+	at java.net.PlainSocketImpl.connect(PlainSocketImpl.java:172)
+	at java.net.Socket.connect(Socket.java:589)
+	at ru.apertum.qsystem.common.NetCommander.sendRpc(NetCommander.java:136)
+	... 20 more

@@ -181,8 +181,13 @@ public class UsersStatistic {
         //DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
         String query = "select max(id) from UsersStatistic where user_id ="+ user_id + " and operation_id =" + Uses.WORK_STAT + " and dt >= :today"; // + " and dt >= '"+ df.format(new Date()) + "' and operation_id =" + Uses.WORK_STAT
         Long id = Spring.getInstance().executeSelectQuery(query, this,query);
-        SaveOp(id);
+        try {SaveOp(id); }
+        catch (Exception ex) {
+            Spring.getInstance().getTxManager().rollback(status);
+            throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+        }
         Spring.getInstance().getTxManager().commit(status);
+                QLog.l().logger().debug("Сохранили логин. ");
        // System.out.println("++++++++++++++++++++++++++");
        // System.out.println(obj.size());
     }
@@ -194,7 +199,11 @@ public class UsersStatistic {
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String q2 = "update UsersStatistic set dt_stop='"+ df.format(dt_stop) +"', dt='"+ df.format(dt_stop) +"' where id=" + id;
-        Spring.getInstance().executeUpdateQuery(q2, dt_stop);
+        try {Spring.getInstance().executeUpdateQuery(q2, dt_stop);}
+        catch (Exception ex) {
+            Spring.getInstance().getTxManager().rollback(status);
+            throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+        }
         Spring.getInstance().getTxManager().commit(status);
     }
         
