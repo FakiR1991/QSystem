@@ -1458,7 +1458,7 @@ public final class FClient extends javax.swing.JFrame {
             String temp = (customer.getRecallCount() > 1) ? " раза":" раз";
             NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp +". Услуга: " + customer.getService().getName(), 10, true);
            
-            workingPeriod.setDtStop(new Date());
+            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
             workingPeriod.setDt(workingPeriod.getDtStop());
             NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
             
@@ -1502,7 +1502,7 @@ public final class FClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + cust.getFullNumber() + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
             }
             
-            workingPeriod.setDtStop(new Date());
+            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
             workingPeriod.setDt(workingPeriod.getDtStop());
             NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
             // Получаем новую обстановку
