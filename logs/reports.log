@@ -2214,3 +2214,9 @@ ru.apertum.qsystem.common.exceptions.ReportException: Ошибка при создании сервер
 	at ru.apertum.qsystem.server.QServer.main(QServer.java:157)
 2017-11-28 16:10:25,891 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
 2017-11-28 16:10:28,774 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-28 16:31:24,646 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-28 16:31:27,664 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-29 07:36:42,638 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-29 07:36:45,192 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}
+2017-11-29 07:38:18,490 [ INFO] START LOGGER for reports. Logger: reports.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:184)}
+2017-11-29 07:38:20,410 [ INFO] Отчетный вэбсервер системы 'Очередь' запущен. at {ru.apertum.qsystem.reports.model.WebServer$1.run(WebServer.java:89)}

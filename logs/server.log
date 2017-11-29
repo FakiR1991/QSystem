@@ -126512,3 +126512,728 @@ java.net.ConnectException: Connection refused: connect
 2017-11-28 16:16:51,772 [TRACE] Response:
 {"result":true,"jsonrpc":"2.0","id":"1511878611772"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
 2017-11-28 16:16:51,773 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:24,642 [ INFO] Properties are ready. at {ru.apertum.qsystem.common.QConfig.prepareCLI(QConfig.java:305)}
+2017-11-28 16:31:24,645 [ INFO] "QSystem 17.1"!  date: 20.05.2017 at {ru.apertum.qsystem.common.QLog.initial(QLog.java:180)}
+2017-11-28 16:31:24,646 [ INFO] START LOGER. Logger: server.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:181)}
+2017-11-28 16:31:24,646 [ INFO] Mode: KEY_DEBUG at {ru.apertum.qsystem.common.QLog.initial(QLog.java:186)}
+2017-11-28 16:31:24,646 [ INFO] Plugins: YES at {ru.apertum.qsystem.common.QLog.initial(QLog.java:187)}
+2017-11-28 16:31:24,649 [ INFO] Languages are loading... at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:79)}
+2017-11-28 16:31:24,708 [DEBUG]    Langusge: Az?rbaycan az_AZ at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,710 [DEBUG]    Langusge: English en_US at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,713 [DEBUG]    Langusge: Espanol es_ES at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,714 [DEBUG]    Langusge: Fran?ais fr_FR at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,724 [DEBUG]    Langusge: Italiano it_IT at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,726 [DEBUG]    Langusge: Portugu?s pt_PT at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,728 [DEBUG]    Langusge: Roman ro_RO at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,729 [DEBUG]    Langusge: Русский ru_RU at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,731 [DEBUG]    Langusge: Українська uk_UA at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-28 16:31:24,866 [ INFO] Загрузка плагинов из папки plugins. at {ru.apertum.qsystem.common.Uses.loadPlugins(Uses.java:810)}
+2017-11-28 16:31:24,867 [DEBUG] Плагин ZoneboardPlugin.jar at {ru.apertum.qsystem.common.Uses.loadPlugins(Uses.java:817)}
+2017-11-28 16:31:24,868 [ INFO] Run Jetty. at {ru.apertum.qsystem.server.QServer.main(QServer.java:148)}
+2017-11-28 16:31:24,882 [ INFO] Старт сервера Jetty на порту 8081 at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:98)}
+2017-11-28 16:31:25,023 [ INFO] Загрузка war из папки ./www/war/ at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:154)}
+2017-11-28 16:31:25,335 [ INFO] Join сервера Jetty на порту 8081 at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:191)}
+2017-11-28 16:31:25,607 [ INFO] DB server '+ driver=com.mysql.jdbc.Driver' url=jdbc:mysql://127.0.0.1/qsystem?autoReconnect=true&amp;characterEncoding=UTF-8 at {ru.apertum.qsystem.hibernate.AnnotationSessionFactoryBean.load(AnnotationSessionFactoryBean.java:183)}
+2017-11-28 16:31:27,662 [ INFO] Отчетный сервер захватывает порт "8088". at {ru.apertum.qsystem.reports.model.WebServer.startWebServer(WebServer.java:75)}
+2017-11-28 16:31:27,663 [ INFO] Пробуем восстановить состояние системы. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:568)}
+2017-11-28 16:31:27,663 [ WARN] Восстановление состояние системы после вчерашнего... нештатного завершения работы сервера. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:571)}
+2017-11-28 16:31:27,696 [ INFO] Восстановление состояния системы завершено. Затрачено времени: 0.033 сек. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:681)}
+2017-11-28 16:31:27,703 [ INFO] Создание табло для телевизоров или мониторов. at {ru.apertum.qsystem.server.controller.QIndicatorBoardMonitor.<init>(QIndicatorBoardMonitor.java:108)}
+2017-11-28 16:31:27,792 [ INFO] Создаем окно для информации. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.<init>(FIndicatorBoard.java:174)}
+2017-11-28 16:31:28,103 [TRACE] Прочитали настройки для окна информации. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.<init>(FIndicatorBoard.java:279)}
+2017-11-28 16:31:28,163 [ INFO] Показываем набор строк. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.showLines(FIndicatorBoard.java:893)}
+2017-11-28 16:31:28,170 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,171 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,172 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,172 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,173 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,174 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,177 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,179 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,180 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,181 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,182 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,183 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,184 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,186 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-28 16:31:28,227 [ INFO] Сервер системы захватывает порт "3128". at {ru.apertum.qsystem.server.QServer.main(QServer.java:222)}
+2017-11-28 16:31:28,228 [ INFO] Сервер системы 'Очередь' запущен. DB name='+' url=jdbc:mysql://127.0.0.1/qsystem?autoReconnect=true&amp;characterEncoding=UTF-8 at {ru.apertum.qsystem.server.QServer.main(QServer.java:232)}
+2017-11-28 16:31:47,459 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:47,464 [TRACE] Task:
+{"params":{},"jsonrpc":"2.0","id":"1511879507299","method":"Все параметры из БД"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:47,567 [ INFO] Task processing: 'Все параметры из БД' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:47,567 [DEBUG] Processing: "Все параметры из БД" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:47,569 [ INFO] Task was finished. Time: 0.002 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:47,581 [TRACE] Response:
+{"result":{},"jsonrpc":"2.0","id":"1511879507569"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:47,582 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:47,936 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:47,936 [TRACE] Task:
+{"jsonrpc":"2.0","id":"1511879507299","method":"Получить перечень пользователей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:47,937 [ INFO] Task processing: 'Получить перечень пользователей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:47,937 [DEBUG] Processing: "Получить перечень пользователей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:48,153 [ INFO] Создали список. at {ru.apertum.qsystem.server.model.ATListModel.createList(ATListModel.java:45)}
+2017-11-28 16:31:48,154 [ INFO] Task was finished. Time: 0.217 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:48,160 [TRACE] Response:
+{"result":[{"id":777,"enable":1,"is_admin":false,"is_report_access":false,"is_parallel":false,"pass":"7SsfRoxfkV8/HPddcGi6rg\u003d\u003d","point":"1","name":"111","adress_rs":33,"point_ext":"","tablo_... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:48,192 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:50,326 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:50,326 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"234"},"jsonrpc":"2.0","id":"1511879507299","method":"Получить состояние очередей с проверкой"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:50,327 [ INFO] Task processing: 'Получить состояние очередей с проверкой' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:50,330 [TRACE] Session for new user 'Администратор' ip=127.0.0.1 at {ru.apertum.qsystem.server.QSession.<init>(QSession.java:41)}
+2017-11-28 16:31:50,330 [DEBUG] Processing: "Получить состояние очередей с проверкой" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:50,331 [ INFO] Task was finished. Time: 0.004 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:50,332 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511879510331"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:50,333 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:50,714 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:50,715 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"234"},"jsonrpc":"2.0","id":"1511879507299","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:50,715 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:50,716 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:50,784 [ INFO] Создали дерево. at {ru.apertum.qsystem.server.model.ATreeModel.createTree(ATreeModel.java:54)}
+2017-11-28 16:31:50,795 [ INFO] Task was finished. Time: 0.08 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:50,797 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:50,820 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:50,845 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:50,846 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511879507299","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:50,846 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:50,846 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:50,847 [ INFO] Task was finished. Time: 0.001 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:50,850 [TRACE] Response:
+{"date":"28.11.2017 16:31:50","jsonrpc":"2.0","id":"1511879510847"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:50,853 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:51,426 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:51,426 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511879507299","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:51,427 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:51,427 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:51,427 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:51,428 [TRACE] Response:
+{"date":"28.11.2017 16:31:51","jsonrpc":"2.0","id":"1511879511427"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:51,428 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:51,439 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:51,440 [TRACE] Task:
+{"params":{"user_id":1,"comments":"234","dt":"28.11.2017 16:31:51","oper_id":1,"dt_start":"28.11.2017 16:31:51","dt_stop":"28.11.2017 16:31:51"},"jsonrpc":"2.0","id":"1511879507299","method":"Сохранит... at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:51,442 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:51,442 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:51,530 [DEBUG] Сохранили. 1 at {ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:167)}
+2017-11-28 16:31:51,530 [ INFO] Task was finished. Time: 0.088 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:51,530 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511879511530"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:51,531 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:55,893 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:55,993 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"234","request_back":true},"jsonrpc":"2.0","id":"1511879507299","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:55,993 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:55,993 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:55,993 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:55,994 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:56,000 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:58,706 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:58,707 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511879507299","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:58,707 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:58,707 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:58,707 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:58,708 [TRACE] Response:
+{"date":"28.11.2017 16:31:58","jsonrpc":"2.0","id":"1511879518707"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:58,709 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:58,713 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:58,713 [TRACE] Task:
+{"params":{"user_id":1,"dt":"28.11.2017 16:31:58","oper_id":4,"dt_start":"28.11.2017 16:31:50","dt_stop":"28.11.2017 16:31:58"},"jsonrpc":"2.0","id":"1511879507299","method":"Сохранить статистику юзер... at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:58,714 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:58,714 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:58,758 [DEBUG] Сохранили. 4 at {ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:167)}
+2017-11-28 16:31:58,758 [ INFO] Task was finished. Time: 0.044 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:58,758 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511879518758"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:58,758 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:31:58,762 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-28 16:31:58,763 [TRACE] Task:
+{"params":{"user_id":1,"dt":"28.11.2017 16:31:58","oper_id":1,"dt_stop":"28.11.2017 16:31:58"},"jsonrpc":"2.0","id":"1511879507299","method":"Сохранить dt_stop"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-28 16:31:58,763 [ INFO] Task processing: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-28 16:31:58,763 [DEBUG] Processing: "Сохранить dt_stop" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-28 16:31:58,922 [DEBUG] Сохранили логин.  at {ru.apertum.qsystem.server.model.UsersStatistic.saveOperation1(UsersStatistic.java:190)}
+2017-11-28 16:31:58,922 [ INFO] Task was finished. Time: 0.159 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-28 16:31:58,922 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511879518922"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-28 16:31:58,923 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-28 16:35:28,543 [ INFO] GET_TICKET_LIST at {ru.apertum.qsystem.server.QServer.lambda$startPostponedTimer$2(QServer.java:327)}
+2017-11-29 07:36:42,618 [ INFO] Properties are ready. at {ru.apertum.qsystem.common.QConfig.prepareCLI(QConfig.java:305)}
+2017-11-29 07:36:42,638 [ INFO] "QSystem 17.1"!  date: 20.05.2017 at {ru.apertum.qsystem.common.QLog.initial(QLog.java:180)}
+2017-11-29 07:36:42,638 [ INFO] START LOGER. Logger: server.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:181)}
+2017-11-29 07:36:42,638 [ INFO] Mode: KEY_DEBUG at {ru.apertum.qsystem.common.QLog.initial(QLog.java:186)}
+2017-11-29 07:36:42,638 [ INFO] Plugins: YES at {ru.apertum.qsystem.common.QLog.initial(QLog.java:187)}
+2017-11-29 07:36:42,638 [ INFO] Languages are loading... at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:79)}
+2017-11-29 07:36:42,708 [DEBUG]    Langusge: Az?rbaycan az_AZ at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,718 [DEBUG]    Langusge: English en_US at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,718 [DEBUG]    Langusge: Espanol es_ES at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,718 [DEBUG]    Langusge: Fran?ais fr_FR at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,718 [DEBUG]    Langusge: Italiano it_IT at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,718 [DEBUG]    Langusge: Portugu?s pt_PT at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,728 [DEBUG]    Langusge: Roman ro_RO at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,728 [DEBUG]    Langusge: Русский ru_RU at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:42,728 [DEBUG]    Langusge: Українська uk_UA at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:36:43,038 [ INFO] Загрузка плагинов из папки plugins. at {ru.apertum.qsystem.common.Uses.loadPlugins(Uses.java:809)}
+2017-11-29 07:36:43,048 [DEBUG] Плагин ZoneboardPlugin.jar at {ru.apertum.qsystem.common.Uses.loadPlugins(Uses.java:816)}
+2017-11-29 07:36:43,048 [ INFO] Run Jetty. at {ru.apertum.qsystem.server.QServer.main(QServer.java:148)}
+2017-11-29 07:36:43,048 [ INFO] Старт сервера Jetty на порту 8081 at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:98)}
+2017-11-29 07:36:43,158 [ INFO] Загрузка war из папки ./www/war/ at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:154)}
+2017-11-29 07:36:43,478 [ INFO] Join сервера Jetty на порту 8081 at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:191)}
+2017-11-29 07:36:43,718 [ INFO] DB server '+ driver=com.mysql.jdbc.Driver' url=jdbc:mysql://127.0.0.1/qsystem?autoReconnect=true&amp;characterEncoding=UTF-8 at {ru.apertum.qsystem.hibernate.AnnotationSessionFactoryBean.load(AnnotationSessionFactoryBean.java:183)}
+2017-11-29 07:36:45,192 [ INFO] Отчетный сервер захватывает порт "8088". at {ru.apertum.qsystem.reports.model.WebServer.startWebServer(WebServer.java:75)}
+2017-11-29 07:36:45,192 [ INFO] Пробуем восстановить состояние системы. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:568)}
+2017-11-29 07:36:45,202 [ WARN] Восстановление состояние системы после вчерашнего... нештатного завершения работы сервера. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:571)}
+2017-11-29 07:36:45,202 [ WARN] Срок давности хранения состояния истек. Если в системе ничего не происходит 3 часа, то считается что сохраненные данные устарели безвозвратно. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:605)}
+2017-11-29 07:36:45,202 [ INFO] Восстановление состояния системы завершено. Затрачено времени: 0.01 сек. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:681)}
+2017-11-29 07:36:45,212 [ INFO] Создание табло для телевизоров или мониторов. at {ru.apertum.qsystem.server.controller.QIndicatorBoardMonitor.<init>(QIndicatorBoardMonitor.java:108)}
+2017-11-29 07:36:45,344 [ INFO] Создаем окно для информации. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.<init>(FIndicatorBoard.java:174)}
+2017-11-29 07:36:46,036 [TRACE] Прочитали настройки для окна информации. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.<init>(FIndicatorBoard.java:279)}
+2017-11-29 07:36:46,196 [ INFO] Показываем набор строк. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.showLines(FIndicatorBoard.java:893)}
+2017-11-29 07:36:46,256 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,256 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,266 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,266 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,266 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,276 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,276 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,276 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,276 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,276 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,286 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,286 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,286 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,286 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:36:46,436 [ INFO] Сервер системы захватывает порт "3128". at {ru.apertum.qsystem.server.QServer.main(QServer.java:222)}
+2017-11-29 07:36:46,446 [ INFO] Сервер системы 'Очередь' запущен. DB name='+' url=jdbc:mysql://127.0.0.1/qsystem?autoReconnect=true&amp;characterEncoding=UTF-8 at {ru.apertum.qsystem.server.QServer.main(QServer.java:232)}
+2017-11-29 07:37:15,441 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:15,541 [TRACE] Task:
+{"params":{},"jsonrpc":"2.0","id":"1511933835341","method":"Все параметры из БД"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:15,571 [ INFO] Task processing: 'Все параметры из БД' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:15,571 [DEBUG] Processing: "Все параметры из БД" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:15,571 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:15,572 [TRACE] Response:
+{"result":{},"jsonrpc":"2.0","id":"1511933835571"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:15,585 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:15,821 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:15,821 [TRACE] Task:
+{"jsonrpc":"2.0","id":"1511933835341","method":"Получить перечень пользователей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:15,821 [ INFO] Task processing: 'Получить перечень пользователей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:15,821 [DEBUG] Processing: "Получить перечень пользователей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:16,021 [ INFO] Создали список. at {ru.apertum.qsystem.server.model.ATListModel.createList(ATListModel.java:45)}
+2017-11-29 07:37:16,031 [ INFO] Task was finished. Time: 0.21 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:16,031 [TRACE] Response:
+{"result":[{"id":777,"enable":1,"is_admin":false,"is_report_access":false,"is_parallel":false,"pass":"7SsfRoxfkV8/HPddcGi6rg\u003d\u003d","point":"1","name":"111","adress_rs":33,"point_ext":"","tablo_... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:16,071 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:18,033 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:18,033 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15"},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей с проверкой"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:18,033 [ INFO] Task processing: 'Получить состояние очередей с проверкой' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:18,043 [TRACE] Session for new user 'Администратор' ip=127.0.0.1 at {ru.apertum.qsystem.server.QSession.<init>(QSession.java:41)}
+2017-11-29 07:37:18,043 [DEBUG] Processing: "Получить состояние очередей с проверкой" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:18,043 [ INFO] Task was finished. Time: 0.01 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:18,053 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933838043"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:18,063 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:18,403 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:18,403 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15"},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:18,403 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:18,403 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:18,423 [ INFO] Создали дерево. at {ru.apertum.qsystem.server.model.ATreeModel.createTree(ATreeModel.java:54)}
+2017-11-29 07:37:18,433 [ INFO] Task was finished. Time: 0.03 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:18,433 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:18,433 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:18,463 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:18,463 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933835341","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:18,463 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:18,463 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:18,463 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:18,463 [TRACE] Response:
+{"result":"29.11.2017 07:37:18","jsonrpc":"2.0","id":"1511933838463"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:18,463 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:19,053 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:19,153 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933835341","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:19,153 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:19,153 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:19,153 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:19,153 [TRACE] Response:
+{"result":"29.11.2017 07:37:19","jsonrpc":"2.0","id":"1511933839153"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:19,153 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:19,153 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:19,153 [TRACE] Task:
+{"params":{"user_id":1,"comments":"15","oper_id":1},"jsonrpc":"2.0","id":"1511933835341","method":"Сохранить статистику юзера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:19,153 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:19,153 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:19,183 [ WARN] SQL Error: 1048, SQLState: 23000 at {org.hibernate.engine.jdbc.spi.SqlExceptionHelper.logExceptions(SqlExceptionHelper.java:144)}
+2017-11-29 07:37:19,183 [ERROR] Column 'dt' cannot be null at {org.hibernate.engine.jdbc.spi.SqlExceptionHelper.logExceptions(SqlExceptionHelper.java:146)}
+2017-11-29 07:37:19,193 [ERROR] Error! Ошибка при сохранении 
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+[org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:72), org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:126), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:112), org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:211), org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96), org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558), org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98), org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:490), org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:195), org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:179), org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:214), org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324), org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288), org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194), org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.saveWithGeneratedOrRequestedId(DefaultSaveOrUpdateEventListener.java:209), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:194), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.performSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:114), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:90), org.hibernate.internal.SessionImpl.fireSaveOrUpdate(SessionImpl.java:684), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:676), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:671), ru.apertum.qsystem.server.Spring.saveOrUpdate(Spring.java:138), ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:151), ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162), ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065), ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200), ru.apertum.qsystem.server.QServer.run(QServer.java:438)] at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: Ошибка при сохранении 
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+[org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:72), org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:126), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:112), org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:211), org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96), org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558), org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98), org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:490), org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:195), org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:179), org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:214), org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324), org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288), org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194), org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.saveWithGeneratedOrRequestedId(DefaultSaveOrUpdateEventListener.java:209), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:194), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.performSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:114), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:90), org.hibernate.internal.SessionImpl.fireSaveOrUpdate(SessionImpl.java:684), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:676), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:671), ru.apertum.qsystem.server.Spring.saveOrUpdate(Spring.java:138), ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:151), ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162), ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065), ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+	at ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:155)
+	at ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162)
+	at ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065)
+	at ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200)
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:438)
+2017-11-29 07:37:19,193 [ INFO] Task was finished. Time: 0.04 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:19,193 [TRACE] Response:
+{"result":false,"jsonrpc":"2.0","id":"1511933839193"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:19,193 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:23,543 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:23,543 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:23,543 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:23,543 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:23,543 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:23,543 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:23,553 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:28,593 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:28,593 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:28,593 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:28,593 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:28,593 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:28,603 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:28,603 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:29,963 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:30,063 [TRACE] Task:
+{"params":{"user_id":1,"request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Перерыв оператора"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:30,063 [ INFO] Task processing: 'Перерыв оператора' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:30,063 [DEBUG] Processing: "Перерыв оператора" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:30,063 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:30,063 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933850063"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:30,063 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:30,073 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:30,073 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933835341","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:30,073 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:30,073 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:30,073 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:30,083 [TRACE] Response:
+{"result":"29.11.2017 07:37:30","jsonrpc":"2.0","id":"1511933850073"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:30,083 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:30,083 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:30,183 [TRACE] Task:
+{"params":{"user_id":1,"oper_id":4},"jsonrpc":"2.0","id":"1511933835341","method":"Сохранить статистику юзера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:30,183 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:30,183 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:30,193 [ WARN] SQL Error: 1048, SQLState: 23000 at {org.hibernate.engine.jdbc.spi.SqlExceptionHelper.logExceptions(SqlExceptionHelper.java:144)}
+2017-11-29 07:37:30,193 [ERROR] Column 'dt' cannot be null at {org.hibernate.engine.jdbc.spi.SqlExceptionHelper.logExceptions(SqlExceptionHelper.java:146)}
+2017-11-29 07:37:30,193 [ERROR] Error! Ошибка при сохранении 
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+[org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:72), org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:126), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:112), org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:211), org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96), org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558), org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98), org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:490), org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:195), org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:179), org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:214), org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324), org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288), org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194), org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.saveWithGeneratedOrRequestedId(DefaultSaveOrUpdateEventListener.java:209), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:194), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.performSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:114), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:90), org.hibernate.internal.SessionImpl.fireSaveOrUpdate(SessionImpl.java:684), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:676), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:671), ru.apertum.qsystem.server.Spring.saveOrUpdate(Spring.java:138), ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:151), ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162), ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065), ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200), ru.apertum.qsystem.server.QServer.run(QServer.java:438)] at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: Ошибка при сохранении 
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+[org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:72), org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:126), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:112), org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:211), org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96), org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558), org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98), org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:490), org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:195), org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:179), org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:214), org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324), org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288), org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194), org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.saveWithGeneratedOrRequestedId(DefaultSaveOrUpdateEventListener.java:209), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:194), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.performSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:114), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:90), org.hibernate.internal.SessionImpl.fireSaveOrUpdate(SessionImpl.java:684), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:676), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:671), ru.apertum.qsystem.server.Spring.saveOrUpdate(Spring.java:138), ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:151), ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162), ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065), ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+	at ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:155)
+	at ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162)
+	at ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065)
+	at ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200)
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:438)
+2017-11-29 07:37:30,203 [ INFO] Task was finished. Time: 0.02 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:30,203 [TRACE] Response:
+{"result":false,"jsonrpc":"2.0","id":"1511933850203"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:30,203 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:30,233 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:30,233 [TRACE] Task:
+{"params":{"user_id":1,"oper_id":1},"jsonrpc":"2.0","id":"1511933835341","method":"Сохранить dt_stop"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:30,233 [ INFO] Task processing: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:30,233 [ERROR] Error! В задании не верно указано название действия: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: В задании не верно указано название действия: 'Сохранить dt_stop' 127.0.0.1
+	at ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192)
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:438)
+2017-11-29 07:37:30,233 [ERROR] Late caught the error when running the command.  at {ru.apertum.qsystem.server.QServer.run(QServer.java:444)}
+ru.apertum.qsystem.common.exceptions.ServerException: В задании не верно указано название действия: 'Сохранить dt_stop' 127.0.0.1
+	at ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192)
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:438)
+2017-11-29 07:37:30,233 [ERROR] Error! Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)] at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:445)
+2017-11-29 07:37:30,233 [ERROR] Error! Ошибка при выполнении задания.
+ru.apertum.qsystem.common.exceptions.ServerException: Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+StackTrace:
+    at ru.apertum.qsystem.server.QServer.run(QServer.java:445)
+
+ at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: Ошибка при выполнении задания.
+ru.apertum.qsystem.common.exceptions.ServerException: Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+StackTrace:
+    at ru.apertum.qsystem.server.QServer.run(QServer.java:445)
+
+
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:467)
+2017-11-29 07:37:30,233 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:32,243 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:32,243 [TRACE] Task:
+{"params":{"user_id":1,"request_back":false},"jsonrpc":"2.0","id":"1511933835341","method":"Перерыв оператора"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:32,243 [ INFO] Task processing: 'Перерыв оператора' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:32,243 [DEBUG] Processing: "Перерыв оператора" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:32,243 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:32,243 [TRACE] Response:
+{"result":false,"jsonrpc":"2.0","id":"1511933852243"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:32,243 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:32,253 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:32,353 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:32,353 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:32,353 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:32,353 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:32,353 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:32,353 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:34,163 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:34,163 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933835341","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:34,173 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:34,173 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:34,173 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:34,173 [TRACE] Response:
+{"result":"29.11.2017 07:37:34","jsonrpc":"2.0","id":"1511933854173"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:34,173 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:34,173 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:34,183 [TRACE] Task:
+{"params":{"user_id":1,"oper_id":4},"jsonrpc":"2.0","id":"1511933835341","method":"Сохранить статистику юзера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:34,183 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:34,183 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:34,193 [ WARN] SQL Error: 1048, SQLState: 23000 at {org.hibernate.engine.jdbc.spi.SqlExceptionHelper.logExceptions(SqlExceptionHelper.java:144)}
+2017-11-29 07:37:34,193 [ERROR] Column 'dt' cannot be null at {org.hibernate.engine.jdbc.spi.SqlExceptionHelper.logExceptions(SqlExceptionHelper.java:146)}
+2017-11-29 07:37:34,193 [ERROR] Error! Ошибка при сохранении 
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+[org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:72), org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:126), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:112), org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:211), org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96), org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558), org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98), org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:490), org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:195), org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:179), org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:214), org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324), org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288), org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194), org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.saveWithGeneratedOrRequestedId(DefaultSaveOrUpdateEventListener.java:209), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:194), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.performSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:114), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:90), org.hibernate.internal.SessionImpl.fireSaveOrUpdate(SessionImpl.java:684), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:676), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:671), ru.apertum.qsystem.server.Spring.saveOrUpdate(Spring.java:138), ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:151), ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162), ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065), ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200), ru.apertum.qsystem.server.QServer.run(QServer.java:438)] at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: Ошибка при сохранении 
+org.hibernate.exception.ConstraintViolationException: could not execute statement
+[org.hibernate.exception.internal.SQLExceptionTypeDelegate.convert(SQLExceptionTypeDelegate.java:72), org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:49), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:126), org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:112), org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:211), org.hibernate.id.IdentityGenerator$GetGeneratedKeysDelegate.executeAndExtract(IdentityGenerator.java:96), org.hibernate.id.insert.AbstractReturningDelegate.performInsert(AbstractReturningDelegate.java:58), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3032), org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3558), org.hibernate.action.internal.EntityIdentityInsertAction.execute(EntityIdentityInsertAction.java:98), org.hibernate.engine.spi.ActionQueue.execute(ActionQueue.java:490), org.hibernate.engine.spi.ActionQueue.addResolvedEntityInsertAction(ActionQueue.java:195), org.hibernate.engine.spi.ActionQueue.addInsertAction(ActionQueue.java:179), org.hibernate.engine.spi.ActionQueue.addAction(ActionQueue.java:214), org.hibernate.event.internal.AbstractSaveEventListener.addInsertAction(AbstractSaveEventListener.java:324), org.hibernate.event.internal.AbstractSaveEventListener.performSaveOrReplicate(AbstractSaveEventListener.java:288), org.hibernate.event.internal.AbstractSaveEventListener.performSave(AbstractSaveEventListener.java:194), org.hibernate.event.internal.AbstractSaveEventListener.saveWithGeneratedId(AbstractSaveEventListener.java:125), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.saveWithGeneratedOrRequestedId(DefaultSaveOrUpdateEventListener.java:209), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.entityIsTransient(DefaultSaveOrUpdateEventListener.java:194), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.performSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:114), org.hibernate.event.internal.DefaultSaveOrUpdateEventListener.onSaveOrUpdate(DefaultSaveOrUpdateEventListener.java:90), org.hibernate.internal.SessionImpl.fireSaveOrUpdate(SessionImpl.java:684), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:676), org.hibernate.internal.SessionImpl.saveOrUpdate(SessionImpl.java:671), ru.apertum.qsystem.server.Spring.saveOrUpdate(Spring.java:138), ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:151), ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162), ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065), ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+	at ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:155)
+	at ru.apertum.qsystem.server.model.UsersStatistic.Save(UsersStatistic.java:162)
+	at ru.apertum.qsystem.server.controller.Executer$43.process(Executer.java:2065)
+	at ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2200)
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:438)
+2017-11-29 07:37:34,203 [ INFO] Task was finished. Time: 0.02 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:34,203 [TRACE] Response:
+{"result":false,"jsonrpc":"2.0","id":"1511933854203"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:34,213 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:34,213 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:34,213 [TRACE] Task:
+{"params":{"user_id":1,"oper_id":1},"jsonrpc":"2.0","id":"1511933835341","method":"Сохранить dt_stop"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:34,213 [ INFO] Task processing: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:34,213 [ERROR] Error! В задании не верно указано название действия: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: В задании не верно указано название действия: 'Сохранить dt_stop' 127.0.0.1
+	at ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192)
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:438)
+2017-11-29 07:37:34,213 [ERROR] Late caught the error when running the command.  at {ru.apertum.qsystem.server.QServer.run(QServer.java:444)}
+ru.apertum.qsystem.common.exceptions.ServerException: В задании не верно указано название действия: 'Сохранить dt_stop' 127.0.0.1
+	at ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192)
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:438)
+2017-11-29 07:37:34,213 [ERROR] Error! Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)] at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:445)
+2017-11-29 07:37:34,213 [ERROR] Error! Ошибка при выполнении задания.
+ru.apertum.qsystem.common.exceptions.ServerException: Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+StackTrace:
+    at ru.apertum.qsystem.server.QServer.run(QServer.java:445)
+
+ at {ru.apertum.qsystem.common.exceptions.ServerException.<init>(ServerException.java:32)}
+ru.apertum.qsystem.common.exceptions.ServerException: Ошибка при выполнении задания.
+ru.apertum.qsystem.common.exceptions.ServerException: Поздно пойманная ошибка при выполнении команды: [ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2192), ru.apertum.qsystem.server.QServer.run(QServer.java:438)]
+StackTrace:
+    at ru.apertum.qsystem.server.QServer.run(QServer.java:445)
+
+
+	at ru.apertum.qsystem.server.QServer.run(QServer.java:467)
+2017-11-29 07:37:34,213 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:37:37,665 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:37:37,665 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:37:37,665 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2190)}
+2017-11-29 07:37:37,665 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:37:37,665 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2202)}
+2017-11-29 07:37:37,665 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:37:37,675 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:18,480 [ INFO] Properties are ready. at {ru.apertum.qsystem.common.QConfig.prepareCLI(QConfig.java:305)}
+2017-11-29 07:38:18,490 [ INFO] "QSystem 17.1"!  date: 20.05.2017 at {ru.apertum.qsystem.common.QLog.initial(QLog.java:180)}
+2017-11-29 07:38:18,490 [ INFO] START LOGER. Logger: server.file.info.trace at {ru.apertum.qsystem.common.QLog.initial(QLog.java:181)}
+2017-11-29 07:38:18,490 [ INFO] Mode: KEY_DEBUG at {ru.apertum.qsystem.common.QLog.initial(QLog.java:186)}
+2017-11-29 07:38:18,490 [ INFO] Plugins: YES at {ru.apertum.qsystem.common.QLog.initial(QLog.java:187)}
+2017-11-29 07:38:18,490 [ INFO] Languages are loading... at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:79)}
+2017-11-29 07:38:18,540 [DEBUG]    Langusge: Az?rbaycan az_AZ at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,550 [DEBUG]    Langusge: English en_US at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,550 [DEBUG]    Langusge: Espanol es_ES at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,550 [DEBUG]    Langusge: Fran?ais fr_FR at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,550 [DEBUG]    Langusge: Italiano it_IT at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,550 [DEBUG]    Langusge: Portugu?s pt_PT at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,550 [DEBUG]    Langusge: Roman ro_RO at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,550 [DEBUG]    Langusge: Русский ru_RU at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,560 [DEBUG]    Langusge: Українська uk_UA at {ru.apertum.qsystem.client.Locales.<init>(Locales.java:119)}
+2017-11-29 07:38:18,670 [ INFO] Загрузка плагинов из папки plugins. at {ru.apertum.qsystem.common.Uses.loadPlugins(Uses.java:810)}
+2017-11-29 07:38:18,670 [DEBUG] Плагин ZoneboardPlugin.jar at {ru.apertum.qsystem.common.Uses.loadPlugins(Uses.java:817)}
+2017-11-29 07:38:18,670 [ INFO] Run Jetty. at {ru.apertum.qsystem.server.QServer.main(QServer.java:148)}
+2017-11-29 07:38:18,670 [ INFO] Старт сервера Jetty на порту 8081 at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:98)}
+2017-11-29 07:38:18,750 [ INFO] Загрузка war из папки ./www/war/ at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:154)}
+2017-11-29 07:38:18,940 [ INFO] Join сервера Jetty на порту 8081 at {ru.apertum.qsystem.server.http.JettyRunner.run(JettyRunner.java:191)}
+2017-11-29 07:38:19,090 [ INFO] DB server '+ driver=com.mysql.jdbc.Driver' url=jdbc:mysql://127.0.0.1/qsystem?autoReconnect=true&amp;characterEncoding=UTF-8 at {ru.apertum.qsystem.hibernate.AnnotationSessionFactoryBean.load(AnnotationSessionFactoryBean.java:183)}
+2017-11-29 07:38:20,410 [ INFO] Отчетный сервер захватывает порт "8088". at {ru.apertum.qsystem.reports.model.WebServer.startWebServer(WebServer.java:75)}
+2017-11-29 07:38:20,410 [ INFO] Пробуем восстановить состояние системы. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:568)}
+2017-11-29 07:38:20,410 [ WARN] Восстановление состояние системы после вчерашнего... нештатного завершения работы сервера. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:571)}
+2017-11-29 07:38:20,420 [ WARN] Срок давности хранения состояния истек. Если в системе ничего не происходит 3 часа, то считается что сохраненные данные устарели безвозвратно. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:605)}
+2017-11-29 07:38:20,420 [ INFO] Восстановление состояния системы завершено. Затрачено времени: 0.01 сек. at {ru.apertum.qsystem.server.QServer.loadPool(QServer.java:681)}
+2017-11-29 07:38:20,420 [ INFO] Создание табло для телевизоров или мониторов. at {ru.apertum.qsystem.server.controller.QIndicatorBoardMonitor.<init>(QIndicatorBoardMonitor.java:108)}
+2017-11-29 07:38:20,500 [ INFO] Создаем окно для информации. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.<init>(FIndicatorBoard.java:174)}
+2017-11-29 07:38:20,764 [TRACE] Прочитали настройки для окна информации. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.<init>(FIndicatorBoard.java:279)}
+2017-11-29 07:38:20,814 [ INFO] Показываем набор строк. at {ru.apertum.qsystem.client.forms.FIndicatorBoard.showLines(FIndicatorBoard.java:893)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,824 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,834 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,834 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,834 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,834 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,834 [ WARN] Parameter of main tablo "Разделитель столбцов" is uncorrect URI or file not exists: ""() at {ru.apertum.qsystem.client.forms.FIndicatorBoard$Line.<init>(FIndicatorBoard.java:669)}
+2017-11-29 07:38:20,864 [ INFO] Сервер системы захватывает порт "3128". at {ru.apertum.qsystem.server.QServer.main(QServer.java:222)}
+2017-11-29 07:38:20,864 [ INFO] Сервер системы 'Очередь' запущен. DB name='+' url=jdbc:mysql://127.0.0.1/qsystem?autoReconnect=true&amp;characterEncoding=UTF-8 at {ru.apertum.qsystem.server.QServer.main(QServer.java:232)}
+2017-11-29 07:38:23,047 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:23,047 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:23,087 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:23,087 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:23,359 [ INFO] Создали список. at {ru.apertum.qsystem.server.model.ATListModel.createList(ATListModel.java:45)}
+2017-11-29 07:38:23,380 [ INFO] Создали дерево. at {ru.apertum.qsystem.server.model.ATreeModel.createTree(ATreeModel.java:54)}
+2017-11-29 07:38:23,390 [ INFO] Task was finished. Time: 0.313 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:23,396 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:23,399 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:23,946 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:24,057 [TRACE] Task:
+{"params":{},"jsonrpc":"2.0","id":"1511933903855","method":"Все параметры из БД"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:24,057 [ INFO] Task processing: 'Все параметры из БД' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:24,057 [DEBUG] Processing: "Все параметры из БД" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:24,057 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:24,057 [TRACE] Response:
+{"result":{},"jsonrpc":"2.0","id":"1511933904057"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:24,057 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:24,297 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:24,297 [TRACE] Task:
+{"jsonrpc":"2.0","id":"1511933903855","method":"Получить перечень пользователей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:24,297 [ INFO] Task processing: 'Получить перечень пользователей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:24,307 [DEBUG] Processing: "Получить перечень пользователей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:24,307 [ INFO] Task was finished. Time: 0.01 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:24,307 [TRACE] Response:
+{"result":[{"id":777,"enable":1,"is_admin":false,"is_report_access":false,"is_parallel":false,"pass":"7SsfRoxfkV8/HPddcGi6rg\u003d\u003d","point":"1","name":"111","adress_rs":33,"point_ext":"","tablo_... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:24,347 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:26,097 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:26,097 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15"},"jsonrpc":"2.0","id":"1511933903855","method":"Получить состояние очередей с проверкой"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:26,097 [ INFO] Task processing: 'Получить состояние очередей с проверкой' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:26,107 [TRACE] Session for new user 'Администратор' ip=127.0.0.1 at {ru.apertum.qsystem.server.QSession.<init>(QSession.java:41)}
+2017-11-29 07:38:26,107 [DEBUG] Processing: "Получить состояние очередей с проверкой" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:26,107 [ INFO] Task was finished. Time: 0.01 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:26,107 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933906107"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:26,107 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:26,347 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:26,347 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15"},"jsonrpc":"2.0","id":"1511933903855","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:26,357 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:26,357 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:26,357 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:26,357 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:26,357 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:26,377 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:26,377 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933903855","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:26,377 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:26,377 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:26,377 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:26,377 [TRACE] Response:
+{"date":"29.11.2017 07:38:26","jsonrpc":"2.0","id":"1511933906377"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:26,377 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:26,967 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:26,967 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933903855","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:26,967 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:26,977 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:26,977 [ INFO] Task was finished. Time: 0.01 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:26,977 [TRACE] Response:
+{"date":"29.11.2017 07:38:26","jsonrpc":"2.0","id":"1511933906977"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:26,977 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:26,977 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:26,977 [TRACE] Task:
+{"params":{"user_id":1,"comments":"15","dt":"29.11.2017 07:38:26","oper_id":1,"dt_start":"29.11.2017 07:38:26","dt_stop":"29.11.2017 07:38:26"},"jsonrpc":"2.0","id":"1511933903855","method":"Сохранить... at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:26,987 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:26,987 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:27,057 [DEBUG] Сохранили. 1 at {ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:167)}
+2017-11-29 07:38:27,057 [ INFO] Task was finished. Time: 0.07 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:27,057 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933907057"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:27,057 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:27,927 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:27,927 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15"},"jsonrpc":"2.0","id":"1511933903855","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:27,927 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:27,927 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:27,927 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:27,927 [TRACE] Response:
+{"result":{"ext_prior":0},"jsonrpc":"2.0","id":"1511933903077"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:27,927 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:29,007 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:29,007 [TRACE] Task:
+{"params":{"user_id":1,"request_back":true},"jsonrpc":"2.0","id":"1511933903855","method":"Перерыв оператора"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:29,007 [ INFO] Task processing: 'Перерыв оператора' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:29,007 [DEBUG] Processing: "Перерыв оператора" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:29,007 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:29,007 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933909007"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:29,007 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:29,017 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:29,107 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:29,107 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:29,107 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:29,107 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:29,107 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:29,107 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:29,117 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933903855","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:29,117 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:29,117 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:29,117 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:29,117 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:29,117 [TRACE] Response:
+{"date":"29.11.2017 07:38:29","jsonrpc":"2.0","id":"1511933909117"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:29,117 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:29,127 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:29,227 [TRACE] Task:
+{"params":{"user_id":1,"dt":"29.11.2017 07:38:29","oper_id":4,"dt_start":"29.11.2017 07:38:26","dt_stop":"29.11.2017 07:38:29"},"jsonrpc":"2.0","id":"1511933903855","method":"Сохранить статистику юзер... at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:29,227 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:29,227 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:29,257 [DEBUG] Сохранили. 4 at {ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:167)}
+2017-11-29 07:38:29,257 [ INFO] Task was finished. Time: 0.03 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:29,257 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933909257"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:29,257 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:29,277 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:29,277 [TRACE] Task:
+{"params":{"user_id":1,"dt":"29.11.2017 07:38:29","oper_id":1,"dt_stop":"29.11.2017 07:38:29"},"jsonrpc":"2.0","id":"1511933903855","method":"Сохранить dt_stop"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:29,277 [ INFO] Task processing: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:29,277 [DEBUG] Processing: "Сохранить dt_stop" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:29,407 [DEBUG] Сохранили логин.  at {ru.apertum.qsystem.server.model.UsersStatistic.saveOperation1(UsersStatistic.java:190)}
+2017-11-29 07:38:29,407 [ INFO] Task was finished. Time: 0.13 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:29,407 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933909407"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:29,407 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:30,727 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:30,727 [TRACE] Task:
+{"params":{"user_id":1,"request_back":false},"jsonrpc":"2.0","id":"1511933903855","method":"Перерыв оператора"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:30,737 [ INFO] Task processing: 'Перерыв оператора' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:30,737 [DEBUG] Processing: "Перерыв оператора" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:30,737 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:30,737 [TRACE] Response:
+{"result":false,"jsonrpc":"2.0","id":"1511933910737"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:30,737 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:30,737 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:30,747 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933903855","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:30,747 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:30,747 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:30,747 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:30,747 [TRACE] Response:
+{"date":"29.11.2017 07:38:30","jsonrpc":"2.0","id":"1511933910747"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:30,747 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:30,757 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:30,757 [TRACE] Task:
+{"params":{"user_id":1,"dt":"29.11.2017 07:38:30","oper_id":5,"dt_start":"29.11.2017 07:38:29","dt_stop":"29.11.2017 07:38:30"},"jsonrpc":"2.0","id":"1511933903855","method":"Сохранить статистику юзер... at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:30,767 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:30,767 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:30,877 [DEBUG] Сохранили. 5 at {ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:167)}
+2017-11-29 07:38:30,877 [ INFO] Task was finished. Time: 0.11 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:30,877 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933910877"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:30,877 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:30,877 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:30,977 [TRACE] Task:
+{"params":{"user_id":1,"dt":"29.11.2017 07:38:30","oper_id":1,"dt_stop":"29.11.2017 07:38:30"},"jsonrpc":"2.0","id":"1511933903855","method":"Сохранить dt_stop"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:30,977 [ INFO] Task processing: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:30,977 [DEBUG] Processing: "Сохранить dt_stop" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:31,027 [DEBUG] Сохранили логин.  at {ru.apertum.qsystem.server.model.UsersStatistic.saveOperation1(UsersStatistic.java:190)}
+2017-11-29 07:38:31,027 [ INFO] Task was finished. Time: 0.05 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:31,027 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933911027"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:31,027 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:31,037 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:31,137 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933903855","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:31,137 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:31,137 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:31,137 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:31,137 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:31,137 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:31,147 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:31,147 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933903855","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:31,147 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:31,147 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:31,157 [ INFO] Task was finished. Time: 0.01 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:31,157 [TRACE] Response:
+{"date":"29.11.2017 07:38:31","jsonrpc":"2.0","id":"1511933911157"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:31,157 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:32,517 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:32,617 [TRACE] Task:
+{"params":{"user_id":1},"jsonrpc":"2.0","id":"1511933903855","method":"Получить время сервера"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:32,617 [ INFO] Task processing: 'Получить время сервера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:32,617 [DEBUG] Processing: "Получить время сервера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:32,617 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:32,617 [TRACE] Response:
+{"date":"29.11.2017 07:38:32","jsonrpc":"2.0","id":"1511933912617"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:32,617 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:32,617 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:32,617 [TRACE] Task:
+{"params":{"user_id":1,"dt":"29.11.2017 07:38:32","oper_id":4,"dt_start":"29.11.2017 07:38:31","dt_stop":"29.11.2017 07:38:32"},"jsonrpc":"2.0","id":"1511933903855","method":"Сохранить статистику юзер... at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:32,617 [ INFO] Task processing: 'Сохранить статистику юзера' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:32,617 [DEBUG] Processing: "Сохранить статистику юзера" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:32,647 [DEBUG] Сохранили. 4 at {ru.apertum.qsystem.server.model.UsersStatistic.saveToSelfDB(UsersStatistic.java:167)}
+2017-11-29 07:38:32,647 [ INFO] Task was finished. Time: 0.03 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:32,647 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933912647"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:32,647 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:32,657 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:32,657 [TRACE] Task:
+{"params":{"user_id":1,"dt":"29.11.2017 07:38:32","oper_id":1,"dt_stop":"29.11.2017 07:38:32"},"jsonrpc":"2.0","id":"1511933903855","method":"Сохранить dt_stop"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:32,657 [ INFO] Task processing: 'Сохранить dt_stop' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:32,657 [DEBUG] Processing: "Сохранить dt_stop" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:32,697 [DEBUG] Сохранили логин.  at {ru.apertum.qsystem.server.model.UsersStatistic.saveOperation1(UsersStatistic.java:190)}
+2017-11-29 07:38:32,697 [ INFO] Task was finished. Time: 0.04 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:32,697 [TRACE] Response:
+{"result":true,"jsonrpc":"2.0","id":"1511933912697"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:32,697 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
+2017-11-29 07:38:34,157 [DEBUG]  Start thread for receiving task. host=127.0.0.1 ip=[127, 0, 0, 1] at {ru.apertum.qsystem.server.QServer.run(QServer.java:390)}
+2017-11-29 07:38:34,157 [TRACE] Task:
+{"params":{"user_id":1,"text_data":"15","request_back":true},"jsonrpc":"2.0","id":"1511933835341","method":"Получить состояние очередей"} at {ru.apertum.qsystem.server.QServer.run(QServer.java:422)}
+2017-11-29 07:38:34,157 [ INFO] Task processing: 'Получить состояние очередей' 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2221)}
+2017-11-29 07:38:34,157 [DEBUG] Processing: "Получить состояние очередей" 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer$Task.process(Executer.java:163)}
+2017-11-29 07:38:34,157 [ INFO] Task was finished. Time: 0.0 sec. 127.0.0.1 at {ru.apertum.qsystem.server.controller.Executer.doTask(Executer.java:2233)}
+2017-11-29 07:38:34,157 [TRACE] Response:
+{"result":{"self_services":[{"id":1504684653226,"waiting":0,"duration":1,"service_name":"Оформить обращение по качеству обслуживания","priority":1,"flexy":false,"roll":false,"line":[]},{"id":150468467... at {ru.apertum.qsystem.server.QServer.run(QServer.java:451)}
+2017-11-29 07:38:34,157 [TRACE] Response was finished at {ru.apertum.qsystem.server.QServer.run(QServer.java:476)}
