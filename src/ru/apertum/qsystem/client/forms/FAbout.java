@@ -151,22 +151,36 @@ public class FAbout extends javax.swing.JDialog {
         }
         DATE_ = settings.getProperty(DATE);
         VERSION_ = settings.getProperty(VERSION);
+        WEB_ = settings.getProperty(WEB, "");
+        SLOGAN_ = settings.getProperty(SLOGAN, "");
         NAME_ = settings.getProperty(NAME, "");
+        //заменяем рыбы значениями
+        NAME_V2_ = settings.getProperty(NAME_V2, "")
+                                .replaceAll(SLOGAN, SLOGAN_)
+                                .replaceAll(VERSION, VERSION_)
+                                .replaceAll(WEB, WEB_);
         VERSION_DB_ = settings.getProperty(VERSION_DB);
         CMRC_ = settings.getProperty(CMRC);
         CMRC_SUFF = "0".equals(CMRC_) || CMRC_.isEmpty() ? "" : (CMRC_.startsWith(".") ? CMRC_ : "." + CMRC_);
     }
+    
     public final static String DATE = "date";
     public final static String VERSION = "version";
     public final static String NAME = "name";
+    public final static String NAME_V2 = "nameV2";
     public final static String VERSION_DB = "version_db";
     public final static String CMRC = "cmrc";
+    public final static String WEB = "web";
+    public final static String SLOGAN = "slogan";
     public static String DATE_ = "";
     public static String VERSION_ = "";
     public static String NAME_ = "";
+    public static String NAME_V2_ = "";
     public static String VERSION_DB_ = "";
     public static String CMRC_ = "";
     public static String CMRC_SUFF = "";
+    public static String WEB_ = "";
+    public static String SLOGAN_ = "";
 
     public static String getCMRC_SUFF() {
         if (CMRC_.isEmpty()) {

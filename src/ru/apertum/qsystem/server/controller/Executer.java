@@ -34,6 +34,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.dom4j.DocumentHelper;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.common.Uses;
@@ -2198,6 +2200,36 @@ public final class Executer {
             return new JsonRPC20OK();
         }
     };
+    
+    /**
+     * Получить актуальную версию клиентского ПО
+     */
+    final Task getLastVersionSoftware = new Task(Uses.TASK_GET_LAST_VERSION_SOFTWARE) {
+        @Override
+        public RpcGetSrt process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            return new RpcGetSrt(getVersionFromDatabase());
+        }
+    };
+    
+    private String getVersionFromDatabase() {
+        final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setName("SomeTxName");
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+        String query = "select version from QVersionSoftware";
+        String version = null;
+        try {
+            version = Spring.getInstance().executeSelectString(query);
+        }
+        catch (Exception ex) {
+            throw new ServerException("Ошибка при получении версии программы\n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+        }
+        Spring.getInstance().getTxManager().commit(status);
+        QLog.l().logger().info("Версия ПО из БД: " + version);
+        return version;
+    }
 
 //****************************************************************************
 //********************* КОНЕЦ добавления в мап обработчиков заданий  *********

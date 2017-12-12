@@ -35,6 +35,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
+import ru.apertum.qsystem.About;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.help.Helper;
 import ru.apertum.qsystem.common.NetCommander;
@@ -219,7 +220,7 @@ public class FLogin extends javax.swing.JDialog {
         buttonEnter.setText(getLocaleMessage("pressOK.Action.text"));
         buttonExit.setText(getLocaleMessage("pressCancel.Action.text"));
         FAbout.loadVersionSt();
-        labelName.setText(FAbout.NAME_);
+        labelName.setText(FAbout.NAME_V2_);
         DefaultComboBoxModel m = new DefaultComboBoxModel(users);
         comboBoxUser.setModel(m);
         final File f = new File("temp/lusr");
@@ -392,6 +393,7 @@ public class FLogin extends javax.swing.JDialog {
         }
 
         final String userPass = user.getPassword();
+        String myPass = MD5(new String(passwordField.getPassword()));
         if (!userPass.equals(MD5(new String(passwordField.getPassword())))) {
             JOptionPane.showMessageDialog(this, getLocaleMessage("messages.noAccessUser.mess"), getLocaleMessage("messages.noAccess.caption"), JOptionPane.ERROR_MESSAGE);
             return false;
