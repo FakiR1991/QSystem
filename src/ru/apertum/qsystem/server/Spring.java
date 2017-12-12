@@ -127,6 +127,16 @@ public class Spring {
         ses.flush();
     }
     
+    public String executeSelectString(String q) {
+        final Session ses = getTxManager().getSessionFactory().getCurrentSession();  
+        Query query = ses.createQuery(q);
+        //query.setDate("today", new Date());
+        List list = query.list();
+        String response = (String)list.get(0);
+        ses.flush();
+        return response;
+    }
+    
     public Long executeSelectQuery(String q, Object obj, String q2) {
         final Session ses = getTxManager().getSessionFactory().getCurrentSession();  
         Query  query = ses.createQuery(q);

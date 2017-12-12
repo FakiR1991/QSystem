@@ -1651,6 +1651,10 @@ public class NetCommander {
         final CmdParams params = new CmdParams();
         params.userId = userId;
         
+        if(st == null) {
+                QLog.l().logger().error("++++++ USERSTATISTIC NULL");
+        }
+        
         params.client_id = st.getClientId();
         params.dt = st.getDt();
         params.dt_start = st.getDtStart();
@@ -1712,7 +1716,7 @@ public class NetCommander {
         return rpc.getResult();
     }
     
-         /**
+    /**
      *Сохранение статистики юзера
      *
      * @param netProperty
@@ -1852,5 +1856,33 @@ public class NetCommander {
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }
+    }
+    
+    /**
+     * Получение версии ПО
+     *
+     * @param netProperty
+     * @return
+     */
+    public static String getLastVersionSoftware(INetProperty netProperty) {
+        QLog.l().logger().info("Получить версию программы");
+        final CmdParams params = new CmdParams();
+
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_GET_LAST_VERSION_SOFTWARE, params);
+        } catch (QException ex) {
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetSrt rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetSrt.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
     }
 }

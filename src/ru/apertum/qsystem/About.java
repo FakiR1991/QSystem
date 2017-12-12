@@ -16,6 +16,7 @@
  */
 package ru.apertum.qsystem;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.GregorianCalendar;
@@ -32,6 +33,7 @@ public class About {
     public static String ver = "";
     public static String date = "";
     public static String db = "";
+    public static String appPath = "";
 
     public static void load() {
         final Properties settings = new Properties();
@@ -45,6 +47,8 @@ public class About {
         ver = settings.getProperty(FAbout.VERSION);
         date = settings.getProperty(FAbout.DATE);
         db = settings.getProperty(FAbout.VERSION_DB);
+        //пусть к папке запущенного ПО
+        appPath = new File("").getAbsolutePath();
     }
 
     /**

@@ -28,17 +28,24 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.URL;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -47,6 +54,8 @@ import java.util.Locale;
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -74,6 +83,7 @@ import ru.apertum.qsystem.common.model.INetProperty;
 import org.dom4j.io.SAXReader;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
+import ru.apertum.qsystem.About;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
@@ -2269,35 +2279,63 @@ public final class FClient extends javax.swing.JFrame {
             //todo   board.showData("", false);
         }
     }
-
+    
     /**
      * @param args the command line arguments
      * @throws DocumentException
      */
     public static void main(String args[]) throws DocumentException {
+        final IClientNetProperty netProperty = new ClientNetProperty(args);
+        //Загрузим серверные параметры
+        QProperties.get().load(netProperty);
+        
         QLog.initial(args, 1);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
+        
+        /*--------------- ПРОВЕРКА ОБНОВЛЕНИЙ ПО ----------------------*/
+        //текущая версия ПО
+        String currentVersion = About.ver;
+        //новая версия ПО
+        String newVersion = null;
+        
+        try {
+            //получаем от сервера актуальную версию ПО
+            newVersion = NetCommander.getLastVersionSoftware(netProperty);
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(new JFrame(),
+                                          "Возникла ошибка во время проверки наличия обновлений клиентского ПО.\n" +
+                                          e.getMessage());
+            QLog.l().logger().error("Ошибка проверки наличия обновлений клиентского ПО (currentVersion=" +
+                                        currentVersion == null ? "" : currentVersion + ", lastVersion=" +
+                                        newVersion == null ? "" : newVersion + ")",
+                                    e);
+        }
+        
+        QLog.l().logger().info("Версия клиентского ПО (currentVersion=" + currentVersion +
+                                                    ", lastVersion=" + newVersion + ")");
+        
+        //если есть новая версия, то открываем окно обновления
+        if (newVersion != null && currentVersion.compareTo(newVersion) != 0) {
+            FUpdate.openUpdateForm(fClient, true);
+        }
+        /*-------------------------------------------------------------*/
+        
         Uses.startSplashClient();
         // Загрузка плагинов из папки plugins
         if (QConfig.cfg().isPlaginable()) {
             Uses.loadPlugins("./plugins/");
         }
-
-        final IClientNetProperty netProperty = new ClientNetProperty(args);
-        //Загрузим серверные параметры
-        QProperties.get().load(netProperty);
         // это заплата на баг с коннектом.
         // без предконнекта из main в дальнейшем сокет не хочет работать,
         // долго висит и вываливает минут через 15-20 эксепшн java.net.SocketException: Malformed reply from SOCKS server  
         
-      /*   Socket skt = null;
+        /*   Socket skt = null;
          try {
          skt = new Socket(netProperty.getAddress(), 61111);
          skt.close();
          } catch (IOException ex) {
          }*/
-         
-
+        
         if (!QConfig.cfg().isTerminal()) {// в терминальном режиме запускаем много копий
             // Отсечем вторую копию.
             try {
@@ -2308,7 +2346,6 @@ public final class FClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(null, getLocaleMessage("messages.restart.mess"), getLocaleMessage("messages.restart.caption"), JOptionPane.INFORMATION_MESSAGE);
                 System.exit(0);
             }
-
         }
         // Определим кто работает на данном месте.
         final QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
@@ -2350,13 +2387,13 @@ public final class FClient extends javax.swing.JFrame {
             workingPeriod = new UsersStatistic();
             workingPeriod.setUserId(user.getId());
             workingPeriod.setOperationId(Uses.WORK_STAT);
-            
+
            workingPeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
            workingPeriod.setDt(workingPeriod.getDtStart());
            workingPeriod.setDtStop(workingPeriod.getDtStart());
            workingPeriod.setPlaceId(QConfig.cfg().getPointN());
            NetCommander.sendUserStat(netProperty,  user.getId(), workingPeriod);
-           
+
         } catch (AWTException ex) {
             QLog.l().logger().error("Ошибка работы с tray: ", ex);
             System.exit(0);

@@ -1212,44 +1212,44 @@ public class FAdmin extends javax.swing.JFrame {
         QLog.l().logger().info("DB is OK.");
 
         //запустим поток обновления пейджера, пусть поработает
-        final Thread tPager = new Thread(() -> {
-            FAbout.loadVersionSt();
-            String result = "";
-            try {
-                final URL url = new URL(PAGER_URL + "/qskyapi/getpagerdata?qsysver=" + FAbout.VERSION_ + "&qplugins=" + getMac() + "-" + getStat() + "&checkdb=" + cdb + "&checkdb2=" + cdb2);
-                //System.out.println(url.toString());
-                final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestProperty("User-Agent", "Java bot");
-                conn.connect();
-                final int code = conn.getResponseCode();
-                if (code == 200) {
-                    try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf8"))) {
-                        String inputLine;
-                        while ((inputLine = in.readLine()) != null) {
-                            result += inputLine;
-                        }
-                    }
-                }
-                conn.disconnect();
-            } catch (Exception e) {
-                System.err.println("Pager not enabled. " + e);
-                return;
-            }
-            final Gson gson = GsonPool.getInstance().borrowGson();
-            try {
-                final Answer answer = gson.fromJson(result, Answer.class);
-                forPager = answer;
-                if (answer.getData().size() > 0) {
-                    forPager.start();
-                }
-            } catch (Exception e) {
-                System.err.println("Pager not enabled but working. " + e);
-            } finally {
-                GsonPool.getInstance().returnGson(gson);
-            }
-        });
-        tPager.setDaemon(true);
-        tPager.start();
+//        final Thread tPager = new Thread(() -> {
+//            FAbout.loadVersionSt();
+//            String result = "";
+//            try {
+//                final URL url = new URL(PAGER_URL + "/qskyapi/getpagerdata?qsysver=" + FAbout.VERSION_ + "&qplugins=" + getMac() + "-" + getStat() + "&checkdb=" + cdb + "&checkdb2=" + cdb2);
+//                //System.out.println(url.toString());
+//                final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+//                conn.setRequestProperty("User-Agent", "Java bot");
+//                conn.connect();
+//                final int code = conn.getResponseCode();
+//                if (code == 200) {
+//                    try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf8"))) {
+//                        String inputLine;
+//                        while ((inputLine = in.readLine()) != null) {
+//                            result += inputLine;
+//                        }
+//                    }
+//                }
+//                conn.disconnect();
+//            } catch (Exception e) {
+//                System.err.println("Pager not enabled. " + e);
+//                return;
+//            }
+//            final Gson gson = GsonPool.getInstance().borrowGson();
+//            try {
+//                final Answer answer = gson.fromJson(result, Answer.class);
+//                forPager = answer;
+//                if (answer.getData().size() > 0) {
+//                    forPager.start();
+//                }
+//            } catch (Exception e) {
+//                System.err.println("Pager not enabled but working. " + e);
+//            } finally {
+//                GsonPool.getInstance().returnGson(gson);
+//            }
+//        });
+//        tPager.setDaemon(true);
+//        tPager.start();
 
         Uses.startSplash();
         // Загрузка плагинов из папки plugins
@@ -6797,10 +6797,10 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
                 } else {
                     form.tabbedPaneMain.remove(form.tabHide);
                 }
-
-                if (!FAbout.VERSION_.equalsIgnoreCase(currVersion) && !forse) {
-                    form.setTitle(form.getTitle() + "  " + getLocaleMessage("qsys.new_ver") + " " + currVersion + " " + getLocaleMessage("qsys.available"));
-                }
+                
+//                if (!FAbout.VERSION_.equalsIgnoreCase(currVersion) && !forse) {
+//                    form.setTitle(form.getTitle() + "  " + getLocaleMessage("qsys.new_ver") + " " + currVersion + " " + getLocaleMessage("qsys.available"));
+//                }
             }
         }
         int tabbi = 0;
