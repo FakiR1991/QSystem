@@ -14,14 +14,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.swing.JOptionPane;
 import ru.apertum.qsystem.About;
 import ru.apertum.qsystem.common.QLog;
-import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 
 
@@ -31,7 +28,6 @@ import ru.apertum.qsystem.common.exceptions.ClientException;
  */
 public class FUpdate extends javax.swing.JDialog {
     
-    public static FUpdate updateForm;
     private Frame parent;
     private boolean modal;
     private String completeUpdateMessage = "Возникла ошибка во время обновления приложения.";
@@ -41,15 +37,6 @@ public class FUpdate extends javax.swing.JDialog {
         this.parent = parent;
         this.modal = modal;
         initComponents();
-    }
-    
-    public static void openUpdateForm(Frame parent, boolean modal) {
-        if (updateForm == null) {
-            updateForm = new FUpdate(parent, modal);
-            Uses.setLocation(updateForm);
-        }
-        
-        updateForm.setVisible(true);
     }
     
     /**
@@ -125,11 +112,10 @@ public class FUpdate extends javax.swing.JDialog {
 
     /**
      * unzip the archive into output folder
-     * @param parent parent control
      * @param zipFile input zip file
      * @param outputFolder zip file output folder
      */
-    public void unZipInto(Frame parent, String zipFile, String outputFolder) {
+    public void unZipInto(String zipFile, String outputFolder) {
         
         byte[] buffer = new byte[1024];
 
@@ -187,7 +173,6 @@ public class FUpdate extends javax.swing.JDialog {
             link = new URL("file://10.5.0.2/ProgsUpdate/QSystem-autoupdate/" + archiveName);
             is = new BufferedInputStream(link.openStream());
         } catch(IOException e) {
-//            JOptionPane.showMessageDialog(this, "Ошибка в процессе обновления ПО.\n" + e.getMessage());
             QLog.l().logger().error("Ошибка в процессе обновления ПО.", e);
             throw new ClientException("Ошибка в процессе обновления ПО.", e);
         }
@@ -201,7 +186,6 @@ public class FUpdate extends javax.swing.JDialog {
             out.close();
             is.close();
         } catch(IOException e) {
-//            JOptionPane.showMessageDialog(this, "Ошибка чтения файла из потока.\n" + e.getMessage());
             QLog.l().logger().error("Ошибка чтения файла из потока.", e);
             throw new ClientException("Ошибка чтения файла из потока.", e);
         }
@@ -219,7 +203,7 @@ public class FUpdate extends javax.swing.JDialog {
         }
 
         //распаковываем файлы архива в папку откуда запускается программа
-        unZipInto(parent, tempZipFilePath, appPath);
+        unZipInto(tempZipFilePath, appPath);
 
         //удаляем архив из временной папки
         File fileToRemove = new File(tempZipFilePath);

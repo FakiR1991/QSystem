@@ -2057,23 +2057,21 @@ public final class Executer {
         public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             try {
-                  UsersStatistic st = new UsersStatistic();
-                  st.setClientId(cmdParams.client_id);
-                  st.setDt(cmdParams.dt);
-                  st.setDtStart(cmdParams.dt_start);
-                  st.setDtStop(cmdParams.dt_stop);
-                  st.setOperationId(cmdParams.oper_id); 
-                  st.setServiceId(cmdParams.serviceId);
-                  st.setStateIn(cmdParams.state_in);
-                  st.setUserId(cmdParams.userId);
-                  st.setPlaceId(cmdParams.comments);
-                  
-                  st.Save();
-                  return new RpcGetBool(true);
-            }
-            catch(Exception ex)
-            {
-                  return new RpcGetBool(false);
+                UsersStatistic st = new UsersStatistic();
+                st.setClientId(cmdParams.client_id);
+                st.setDt(cmdParams.dt);
+                st.setDtStart(cmdParams.dt_start);
+                st.setDtStop(cmdParams.dt_stop);
+                st.setOperationId(cmdParams.oper_id); 
+                st.setServiceId(cmdParams.serviceId);
+                st.setStateIn(cmdParams.state_in);
+                st.setUserId(cmdParams.userId);
+                st.setPlaceId(cmdParams.comments);
+                st.Save();
+                
+                return new RpcGetBool(true);
+            } catch(Exception ex) {
+                return new RpcGetBool(false);
             }
         }
     };
