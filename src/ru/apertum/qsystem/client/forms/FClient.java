@@ -501,34 +501,35 @@ public final class FClient extends javax.swing.JFrame {
             setVisible(true);
             setState(JFrame.NORMAL);
         });
-        tray.addItem("-", (ActionEvent e) -> { });
+        tray.addItem("-", (ActionEvent e) -> {
+        });
         tray.addItem(getLocaleMessage("messages.tray.close"), (ActionEvent e) -> {
-            if (user.isPause()) {
-                 JOptionPane.showMessageDialog(null, "Для выхода из программы необходимо убрать Перерыв!");
-                 return;
-            }
-            if (idlePeriod != null) {
-                idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                idlePeriod.setDt(idlePeriod.getDtStop());
-                NetCommander.sendUserStat(netProperty,  user.getId(), idlePeriod);
-                
-                workingPeriod.setDtStop(idlePeriod.getDtStop());
-                workingPeriod.setDt(idlePeriod.getDtStop());
-                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-            }
-            if (idlePeriod2 != null) {
-                idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                idlePeriod2.setDt(idlePeriod2.getDtStop());
-                NetCommander.sendUserStat(netProperty,  user.getId(), idlePeriod2);  
-                
-                workingPeriod.setDtStop(idlePeriod2.getDtStop());
-                workingPeriod.setDt(idlePeriod2.getDtStop());
-                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-            }
-//            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId(), null));
-//            workingPeriod.setDt(idlePeriod.getDtStop());
-//            workingPeriod.setPlaceId(user.getPoint());
-//            NetCommander.sendUserStat(netProperty, user.getId(), workingPeriod)
+           //проставим idle, если есть 
+           
+        if(user.isPause()) {
+             JOptionPane.showMessageDialog(null, "Для выхода из программы необходимо убрать Перерыв!");
+             return;
+        }
+        if(idlePeriod != null) {
+            idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+            idlePeriod.setDt(idlePeriod.getDtStop());
+            NetCommander.sendUserStat(netProperty,  user.getId(), idlePeriod); 
+            workingPeriod.setDtStop(idlePeriod.getDtStop());
+            workingPeriod.setDt(idlePeriod.getDtStop());
+            NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+        }
+        if(idlePeriod2 != null) {
+            idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+            idlePeriod2.setDt(idlePeriod2.getDtStop());
+            NetCommander.sendUserStat(netProperty,  user.getId(), idlePeriod2);  
+            workingPeriod.setDtStop(idlePeriod2.getDtStop());
+            workingPeriod.setDt(idlePeriod2.getDtStop());
+            NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+        }
+           // workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId(), null));
+          //  workingPeriod.setDt(idlePeriod.getDtStop());
+          //  workingPeriod.setPlaceId(user.getPoint());
+         //   NetCommander.sendUserStat(netProperty, user.getId(), workingPeriod);
             dispose();
             System.exit(0);
         });
@@ -588,6 +589,7 @@ public final class FClient extends javax.swing.JFrame {
             setSize(getPreferredSize().width - panelParallerCusts.getPreferredSize().width, getPreferredSize().height);
             panelParallerCusts.setVisible(user.getParallelAccess());
         } else {
+
             listParallelClients.setCellRenderer(new ParallelCellRenderer());
             /*
             LinkedList<QCustomer> cs = new LinkedList<>();
@@ -624,7 +626,7 @@ public final class FClient extends javax.swing.JFrame {
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
         labelUser.setText(user.getName() + " - " + (QConfig.cfg().getPointN() != null ? QConfig.cfg().getPointN() : user.getPoint()));
         ch.setSelected(user.isPause());
-        if (user.isPause())
+        if(user.isPause())
         {
             ch.setForeground(new Color(250, 0, 0));
             ch.setText(getLocaleMessage("client.pause").toUpperCase());
@@ -650,7 +652,8 @@ public final class FClient extends javax.swing.JFrame {
 
         ch.setOpaque(false);
         ch.addActionListener((ActionEvent e) -> {
-            if (this.customer != null) {
+            if(this.customer != null)
+            {
                 ch.setSelected(false);
                 return;
             }
@@ -681,7 +684,7 @@ public final class FClient extends javax.swing.JFrame {
                 pausePeriod = new UsersStatistic();
                 pausePeriod.setOperationId(Uses.PAUSE_STAT);
                 pausePeriod.setUserId(user.getId());
-                if (idlePeriod != null) {
+                if(idlePeriod != null) {
                     idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                     idlePeriod.setDt(idlePeriod.getDtStop());
                     NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod);
@@ -690,11 +693,11 @@ public final class FClient extends javax.swing.JFrame {
                     workingPeriod.setDt(idlePeriod.getDtStop());
                     NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
                     
-                    pausePeriod.setDtStart(idlePeriod.getDtStop());
+                    pausePeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
                     idlePeriod = null;
                     
                 }
-                if (idlePeriod2 != null) {
+                if(idlePeriod2 != null) {
                     idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                     idlePeriod2.setDt(idlePeriod2.getDtStop());
                     NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod2);
@@ -703,34 +706,38 @@ public final class FClient extends javax.swing.JFrame {
                     workingPeriod.setDt(idlePeriod2.getDtStop());
                     NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
                     
-                    pausePeriod.setDtStart(idlePeriod2.getDtStop());
+                    pausePeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
                     idlePeriod2 = null;
                 }
-                if (pausePeriod.getDtStart() == null) {
+                if(pausePeriod.getDtStart() == null)
+                {
                     pausePeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
                 }
             } else {
                 ch.setForeground(new Color(0, 150, 0));
                 ch.setText(getLocaleMessage("client.pause"));  
-                if (customersCountForUser > 0) {
-                    menuItemInvitePostponed1.setEnabled(true);
-                    buttonInvite.setEnabled(true);
-                    menuItemInvite.setEnabled(true);
+                if(customersCountForUser>0)
+                {
+                 menuItemInvitePostponed1.setEnabled(true);
+                 buttonInvite.setEnabled(true);
+                 menuItemInvite.setEnabled(true);
                 }
-                if (listPostponed.getModel().getSize() > 0) {
-                    menuItemInvitePostponed.setEnabled(true);
-                    menuItemChangeStatusPostponed.setEnabled(true);
+                if(listPostponed.getModel().getSize()>0)
+                {
+                   menuItemInvitePostponed.setEnabled(true);
+                   menuItemChangeStatusPostponed.setEnabled(true);
                 }
-                if (pausePeriod.getDtStart() != null) {
-                    pausePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                    pausePeriod.setDt(pausePeriod.getDtStop());
-                    NetCommander.sendUserStat(netProperty, user.getId(), pausePeriod);
-                    
-                    workingPeriod.setDtStop(pausePeriod.getDtStop());
-                    workingPeriod.setDt(pausePeriod.getDtStop());
-                    NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                    
-                    pausePeriod = null;
+                
+                if(pausePeriod.getDtStart() != null) 
+                {
+                   pausePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+                   pausePeriod.setDt(pausePeriod.getDtStop());
+                   NetCommander.sendUserStat(netProperty, user.getId(), pausePeriod);
+                   
+                   workingPeriod.setDtStop(pausePeriod.getDtStop());
+                   workingPeriod.setDt(pausePeriod.getDtStop());
+                   NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+                   pausePeriod = null;
                 }
                 refreshSituation(true);
             }
@@ -935,23 +942,23 @@ public final class FClient extends javax.swing.JFrame {
                 // здесь idle
                 
                 //надо проверить, был ли до этого idle_2. Если был, то отослать его на сервер для последующего сохранения
-                if (customer == null && !user.isPause()) {
-                    if (idlePeriod2 != null) {
+                if(customer == null && !user.isPause()) {
+                    if(idlePeriod2 != null) {
                         idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                         idlePeriod2.setDt(idlePeriod2.getDtStop());
-                        NetCommander.sendUserStat(netProperty, user.getId(), null);
+                        NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod2);
 
                         workingPeriod.setDtStop(idlePeriod2.getDtStop());
                         workingPeriod.setDt(idlePeriod2.getDtStop());
                         NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
 
-//                        idlePeriod = new UsersStatistic();
-//                        idlePeriod.setDtStart(idlePeriod2.getDtStop());
-//                        idlePeriod.setOperationId(Uses.IDLE_STAT);
-//                        idlePeriod.setUserId(user.getId());
+                        idlePeriod = new UsersStatistic();
+                        idlePeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
+                        idlePeriod.setOperationId(Uses.IDLE_STAT);
+                        idlePeriod.setUserId(user.getId());
                         idlePeriod2 = null;
                     }
-                    if (idlePeriod == null) {
+                    if(idlePeriod == null) {
                         idlePeriod = new UsersStatistic();
                         idlePeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
                         idlePeriod.setOperationId(Uses.IDLE_STAT);
@@ -963,7 +970,7 @@ public final class FClient extends javax.swing.JFrame {
                 //здесь idle2  
                 if (customer == null && !user.isPause()) {
                     // надо проверить, бвл ли до этого idle. Если был, то отослать его на сервер для последующего сохранения
-                    if (idlePeriod != null) {
+                    if(idlePeriod != null) {
                         idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                         idlePeriod.setDt(idlePeriod.getDtStop());
                         NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod);
@@ -972,13 +979,13 @@ public final class FClient extends javax.swing.JFrame {
                         workingPeriod.setDt(idlePeriod.getDtStop());
                         NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
 
-//                        idlePeriod2 = new UsersStatistic();
-//                        idlePeriod2.setDtStart(idlePeriod.getDtStop());
-//                        idlePeriod2.setOperationId(Uses.IDLE_STAT_2);
-//                        idlePeriod2.setUserId(user.getId());
+                        idlePeriod2 = new UsersStatistic();
+                        idlePeriod2.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
+                        idlePeriod2.setOperationId(Uses.IDLE_STAT_2);
+                        idlePeriod2.setUserId(user.getId());
                         idlePeriod = null;
                     }
-                    if (idlePeriod2 == null) {
+                    if(idlePeriod2 == null) {
                         idlePeriod2 = new UsersStatistic();
                         idlePeriod2.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
                         idlePeriod2.setOperationId(Uses.IDLE_STAT_2);
@@ -1043,24 +1050,23 @@ public final class FClient extends javax.swing.JFrame {
         labelPost.setText("<html><span style='color:" + color + "'>" + plan.getPostponedList().size() + "</span>");
     }
     
-    public void expandAll(JTree tree) {
-        TreeNode root = (TreeNode)tree.getModel().getRoot();
-        expandAll(tree, new TreePath(root));
-    }
+   public void expandAll(JTree tree) {
+    TreeNode root = (TreeNode) tree.getModel().getRoot();
+    expandAll(tree, new TreePath(root));
+  }
 
-    private void expandAll(JTree tree, TreePath parent) {
-        TreeNode node = (TreeNode) parent.getLastPathComponent();
-        if (node.getChildCount() >= 0) {
-            for (Enumeration e = node.children(); e.hasMoreElements();) {
-                TreeNode n = (TreeNode) e.nextElement();
-                TreePath path = parent.pathByAddingChild(n);
-                expandAll(tree, path);
-            }
-        }
-        tree.expandPath(parent);
-        // tree.collapsePath(parent);
+  private void expandAll(JTree tree, TreePath parent) {
+    TreeNode node = (TreeNode) parent.getLastPathComponent();
+    if (node.getChildCount() >= 0) {
+      for (Enumeration e = node.children(); e.hasMoreElements();) {
+        TreeNode n = (TreeNode) e.nextElement();
+        TreePath path = parent.pathByAddingChild(n);
+        expandAll(tree, path);
+      }
     }
-    
+    tree.expandPath(parent);
+    // tree.collapsePath(parent);
+  }
     /**
      * Возможный состояния кнопок 1 - доступна кнопка, 0 - не доступна
      */
@@ -1149,77 +1155,79 @@ public final class FClient extends javax.swing.JFrame {
         
         DefaultMutableTreeNode node = (DefaultMutableTreeNode)treeSituation.getLastSelectedPathComponent();
         String num = node.getUserObject().toString().split(" ")[0];
-        if (num != null && node.getChildCount() == 0) {
-            System.out.println(num);
-            
-            if (System.currentTimeMillis() - lastInvite < 10_000) {
-                return;
+         if (node!=null&& node.getChildCount() == 0) {
+             System.out.println(num);
+         
+        if (System.currentTimeMillis() - lastInvite < 10_000) {
+            return;
+        }
+        try {
+            lastInvite = go();
+
+            if(idlePeriod2 != null) 
+            {
+                idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+                idlePeriod2.setDt(idlePeriod2.getDtStop());
+                
+                NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod2);
+                
+                workingPeriod.setDtStop(idlePeriod2.getDtStop());
+                workingPeriod.setDt(idlePeriod2.getDtStop());
+                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
             }
-            try {
-                lastInvite = go();
-
-                if (idlePeriod2 != null) {
-                    idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                    idlePeriod2.setDt(idlePeriod2.getDtStop());
-
-                    NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod2);
-
-                    workingPeriod.setDtStop(idlePeriod2.getDtStop());
-                    workingPeriod.setDt(idlePeriod2.getDtStop());
-                    NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                    
+             if(idlePeriod != null) 
+            {
+                idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+                idlePeriod.setDt(idlePeriod.getDtStop());
+                
+                NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod);
+                
+                workingPeriod.setDtStop(idlePeriod.getDtStop());
+                workingPeriod.setDt(idlePeriod.getDtStop());
+                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+                
+                
+            }
+            if(techPeriod == null)
+            {
+                techPeriod = new UsersStatistic();
+                techPeriod.setUserId(user.getId());
+                techPeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
+                techPeriod.setOperationId(Uses.TECH_STAT);
+                if(idlePeriod2!= null) {
+                    //techPeriod.setDtStart(idlePeriod2.getDtStop());
                     idlePeriod2 = null;
                 }
-                if (idlePeriod != null) {
-                    idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                    idlePeriod.setDt(idlePeriod.getDtStop());
-
-                    NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod);
-
-                    workingPeriod.setDtStop(idlePeriod.getDtStop());
-                    workingPeriod.setDt(idlePeriod.getDtStop());
-                    NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                    
-                    idlePeriod = null;
-                }
-                if (techPeriod == null) {
-                    techPeriod = new UsersStatistic();
-                    techPeriod.setUserId(user.getId());
-                    techPeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
-                    techPeriod.setOperationId(Uses.TECH_STAT);
-                    
-//                    if (idlePeriod2 != null) {
-//                        techPeriod.setDtStart(idlePeriod2.getDtStop());
-//                        idlePeriod2 = null;
-//                    }
-                }
-
-                // Вызываем кастомера
-                final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId(), num);
-                if (cust != null && cust.getPostponPeriod() > 0) {
-                    JOptionPane.showMessageDialog(this,
-                            getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
-                            getLocaleMessage("invite.posponed.title"),
-                            JOptionPane.INFORMATION_MESSAGE);
-                };
-
-                if (cust != null && customer != null) {
-                    if (cust.getId().equals(customer.getId())) {
-                        customer.setRecallCount(cust.getRecallCount());
-                    }
-                }
-                
-                // Показываем обстановку
-                setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-                /*if(!denyTimer.isRunning())
-                     denyTimer.start();*/
-                // поддержка расширяемости плагинами
-                extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 1);
-                end(lastInvite);         
-
-            } catch (HeadlessException | QException th) {
-                throw new ClientException(new Exception(th));
             }
+            
+            
+            // Вызываем кастомера
+            final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId(),num);
+            if (cust != null && cust.getPostponPeriod() > 0) {
+                JOptionPane.showMessageDialog(this,
+                        getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
+                        getLocaleMessage("invite.posponed.title"),
+                        JOptionPane.INFORMATION_MESSAGE);
+            };
+            
+            if (cust != null&& customer != null)
+            {
+                if(cust.getId().equals(customer.getId()))
+                {
+                  customer.setRecallCount(cust.getRecallCount());
+                }
+            }
+            // Показываем обстановку
+            setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+           /* if(!denyTimer.isRunning())
+                 denyTimer.start();*/
+            // поддержка расширяемости плагинами
+            extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 1);
+            end(lastInvite);         
+            
+        } catch (HeadlessException | QException th) {
+            throw new ClientException(new Exception(th));
+        }
         }
     }
     private long lastInvite = 0;
@@ -1232,45 +1240,34 @@ public final class FClient extends javax.swing.JFrame {
      */
     @Action
     public void inviteNextCustomer(ActionEvent evt) {
-        
         if (System.currentTimeMillis() - lastInvite < 10_000) {
             return;
         }
         try {
             lastInvite = go();
-            if (idlePeriod2 != null) {
+            if(idlePeriod2 != null) 
+            {
                 idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                 idlePeriod2.setDt(idlePeriod2.getDtStop());
+                
                 NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod2);
                 
                 workingPeriod.setDtStop(idlePeriod2.getDtStop());
                 workingPeriod.setDt(idlePeriod2.getDtStop());
                 NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                
-                idlePeriod2 = null;
             }
-            if (idlePeriod != null) {
-                idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                idlePeriod.setDt(idlePeriod.getDtStop());
-
-                NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod);
-
-                workingPeriod.setDtStop(idlePeriod.getDtStop());
-                workingPeriod.setDt(idlePeriod.getDtStop());
-                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                
-                idlePeriod = null;
-            }
-            if (techPeriod == null) {
+            if(techPeriod == null)
+            {
                 techPeriod = new UsersStatistic();
                 techPeriod.setUserId(user.getId());
                 techPeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
                 techPeriod.setOperationId(Uses.TECH_STAT);
                 
-//                if(idlePeriod2!= null) {
-//                    techPeriod.setDtStart(idlePeriod2.getDtStop());
-//                    idlePeriod2 = null;
-//                }
+                if(idlePeriod2!= null) {
+                    //techPeriod.setDtStart(idlePeriod2.getDtStop());
+                    idlePeriod2 = null;
+                }
+                
             }
             // Вызываем кастомера
             final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId());
@@ -1280,16 +1277,18 @@ public final class FClient extends javax.swing.JFrame {
                         getLocaleMessage("invite.posponed.title"),
                         JOptionPane.INFORMATION_MESSAGE);
             };
-            if (cust != null&& customer != null) {
-                if(cust.getId().equals(customer.getId())) {
-                    customer.setRecallCount(cust.getRecallCount());
+            if (cust != null&& customer != null)
+            {
+                if(cust.getId().equals(customer.getId()))
+                {
+                  customer.setRecallCount(cust.getRecallCount());
                 }
             }
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-            /*if(!denyTimer.isRunning())
+           /* if(!denyTimer.isRunning())
                 denyTimer.start();*/
-            // Поддержка расширяемости плагинами
+            // поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 1);
             end(lastInvite);
         } catch (HeadlessException | QException th) {
@@ -1335,15 +1334,17 @@ public final class FClient extends javax.swing.JFrame {
                                                   JOptionPane.YES_NO_OPTION) == 1) {
                     return;
                 }
-                techPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                techPeriod.setDt(techPeriod.getDtStop());
-                NetCommander.sendUserStat(netProperty, user.getId(), techPeriod);
-                
-                workingPeriod.setDtStop(techPeriod.getDtStop());
-                workingPeriod.setDt(techPeriod.getDtStop());
-                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                
-                techPeriod = null;
+                if (techPeriod != null) {
+                    techPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+                    techPeriod.setDt(techPeriod.getDtStop());
+                    NetCommander.sendUserStat(netProperty, user.getId(), techPeriod);
+
+                    workingPeriod.setDtStop(techPeriod.getDtStop());
+                    workingPeriod.setDt(techPeriod.getDtStop());
+                    NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+
+                    techPeriod = null;
+                }
                 NetCommander.killNextCustomer(netProperty, user.getId(), customer.getId());
             } else {
                 // Уточним намерения
@@ -1355,8 +1356,8 @@ public final class FClient extends javax.swing.JFrame {
                 }
                 // Убиваем пользователя
                 //NetCommander.killNextCustomer(netProperty, user.getId(), customer.getId());
-
-              /*if(denyTimer.isRunning())
+                
+                /*if(denyTimer.isRunning())
                    denyTimer.stop();*/
                 boolean isMine = customer.getIsMine() == null ? false : true;
                 customer.setStartTime(new Date());
@@ -1374,12 +1375,13 @@ public final class FClient extends javax.swing.JFrame {
                 }
                 NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), "Отложен по неявке. Вызван: " + (customer.getRecallCount()) + temp + ". Услуга: " + customer.getService().getName(), 10, isMine);
             }
-            // Получаем новую обстановку
-            // Получаем состояние очередей для юзера
+            // получаем новую обстановку
+            // получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             // поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 2);
             end(start);
+
         } catch (HeadlessException | QException th) {
             throw new ClientException(new Exception(th));
         }
@@ -1395,28 +1397,30 @@ public final class FClient extends javax.swing.JFrame {
         try {
             final long start = go();
             // Переводим кастомера в разряд обрабатываемых
-            /*if(denyTimer.isRunning())
+           /* if(denyTimer.isRunning())
                denyTimer.stop();*/
             techPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
             NetCommander.getStartCustomer(netProperty, user.getId());
             
             // Получаем новую обстановку
-            // Получаем состояние очередей для юзера
+            //Получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-            if (techPeriod != null && user.getCustomer() != null) {
-                QLog.l().logger().info("Сработало условие \"techPeriod != null && user.getCustomer() != null\"");
+            if(techPeriod!= null && user.getCustomer()!= null)
+            {
                 techPeriod.setDtStop(user.getCustomer().getStartTime());
             }
-            techPeriod.setDt(techPeriod.getDtStop());
+              techPeriod.setDt(techPeriod.getDtStop());
             // поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 3);
             end(start);
             
-            if (techPeriod != null) {
-                if (NetCommander.sendUserStat(netProperty, user.getId(), techPeriod)) {
-                    workingPeriod.setDtStop(techPeriod.getDtStop());
-                    workingPeriod.setDt(techPeriod.getDtStop());
-                    NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+            if(techPeriod!= null) 
+            {
+                if(NetCommander.sendUserStat(netProperty, user.getId(), techPeriod))
+                {
+                  workingPeriod.setDtStop(techPeriod.getDtStop());
+                  workingPeriod.setDt(techPeriod.getDtStop());
+                  NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
                     
                     techPeriod = null;
                 }
@@ -1447,7 +1451,7 @@ public final class FClient extends javax.swing.JFrame {
                 return;
             }
             
-            String temp = (customer.getRecallCount() > 1) ? " раза":" раз";
+            String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
             NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp +". Услуга: " + customer.getService().getName(), 10, true);
            
             workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
@@ -2298,7 +2302,7 @@ public final class FClient extends javax.swing.JFrame {
         
         //если есть новая версия, то открываем окно обновления
         if (newVersion != null && currentVersion.compareTo(newVersion) != 0) {
-//            FUpdate.openUpdateForm(fClient, true);
+            //FUpdate.openUpdateForm(fClient, true);
             FUpdate updateForm = new FUpdate(fClient, true);
             Uses.setLocation(updateForm);
             updateForm.setVisible(true);
@@ -2452,10 +2456,10 @@ public final class FClient extends javax.swing.JFrame {
             if (!moveToPostponed.isOK()) {
                 return;
             }
-            String temp = (customer.getRecallCount() > 1) ? " раза":" раз";
+            String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
             NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), moveToPostponed.getResult()+  ". Вызван: " + (customer.getRecallCount()) + temp +". Услуга: " + customer.getService().getName(), moveToPostponed.getPeriod(), moveToPostponed.isMine());
             
-            workingPeriod.setDtStop(new Date());
+            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
             workingPeriod.setDt(workingPeriod.getDtStop());
             NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
             
@@ -2473,66 +2477,58 @@ public final class FClient extends javax.swing.JFrame {
     @Action
     public void invitePostponed() throws QException {
         if (listPostponed.getSelectedIndex() != -1) {
-            if (
-                    customer == null ||
-                    (
-                        user.getParallelAccess() &&
-                        customer != null &&
-                        (CustomerState.STATE_WORK.equals(customer.getState()) || CustomerState.STATE_WORK_SECONDARY.equals(customer.getState()))
-                    )
-                )
-            {
+            if (customer == null
+                    || (user.getParallelAccess()
+                    && customer != null
+                    && (CustomerState.STATE_WORK.equals(customer.getState()) || CustomerState.STATE_WORK_SECONDARY.equals(customer.getState())))) {
                 final long start = go();
-                final QCustomer cust = (QCustomer)listPostponed.getSelectedValue();
-                if (idlePeriod2 != null) {
-                    idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                    idlePeriod2.setDt(idlePeriod2.getDtStop());
-                    NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod2);
-
-                    workingPeriod.setDtStop(idlePeriod2.getDtStop());
-                    workingPeriod.setDt(idlePeriod2.getDtStop());
-                    NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                    
+                final QCustomer cust = (QCustomer) listPostponed.getSelectedValue();
+            if(idlePeriod2 != null) 
+            {
+                idlePeriod2.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+                idlePeriod2.setDt(idlePeriod2.getDtStop());
+                NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod2);
+                
+                workingPeriod.setDtStop(idlePeriod2.getDtStop());
+                workingPeriod.setDt(idlePeriod2.getDtStop());
+                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+            }
+            if(idlePeriod != null) 
+            {
+                idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+                idlePeriod.setDt(idlePeriod.getDtStop());
+                NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod);
+                
+                workingPeriod.setDtStop(idlePeriod.getDtStop());
+                workingPeriod.setDt(idlePeriod.getDtStop());
+                NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+            }
+            if(techPeriod == null)
+            {
+                techPeriod = new UsersStatistic();
+                techPeriod.setUserId(user.getId());
+                techPeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
+                if(idlePeriod2!= null) {
+                    //techPeriod.setDtStart(idlePeriod2.getDtStop());
                     idlePeriod2 = null;
-                }
-                if (idlePeriod != null) {
-                    idlePeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-                    idlePeriod.setDt(idlePeriod.getDtStop());
-                    NetCommander.sendUserStat(netProperty, user.getId(), idlePeriod);
-
-                    workingPeriod.setDtStop(idlePeriod.getDtStop());
-                    workingPeriod.setDt(idlePeriod.getDtStop());
-                    NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-                    
+                 }
+      
+                if(idlePeriod != null) {
+                    //techPeriod.setDtStart(idlePeriod.getDtStop());
                     idlePeriod = null;
                 }
-                if (techPeriod == null) {
-                    techPeriod = new UsersStatistic();
-                    techPeriod.setUserId(user.getId());
-                    techPeriod.setDtStart(NetCommander.getServerTime(netProperty, user.getId()));
-//                    if (idlePeriod2 != null) {
-//                        techPeriod.setDtStart(idlePeriod2.getDtStop());
-//                        idlePeriod2 = null;
-//                    }
-//                    if (idlePeriod != null) {
-//                        techPeriod.setDtStart(idlePeriod.getDtStop());
-//                        idlePeriod = null;
-//                    }
-                    techPeriod.setOperationId(Uses.TECH_STAT);
-                }
+                techPeriod.setOperationId(Uses.TECH_STAT);
+            } 
                 NetCommander.invitePostponeCustomer(netProperty, user.getId(), cust.getId());
                 // Показываем обстановку
                 setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
                 /*if(!denyTimer.isRunning())
                     denyTimer.start();*/
-                // Поддержка расширяемости плагинами
+                // поддержка расширяемости плагинами
                 extPluginIStartClientPressButton(user, netProperty, getUserPlan(), new ActionEvent(menuItemInvitePostponed, 1, KEYS_MAY_INVITE), 1);
                 end(start);
             } else {
-                JOptionPane.showMessageDialog(null,
-                                              getLocaleMessage("postponed.already_invited"),
-                                              getLocaleMessage("invite.posponed.title"),
-                                              JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, getLocaleMessage("postponed.already_invited"), getLocaleMessage("invite.posponed.title"), JOptionPane.INFORMATION_MESSAGE);
             }
         }
     }
