@@ -158,7 +158,7 @@ public class NetCommander {
                 } finally {
                     socket.close();
                 }
-                QLog.l().logger().trace("Response:\n" + data);
+//                QLog.l().logger().trace("Response:\n" + data);
             }
         } catch (Exception ex) {
             throw new QException(Locales.locMes("no_response_from_server"), ex);

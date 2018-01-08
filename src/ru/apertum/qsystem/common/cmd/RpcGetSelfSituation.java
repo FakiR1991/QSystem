@@ -145,17 +145,22 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         @Expose
         @SerializedName("waiting")
         public final Integer waiting;
+        @Expose
+        @SerializedName("isMine")
+        public final Long isMine;
 
-        public StPair(String number, String data, Integer waiting) {
+        public StPair(String number, String data, Integer waiting, Long isMine) {
             this.number = number;
             this.data = data;
             this.waiting = waiting;
+            this.isMine = isMine;
         }
 
         public StPair() {
             this.number = null;
             this.data = null;
             this.waiting = null;
+            this.isMine = null;
         }
 
     }
@@ -183,7 +188,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.line = new LinkedList<>();
             for (QCustomer cu : service.getClients()) {// не переделывать на лямбду.
                 final String fn = cu.getFullNumber();
-                final StPair sp = new StPair(fn, cu.getPostponedStatus(), cu.getWaitingMinutes());
+                final StPair sp = new StPair(fn, cu.getPostponedStatus(), cu.getWaitingMinutes(), cu.getIsMine());
                 line.addLast(sp);
             }
         }

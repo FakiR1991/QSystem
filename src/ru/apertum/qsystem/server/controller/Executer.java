@@ -424,7 +424,6 @@ public final class Executer {
             // синхронизация работы с клиентом
             CLIENT_TASK_LOCK.lock();
             try {
-
                 // Мерзость. вызов по номеру.
                 if (cmdParams.textData != null && !cmdParams.textData.isEmpty()) {
                     final String num = cmdParams.textData.replaceAll("[^\\p{L}+\\d]", "");
@@ -828,12 +827,12 @@ public final class Executer {
                 hashState.put(cmdParams.userId, stateH);
             }
             return new RpcGetSelfSituation(new RpcGetSelfSituation.SelfSituation(servs,
-                    user.getCustomer(),
-                    new LinkedList(user.getParallelCustomers().values()),
-                    QPostponedList.getInstance().getPostponedCustomers(),
-                    ServerProps.getInstance().getProps().getLimitRecall(),
-                    ServerProps.getInstance().getProps().getExtPriorNumber(),
-                    user.getShadow()));
+                                                                                 user.getCustomer(),
+                                                                                 new LinkedList(user.getParallelCustomers().values()),
+                                                                                 QPostponedList.getInstance().getPostponedCustomers(),
+                                                                                 ServerProps.getInstance().getProps().getLimitRecall(),
+                                                                                 ServerProps.getInstance().getProps().getExtPriorNumber(),
+                                                                                 user.getShadow()));
         }
     };
     /**
