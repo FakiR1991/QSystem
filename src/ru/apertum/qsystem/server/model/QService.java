@@ -81,6 +81,12 @@ import ru.apertum.qsystem.server.model.schedule.QSchedule;
 @Entity
 @Table(name = "services")
 public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, Transferable, Serializable {
+    
+    /*
+    * Идентификаторы услуг
+    */
+    public static final Long IPHONE_SETTING_FOR_VOLTE = 1516101725491L;
+    public static final Long IPHONE_SETTING_FOR_VOLTE_SERVICE_CENTER = 1516101802925L;
 
     /**
      * множество кастомеров, вставших в очередь к этой услуге
