@@ -80,6 +80,10 @@ public class WelcomeParams {
     private static final String DELAY_PRINT = "delay_print";
     private static final String DELAY_BACK = "delay_back";
     private static final String LOGO_IMG = "logo_img";
+    private static final String GOOGLE_IMG = "google_img";
+    private static final String APPLE_IMG = "apple_img";
+    private static final String GOOGLE_LEFT = "google_left";
+    private static final String APPLE_LEFT = "apple_left";
     private static final String BACKGROUND_IMG = "background_img";
     private static final String TXT_FONT_NAME = "ticket_font_name";
     private static final String TXT_FONT_SIZE = "ticket_font_size";
@@ -189,6 +193,10 @@ public class WelcomeParams {
     public String confirmationStartImg = ""; // - это картинка для диалога подтверждения стоять в очереди. пустое значение - картинка по умолчанию
     public String patternInfoDialog = ""; // шаблон текста для информационных диалогов Встроенный текст dialog.message
     public String patternPickAdvanceTitle = ""; // шаблон текста для выбора предварительной услуги диалогов Встроенный текст: dialog_text.part1 dialog_text.part2
+    public String googleImg; // google play логотип
+    public String appleImg; // apple store логотип
+    public int googleLeft = 1; // отступ слева логотипа google play (значение по умолчанию)
+    public int appleLeft = 104; // отступ слева логотипа apple store (значение по умолчанию)
 
     public Font btnFont = null;
     public Font btnAdvFont = null;
@@ -252,6 +260,10 @@ public class WelcomeParams {
         delayPrint = Integer.parseInt(settings.getProperty(DELAY_PRINT)); // Задержка заставки при печати в мсек.
         delayBack = Integer.parseInt(settings.getProperty(DELAY_BACK)); // Задержка заставки при печати в мсек.
         logoImg = settings.getProperty(LOGO_IMG);
+        googleImg = settings.getProperty(GOOGLE_IMG);
+        appleImg = settings.getProperty(APPLE_IMG);
+        googleLeft = Integer.parseInt(settings.getProperty(GOOGLE_LEFT));
+        appleLeft = Integer.parseInt(settings.getProperty(APPLE_LEFT));
         backgroundImg = settings.containsKey(BACKGROUND_IMG) ? settings.getProperty(BACKGROUND_IMG) : "/ru/apertum/qsystem/client/forms/resources/fon_welcome.jpg";
         if (!new File(backgroundImg).exists()) {
             backgroundImg = "/ru/apertum/qsystem/client/forms/resources/fon_welcome.jpg";

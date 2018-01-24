@@ -1273,106 +1273,97 @@ public class FWelcome extends javax.swing.JFrame {
     private static int ptintLines(Graphics2D g2, String text, int alignment, double kx, double ky, int initY, int line, boolean isBottom) {
         final FontMetrics fm = CMP.getFontMetrics(g2.getFont());
         String capt = text;
-        if(!isBottom)
+        if (!isBottom) {
             while (capt.length() != 0) {
-            String prn;
-            int leC = fm.stringWidth(capt);
-            int a = WelcomeParams.getInstance().lineLenght;
-            int b =  WelcomeParams.getInstance().paperWidht;
-            
-            if (capt.length() > a || leC > b) {
-                int fl = 0;
+                String prn;
+                int leC = fm.stringWidth(capt);
+                int a = WelcomeParams.getInstance().lineLenght;
+                int b =  WelcomeParams.getInstance().paperWidht;
 
-                int br = capt.toLowerCase().indexOf("<br>");
-                if (br > 0 && br < WelcomeParams.getInstance().lineLenght) {
-                    fl = br;
-                }
-                if (fl > 0) {
-                    prn = capt.substring(0, fl).replaceFirst("<br>", "");
-                    int le = fm.stringWidth(prn);
-                    if (le > WelcomeParams.getInstance().paperWidht) {
-                        fl = 0;
+                if (capt.length() > a || leC > b) {
+                    int fl = 0;
+
+                    int br = capt.toLowerCase().indexOf("<br>");
+                    if (br > 0 && br < WelcomeParams.getInstance().lineLenght) {
+                        fl = br;
                     }
-                }
-
-                for (int i = Math.min(WelcomeParams.getInstance().lineLenght, capt.length()); i > 0 && fl == 0; i--) {
-
-                    if (" ".equals(capt.substring(i - 1, i))) {
-                        fl = i;
-                        prn = capt.substring(0, fl);
+                    if (fl > 0) {
+                        prn = capt.substring(0, fl).replaceFirst("<br>", "");
                         int le = fm.stringWidth(prn);
                         if (le > WelcomeParams.getInstance().paperWidht) {
                             fl = 0;
-                        } else {
-                            break;
                         }
                     }
+
+                    for (int i = Math.min(WelcomeParams.getInstance().lineLenght, capt.length()); i > 0 && fl == 0; i--) {
+
+                        if (" ".equals(capt.substring(i - 1, i))) {
+                            fl = i;
+                            prn = capt.substring(0, fl);
+                            int le = fm.stringWidth(prn);
+                            if (le > WelcomeParams.getInstance().paperWidht) {
+                                fl = 0;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
+                    prn = capt.substring(0, pos).trim();
+                    capt = capt.substring(pos).trim();
+                    if (capt.toLowerCase().startsWith("<br>")) {
+                        capt = capt.replaceFirst("<br>", "");
+                    }
+                } else {
+                    prn = capt.trim();
+                    capt = "";
                 }
-                int pos = fl == 0 ? WelcomeParams.getInstance().lineLenght : fl;
-                prn = capt.substring(0, pos).trim();
-                capt = capt.substring(pos).trim();
-                if (capt.toLowerCase().startsWith("<br>")) {
-                    capt = capt.replaceFirst("<br>", "");
+                write(g2, getTrim(prn), line, (int) getHAlignment(g2, getTrim(prn), getAlign(prn, alignment), kx), kx, ky, initY);
+                //System.out.println("-->" + prn + " / " + capt);
+                int h = CMP.getFontMetrics(g2.getFont()).getHeight();
+                if (!capt.isEmpty()) {
+                    initY = initY + Math.round(new Float(h * (h > 30 ? (h > 60 ? 0.65 : 0.7) : (h > 10 ? 0.83 : 1))));
                 }
-            } else {
-                prn = capt.trim();
-                capt = "";
             }
-            write(g2, getTrim(prn), line, (int) getHAlignment(g2, getTrim(prn), getAlign(prn, alignment), kx), kx, ky, initY);
-            //System.out.println("-->" + prn + " / " + capt);
-            int h = CMP.getFontMetrics(g2.getFont()).getHeight();
-            if (!capt.isEmpty()) {
-                initY = initY + Math.round(new Float(h * (h > 30 ? (h > 60 ? 0.65 : 0.7) : (h > 10 ? 0.83 : 1))));
+        } else {
+            String [] lines = capt.split("<br>");
+            Font temp = g2.getFont();
+            Font temp1 = temp;
+            //Map attributes = temp1.getAttributes();
+            //attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+            //temp1 = temp1.deriveFont(attributes);
+            //g2.setFont(temp1.deriveFont(attributes));
+            g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), 8));
+            write(g2, lines[0], ++line, getHAlignment(g2, lines[0],0,1), 1, 1, initY );
+            int initYtemp = initY;
+            for (int i = 1; i < lines.length; i++) {
+                String[] tmp = lines[i].split("<b>");
+                line++;
+                lines[i] = lines[i].replace("<b>","");
+                int tmpMargin = getHAlignment(g2, lines[i], 0, 1);
+                for (int j = 0; j < tmp.length; j++) {
+                    //tmpMargin += CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j]);
+                    if (j == 0) {
+                        g2.setFont(new Font(g2.getFont().getName(),  temp1.getStyle(), 8));
+                        write(g2, tmp[j], line, getHAlignment(g2, lines[i], 0, 1), 1, 1, initY); 
+                    } else {
+                        if (j % 2 == 0) {
+                            write(g2, tmp[j], line,  tmpMargin   /*CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j-1])*/, 1, 1, initY);
+                        } else {
+                            g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, 8));
+                            write(g2,tmp[j], line, tmpMargin /*+  CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j]*/,1,1, initY);
+                            g2.setFont(new Font(g2.getFont().getName(),  temp1.getStyle(), 8));
+                        }
+                    }
+                    //g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), 7));
+                    tmpMargin += CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j]);
+                }
+                // write(g2, lines[i], ++line, getHAlignment(g2, lines[i], 0, 1), 1, 1, initY);
+                int h = CMP.getFontMetrics(g2.getFont()).getHeight();
+                initYtemp = initYtemp + Math.round(new Float(h * (h > 30 ? (h > 60 ? 0.65 : 0.7) : (h > 7 ? 0.83 : 1))));
             }
-        }
-        else
-        {
-           String [] lines = capt.split("<br>");
-           Font temp = g2.getFont();
-           Font temp1 = temp;
-           Map attributes = temp1.getAttributes();
-           attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
-           //temp1 = temp1.deriveFont(attributes);
-           g2.setFont(temp1.deriveFont(attributes));
-           write(g2, lines[0], ++line, getHAlignment(g2, lines[0],0,1), 1, 1, initY );
-           g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), 7));
-           int initYtemp=initY;
-           for(int i=1;i<lines.length;i++)
-           {
-               String[] tmp = lines[i].split("<b>");
-               line++;
-               lines[i] = lines[i].replace("<b>","");
-               int tmpMargin = getHAlignment(g2, lines[i], 0, 1);
-               for(int j = 0; j< tmp.length; j++) 
-               {
-                   //tmpMargin += CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j]);
-                  if(j == 0)
-                  {
-                     g2.setFont(new Font(g2.getFont().getName(),  temp1.getStyle(), 7));
-                     write(g2, tmp[j], line, getHAlignment(g2, lines[i], 0, 1), 1, 1, initY); 
-                  }
-                  else
-                  {
-                   if(j%2 == 0)
-                   {
-                       write(g2, tmp[j], line,  tmpMargin   /*CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j-1])*/, 1, 1, initY);
-                   }
-                  else
-                  {
-                       g2.setFont(new Font(g2.getFont().getName(), Font.BOLD, 7));
-                       write(g2,tmp[j], line, tmpMargin /*+  CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j]*/,1,1, initY);
-                       g2.setFont(new Font(g2.getFont().getName(),  temp1.getStyle(), 7));
-                  }
-                  }
-                //g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), 7));
-                tmpMargin += CMP.getFontMetrics(g2.getFont()).stringWidth(tmp[j]);
-               }
-              // write(g2, lines[i], ++line, getHAlignment(g2, lines[i], 0, 1), 1, 1, initY);
-               int h = CMP.getFontMetrics(g2.getFont()).getHeight();
-               initYtemp = initYtemp + Math.round(new Float(h * (h > 30 ? (h > 60 ? 0.65 : 0.7) : (h > 7 ? 0.83 : 1))));
-           }
-           g2.setFont(temp);
-           return initYtemp+5;
+            g2.setFont(temp);
+            return initYtemp + 5;
         }
         return initY;
     }
@@ -1513,6 +1504,7 @@ public class FWelcome extends javax.swing.JFrame {
                 }
 
                 if (WelcomeParams.getInstance().barcode != 0) {
+                    line++;
                     int y = write(g2, "", ++line, 0, 1, 1, initY);
 
                     if (WelcomeParams.getInstance().barcode == 2) {
@@ -1525,7 +1517,7 @@ public class FWelcome extends javax.swing.JFrame {
                             for (int i = 0; i < matrixWidth; i++) {
                                 for (int j = 0; j < matrixWidth; j++) {
                                     if (matrix.get(i, j)) {
-                                        g2.fillRect(WelcomeParams.getInstance().leftMargin * 8 + i, y + j - 25, 1, 1);
+                                        g2.fillRect(WelcomeParams.getInstance().leftMargin * 7 + i, y + j - 25, 1, 1);
                                     }
                                 }
                             }
@@ -1581,23 +1573,34 @@ public class FWelcome extends javax.swing.JFrame {
 
                 //Напечатаем текст внизу билета
                 name = WelcomeParams.getInstance().bottomText;
-               // int al = getAlign(name, -1);
+                //int al = getAlign(name, -1);
                 name = getTrim(name);
                 if (name != null && !name.isEmpty() && !".".equals(name)) {
-                    initY = ptintLines(g2, name, 0, 1, 1, initY, ++line,true);
+                    initY = ptintLines(g2, name, 0, 1, 1, initY, ++line, true);
                     
-                   
                     /*write(g2, "         Короткие номера Службы поддержки:", ++line, getHAlignment(g2, "         Короткие номера Службы поддержки:", 0, 1), 1, 1, initY);
-                    
                     g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), 7));
                     write(g2, "Мобильная связь - 1199, Проводная связь - 194,", ++line, getHAlignment(g2, "Мобильная связь - 1199, Проводная связь - 194", 0, 1), 1, 1, initY);
                     write(g2, "Интернет - 1144, ТВ - 1188, Техническая поддержка - 198", ++line , getHAlignment(g2, "Интернет - 1144, ТВ - 1188, Техническая поддержка - 198", 0, 1), 1, 1, initY);*/
-                    
                 }
+                
+                //выводим логотип google внизу талона
+                g2.drawImage(Uses.loadImage(this, WelcomeParams.getInstance().googleImg, "/ru/apertum/qsystem/client/forms/resources/logo_ticket_a.png"),
+                             WelcomeParams.getInstance().googleLeft,
+                             initY + ++line * WelcomeParams.getInstance().lineHeigth + 3,
+                             null);
+                
+                //выводим логотип apple внизу талона
+                g2.drawImage(Uses.loadImage(this, WelcomeParams.getInstance().appleImg, "/ru/apertum/qsystem/client/forms/resources/logo_ticket_a.png"),
+                             WelcomeParams.getInstance().appleLeft,
+                             initY + line * WelcomeParams.getInstance().lineHeigth + 3,
+                             null);
+                line += 3;
+                
                 if (WelcomeParams.getInstance().bottomGap > 0) {
                     write(g2, ".", ++line + WelcomeParams.getInstance().bottomGap, 0, 1, 1, initY);
                 }
-
+                
                 return Printable.PAGE_EXISTS;
             }
         };

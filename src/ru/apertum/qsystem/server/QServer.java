@@ -297,7 +297,9 @@ public class QServer extends Thread {
         QLog.l().logger().debug("Выключение центрального табло.");
         MainBoard.getInstance().close();
 
-        deleteTempFile();
+        //при штатном закрытии сервера удалялся temp файл, который содержит состояние очередей
+        //вызов метода deleteTempFile закомментирован, чтобы при перезапуске сервера состояние очередей не удалялось
+        //deleteTempFile();
         Thread.sleep(1500);
         QLog.l().logger().info("Сервер штатно завершил работу. Время работы: " + Uses.roundAs(((double) (System.currentTimeMillis() - start)) / 1000 / 60, 2) + " мин.");
         System.exit(0);
