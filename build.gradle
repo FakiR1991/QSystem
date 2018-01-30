@@ -242,7 +242,7 @@ task runClient (dependsOn: 'classes', type: JavaExec) {
         args '+cfgfx'
         args 'config/clientboardfx.properties'
         args '-point'
-        args '234'
+        args '10'
         args '-d'
         args '++terminal'
         args '-np'

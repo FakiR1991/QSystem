@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -1717,7 +1718,7 @@ public class NetCommander {
     }
     
     /**
-     *Сохранение статистики юзера
+     * Сохранение статистики юзера
      *
      * @param netProperty
      * @param userId id юзера который вызывает

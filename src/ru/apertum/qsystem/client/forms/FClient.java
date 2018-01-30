@@ -1105,9 +1105,9 @@ public final class FClient extends javax.swing.JFrame {
     */
     private boolean getExcludeServiceVoLTE(Long serviceId) {
         //если переданная услуга не является одной из указанных ниже, то отображаем её
-        if (!QService.IPHONE_SETTING_FOR_VOLTE.equals(serviceId)
+        if (!QService.IPHONE_SETTING_FOR_VOLTE_ABO.equals(serviceId)
                 &&
-            !QService.IPHONE_SETTING_FOR_VOLTE_SERVICE_CENTER.equals(serviceId))
+            !QService.IPHONE_SETTING_FOR_VOLTE_SC.equals(serviceId))
         {
             return false;
         }

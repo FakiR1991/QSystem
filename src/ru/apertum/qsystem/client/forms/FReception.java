@@ -1956,7 +1956,7 @@ public class FReception extends javax.swing.JFrame {
             System.out.println(standards);
         } catch (Exception ex) {
             Uses.closeSplash();
-            QLog.l().logger().error("Не загрузились пользователи. ", ex); //NOI18N
+            QLog.l().logger().error("Не загрузились нормативные настройки системы. ", ex); //NOI18N
             return false;
         }
 

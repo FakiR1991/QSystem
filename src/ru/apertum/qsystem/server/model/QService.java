@@ -85,8 +85,12 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     /*
     * Идентификаторы услуг
     */
-    public static final Long IPHONE_SETTING_FOR_VOLTE = 1516101725491L;
-    public static final Long IPHONE_SETTING_FOR_VOLTE_SERVICE_CENTER = 1516101802925L;
+    //корень услуг для абон. зала
+    public static final Long ROOT_SERVICES_ABO = 1503466462316L;
+    //корень услуг для сервисного центра
+    public static final Long ROOT_SERVICES_SC = 1503466512673L;
+    public static final Long IPHONE_SETTING_FOR_VOLTE_ABO = 1516101725491L;
+    public static final Long IPHONE_SETTING_FOR_VOLTE_SC = 1516101802925L;
 
     /**
      * множество кастомеров, вставших в очередь к этой услуге

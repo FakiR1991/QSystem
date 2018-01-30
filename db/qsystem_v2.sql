@@ -967,4 +967,31 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-12-04  9:17:49
+--
+-- Table structure for table `version_software`
+--
+
+DROP TABLE IF EXISTS `notifications_info`;
+CREATE TABLE `qsystem`.`notifications_info` (
+  `id` INT NOT NULL,
+  `fio` VARCHAR(65) NOT NULL,
+  `email` VARCHAR(80) NOT NULL,
+  `phone` VARCHAR(8) NULL,
+  PRIMARY KEY (`id`))
+COMMENT = 'Информация для уведомлений об очередях';
+
+--
+-- Table structure for table `email_sending_settings`
+--
+
+DROP TABLE IF EXISTS `email_sending_settings`;
+CREATE TABLE `qsystem`.`email_sending_settings` (
+  `id` INT NOT NULL,
+  `smtp_host` VARCHAR(45) NOT NULL COMMENT 'Адрес SMTP сервера',
+  `smtp_port` VARCHAR(45) NOT NULL,
+  `email` VARCHAR(45) NOT NULL COMMENT 'Email адрес отправителя',
+  `password` VARCHAR(45) NOT NULL COMMENT 'Пароль для email',
+  `subject` VARCHAR(45) NOT NULL COMMENT 'Заголовок сообщения',
+  `message` VARCHAR(100) NOT NULL COMMENT 'Текст сообщения',
+  PRIMARY KEY (`id`))
+COMMENT = 'Настроечные данные для отправки почты. Адрес SMTP сервера, пароль и логин почтового ящика, с которого отправляются письма и т.д.';

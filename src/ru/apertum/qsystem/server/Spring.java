@@ -18,8 +18,10 @@ package ru.apertum.qsystem.server;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -31,7 +33,9 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import ru.apertum.qsystem.common.model.QEmailSendingSettings;
 import ru.apertum.qsystem.common.exceptions.ServerException;
+import ru.apertum.qsystem.server.model.QNotificationsInfo;
 
 /**
  *
@@ -135,6 +139,61 @@ public class Spring {
         String response = (String)list.get(0);
         ses.flush();
         return response;
+    }
+    
+    public ArrayList<QNotificationsInfo> executeSelectNotificationsInfo(String q) {
+        ArrayList<QNotificationsInfo> ni = new ArrayList<QNotificationsInfo>();
+        
+        final Session ses = getTxManager().getSessionFactory().getCurrentSession();
+        Iterator iterator = ses.createQuery(q)
+                               .list()
+                               .iterator();
+        
+        while (iterator.hasNext()) {
+            Object[] item = (Object[])iterator.next();
+            
+            long id = (long)item[QNotificationsInfo.COLUMN_ID];
+            String fio = (String)item[QNotificationsInfo.COLUMN_FIO];
+            String email = (String)item[QNotificationsInfo.COLUMN_EMAIL];
+            String phone = (String)item[QNotificationsInfo.COLUMN_PHONE];
+            
+            ni.add(new QNotificationsInfo(id, fio, email, phone));
+        }
+        ses.flush();
+        
+        return ni.size() <= 0 ? null : ni;
+    }
+    
+    public QEmailSendingSettings executeSelectEmailSendingSettings(String q) {
+        QEmailSendingSettings sendingSettings = new QEmailSendingSettings();
+        
+        final Session ses = getTxManager().getSessionFactory().getCurrentSession();
+        Iterator iterator = ses.createQuery(q)
+                               .list()
+                               .iterator();
+        
+        while (iterator.hasNext()) {
+            Object[] item = (Object[])iterator.next();
+            
+            long id = (long)item[QEmailSendingSettings.COLUMN_ID];
+            String smtpHost = (String)item[QEmailSendingSettings.COLUMN_SMTP_HOST];
+            String smtpPort = (String)item[QEmailSendingSettings.COLUMN_SMTP_PORT];
+            String email = (String)item[QEmailSendingSettings.COLUMN_EMAIL];
+            String pass = (String)item[QEmailSendingSettings.COLUMN_PASSWORD];
+            String subject = (String)item[QEmailSendingSettings.COLUMN_SUBJECT];
+            String message = (String)item[QEmailSendingSettings.COLUMN_MESSAGE];
+            
+            sendingSettings.setId(id);
+            sendingSettings.setSmtpHost(smtpHost);
+            sendingSettings.setSmtpPort(smtpPort);
+            sendingSettings.setEmail(email);
+            sendingSettings.setPassword(pass);
+            sendingSettings.setSubject(subject);
+            sendingSettings.setMessage(message);
+        }
+        ses.flush();
+        
+        return sendingSettings;
     }
     
     public Long executeSelectQuery(String q, Object obj, String q2) {

@@ -71,6 +71,8 @@
                 <value>ru.apertum.qsystem.server.model.calendar.QCalendar</value>
                 <value>ru.apertum.qsystem.server.model.calendar.FreeDay</value>
 								<value>ru.apertum.qsystem.server.model.QVersionSoftware</value>
+								<value>ru.apertum.qsystem.server.model.QNotificationsInfo</value>
+								<value>ru.apertum.qsystem.common.model.QEmailSendingSettings</value>
             </list>
         </property>
         
