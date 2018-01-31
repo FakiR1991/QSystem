@@ -39,7 +39,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.ServiceLoader;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.swing.Timer;
 import org.springframework.transaction.TransactionDefinition;
@@ -87,11 +91,15 @@ public class QServer extends Thread {
     //т.к. уже были разосланы уведомления о высокой нагрузке
     private static boolean checkWorkloadTimeout = false;
     
-    //таймер, который через 10 минут переключает флаг checkWorkloadTimeout в false
-    //он меняет значение в true только после отправки уведомлений в методе sendMails,
-    //а обратно меняет значение в false только по десятиминутному таймеру
-    Timer workloadTimer = new Timer(10 * 60 * 1000, (ActionEvent e) -> {
-        checkWorkloadTimeout = false;
+    //таймер, который раз в минуту будет проверять загруженность операторов
+    //и состояние очередей, чтобы в случае высокой нагрузки отправить email
+    //с уведомлением о сложившейся ситуации
+    private static Timer workloadTimer = new Timer(60 * 1000, (ActionEvent e) -> {
+        try {
+            checkWorkload();
+        } catch (Exception ex) {
+            QLog.l().logger().error("WORKLOAD TIMER EXCEPTION:", ex);
+        }
     });
     
     /**
@@ -99,16 +107,6 @@ public class QServer extends Thread {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        //таймер, который раз в минуту будет проверять загруженность операторов
-        //и состояние очередей, чтобы в случае высокой нагрузки отправить email
-        //с уведомлением о сложившейся ситуации 
-        Timer workloadTimer = new Timer(60 * 1000, (ActionEvent e) -> {
-            try {
-                checkWorkload();
-            } catch (Exception ex) {
-                QLog.l().logger().error("WORKLOAD TIMER EXCEPTION:", ex);
-            }
-        });
         workloadTimer.start();
         
         About.printdef();
@@ -611,9 +609,24 @@ public class QServer extends Thread {
             EmailSender esender = new EmailSender();
             esender.sendMessages(emails);
             
-            //на 10 минут отключаем проверку состояния очередей
-            checkWorkloadTimeout = true;
+            setWorkloadTimeout();
         }
+    }
+    
+    /**
+     * На 10 минут отключает проверку состояния очередей.
+     */
+    private static void setWorkloadTimeout() {
+        checkWorkloadTimeout = true;
+        
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                checkWorkloadTimeout = false;
+            }
+        };
+        scheduler.schedule(runnable, 10, TimeUnit.MINUTES);
     }
     
     private static ArrayList<QNotificationsInfo> getEmailsForNotification() {
