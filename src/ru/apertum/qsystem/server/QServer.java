@@ -522,9 +522,34 @@ public class QServer extends Thread {
             }
         });
         
+        //логгируем статистику по очередям
+        loggingWorkloadStats(workloadStats);
+        
         //анализируем собранные данные и отправляем
         //уведомления на e-mail-ы, если требуется
         sendMails(workloadStats);
+    }
+    
+    private static void loggingWorkloadStats(WorkloadStatistics workloadStats) {
+        workloadStats.getClientsCountReadyToWorkAbo();
+        workloadStats.getClientsCountReadyToWorkSC();
+        workloadStats.getCustomersCountAbo();
+        workloadStats.getCustomersCountSC();
+        workloadStats.getMaxWaitingMinutesAbo();
+        workloadStats.getMaxWaitingMinutesSC();
+        workloadStats.getCustomersToClientsRatioForAbo();
+        workloadStats.getCustomersToClientsRatioForSC();
+        
+        String logText = "Операторов готовых работать АБО: " + workloadStats.getClientsCountReadyToWorkAbo() + "\n" +
+                         "Операторов готовых работать СЦ: " + workloadStats.getClientsCountReadyToWorkSC() + "\n" +
+                         "Кол-во клиентов в очереди АБО: " + workloadStats.getCustomersCountAbo() + "\n" +
+                         "Кол-во клиентов в очереди СЦ: " + workloadStats.getCustomersCountSC() + "\n" +
+                         "Макс. время ожидания АБО: " + workloadStats.getMaxWaitingMinutesAbo() + "\n" +
+                         "Макс. время ожидания СЦ: " + workloadStats.getMaxWaitingMinutesSC() + "\n" +
+                         "Соотношение клиентов к операторам АБО: " + workloadStats.getCustomersToClientsRatioForAbo() + "\n" +
+                         "Соотношение клиентов к операторам СЦ: " + workloadStats.getCustomersToClientsRatioForSC();
+        
+        QLog.l().logger().info(logText);
     }
     
     /**
