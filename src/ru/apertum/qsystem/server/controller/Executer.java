@@ -224,9 +224,17 @@ public final class Executer {
                 if (service.getLink() != null) {
                     customer.setService(service.getLink());
                 }
-                // время постановки проставляется автоматом при создании кастомера.
-                // Приоритет "как все"
-                customer.setPriority(cmdParams.priority);
+                
+                if (QService.IPHONE_SETTING_FOR_VOLTE_ABO.equals(service.getId()) || QService.IPHONE_SETTING_FOR_VOLTE_SC.equals(service.getId())) {
+                    // если услуга, которую надо поставить в очередь является услугой
+                    // по настройке VoLTE, тогда ставим ей максимальный приоритет по умолчанию
+                    customer.setPriority(Uses.PRIORITY_VIP);
+                } else {
+                    // время постановки проставляется автоматом при создании кастомера.
+                    // Приоритет "как все"
+                    customer.setPriority(cmdParams.priority);
+                }
+                
                 // Введенные кастомером данные
                 customer.setInput_data(cmdParams.textData);
                 //добавим нового пользователя

@@ -936,8 +936,8 @@ public final class FClient extends javax.swing.JFrame {
                         //то не отображаем его в очереди для других операторов
                         if (
                                 (cu.isMine != null && cu.isMine.compareTo(user.getId()) != 0)
-                                    ||
-                                getExcludeServiceVoLTE(cu.serviceId)
+//                                    ||
+//                                getExcludeServiceVoLTE(cu.serviceId)
                             )
                         {
                             excludedCustomersCount.increment();
