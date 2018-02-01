@@ -539,10 +539,9 @@ public class QServer extends Thread {
         
         //цикл по всем пользователям системы
         for (QUser user : users) {
-            Integer point = user.getPoint() == null ? null : Integer.valueOf(user.getPoint().trim());
+            Integer point = user.getPoint() == null || user.getPoint().equals("") ? null : Integer.valueOf(user.getPoint().trim());
             
             if (point == null) {
-                QLog.l().logger().warn("Point is null. Не указано окно оператора.");
                 continue;
             }
             
