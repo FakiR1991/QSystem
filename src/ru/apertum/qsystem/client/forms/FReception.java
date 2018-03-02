@@ -109,6 +109,7 @@ import ru.apertum.qsystem.server.model.QServiceLang;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QStandards;
 import ru.apertum.qsystem.server.model.QUser;
+import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 
 /**
@@ -141,8 +142,11 @@ public class FReception extends javax.swing.JFrame {
      * @param netProperty
      */
     public FReception(IClientNetProperty netProperty) {
-        initComponents();
         this.netProperty = netProperty;
+        
+        initComponents();
+        initManuallyAddedComponents();
+        loadMovedToPaymentList();
 
         // инициализим trayIcon, т.к. setSituation() требует работу с tray
         final JFrame fr = this;
@@ -164,6 +168,48 @@ public class FReception extends javax.swing.JFrame {
                  load();
                 });
                 t.start();
+    }
+    
+    private void initManuallyAddedComponents() {
+        jPanelMovedToPayment = new javax.swing.JPanel();
+        jScrollMovedToPayment = new javax.swing.JScrollPane();
+        jListMovedToPayment = new javax.swing.JList<>();
+        jButtonRefresh = new javax.swing.JButton();
+        
+        jButtonRefresh.setText("Обновить");
+        jButtonRefresh.addActionListener((java.awt.event.ActionEvent evt) -> {
+            loadMovedToPaymentList();
+        });
+        
+        jScrollMovedToPayment.setViewportView(jListMovedToPayment);
+
+        jListMovedToPayment.setName("jListMovedToPayment");
+        jPanelMovedToPayment.setName("jPanelMovedToPayment");
+
+        javax.swing.GroupLayout jPanelMovedToPaymentLayout = new javax.swing.GroupLayout(jPanelMovedToPayment);
+        jPanelMovedToPayment.setLayout(jPanelMovedToPaymentLayout);
+        jPanelMovedToPaymentLayout.setHorizontalGroup(
+            jPanelMovedToPaymentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollMovedToPayment)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelMovedToPaymentLayout.createSequentialGroup()
+                .addContainerGap(640, Short.MAX_VALUE)
+                .addComponent(jButtonRefresh)
+                .addContainerGap())
+        );
+        jPanelMovedToPaymentLayout.setVerticalGroup(
+            jPanelMovedToPaymentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelMovedToPaymentLayout.createSequentialGroup()
+                .addComponent(jScrollMovedToPayment, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
+                .addComponent(jButtonRefresh)
+                .addContainerGap())
+        );
+
+        tabsPane.addTab("Ушедшие на оплату", jPanelMovedToPayment);
+    }
+    
+    private void loadMovedToPaymentList() {
+        jListMovedToPayment.setModel(QMovedToBankList.getInstance().loadMovedToBankList(NetCommander.getMovedToPaymentList(netProperty)));
     }
 
     private String title() {
@@ -2093,7 +2139,7 @@ public class FReception extends javax.swing.JFrame {
 
             final QCustomer customer;
             try {
-                customer = NetCommander.standInService(netProperty, service.getId(), "1", 1, inputData); //NOI18N
+                customer = NetCommander.standInService(netProperty, service.getId(), "1", 1, inputData, QConfig.cfg().getUnitId()); //NOI18N
             } catch (Exception ex) {
                 throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
             }
@@ -2362,6 +2408,13 @@ public class FReception extends javax.swing.JFrame {
             }
         }
     }
+    
+    private javax.swing.JPanel jPanelMovedToPayment;
+    private javax.swing.JScrollPane jScrollMovedToPayment;
+    private javax.swing.JList jListMovedToPayment;
+    private javax.swing.JButton jButtonRefresh;
+
+    
     private static FReception fReception;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuBar MenuBar;

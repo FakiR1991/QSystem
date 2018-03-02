@@ -28,6 +28,18 @@ import ru.apertum.qsystem.server.model.QUser.Shadow;
  * @author Evgeniy Egorov
  */
 public class RpcGetSelfSituation extends JsonRPC20 {
+    
+    @Expose
+    @SerializedName("result")
+    private SelfSituation result;
+
+    public void setResult(SelfSituation result) {
+        this.result = result;
+    }
+
+    public SelfSituation getResult() {
+        return result;
+    }
 
     public RpcGetSelfSituation() {
     }
@@ -151,13 +163,17 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         @Expose
         @SerializedName("serviceId")
         public final Long serviceId;
+        @Expose
+        @SerializedName("unitId")
+        public final Integer unitId;
 
-        public StPair(String number, String data, Integer waiting, Long isMine, Long serviceId) {
+        public StPair(String number, String data, Integer waiting, Long isMine, Long serviceId, Integer unitId) {
             this.number = number;
             this.data = data;
             this.waiting = waiting;
             this.isMine = isMine;
             this.serviceId = serviceId;
+            this.unitId = unitId;
         }
 
         public StPair() {
@@ -166,6 +182,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.waiting = null;
             this.isMine = null;
             this.serviceId = null;
+            this.unitId = null;
         }
 
     }
@@ -193,7 +210,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.line = new LinkedList<>();
             for (QCustomer cu : service.getClients()) {// не переделывать на лямбду.
                 final String fn = cu.getFullNumber();
-                final StPair sp = new StPair(fn, cu.getPostponedStatus(), cu.getWaitingMinutes(), cu.getIsMine(), cu.getService().getId());
+                final StPair sp = new StPair(fn, cu.getPostponedStatus(), cu.getWaitingMinutes(), cu.getIsMine(), cu.getService().getId(), cu.getUnitId());
                 line.addLast(sp);
             }
         }
@@ -291,16 +308,5 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.line = line;
         }
 
-    }
-    @Expose
-    @SerializedName("result")
-    private SelfSituation result;
-
-    public void setResult(SelfSituation result) {
-        this.result = result;
-    }
-
-    public SelfSituation getResult() {
-        return result;
     }
 }

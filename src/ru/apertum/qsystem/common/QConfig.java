@@ -40,6 +40,7 @@ import ru.apertum.qsystem.common.exceptions.ServerException;
  */
 public final class QConfig {
 
+    private static final String KEY_UNIT = "unitid";
     private static final String KEY_DEBUG = "debug";
     // ключ, отвечающий за режим демонстрации. При нем не надо прятать мышку и убирать шапку формы
     // Режим демонстрации. При нем не надо прятать мышку и убирать шапку формы.
@@ -106,6 +107,9 @@ public final class QConfig {
         }
         options.addOption("?", "hey", false, "Show information about command line arguments");
         options.addOption("h", "help", false, "Show information about command line arguments");
+        //if (type == 1 || type == 2 || type == 4) {
+            options.addOption("uid", KEY_UNIT, true, "Идентификатор зала, используется для взаимодействия с банком при отправке кастомеров на оплату услуги.");
+        //}
 
         /*
          CLIENT: ide -s 127.0.0.1 -cport 3129 -sport 3128 -cfg config/clientboard.xml -cfgfx1 config/clientboardfx.properties -point1 234 debug -terminal1
@@ -306,6 +310,12 @@ public final class QConfig {
         return this;
     }
 
+    public Integer getUnitId() {
+        return line.hasOption(KEY_UNIT)
+                ? Integer.parseInt(line.getOptionValue(KEY_UNIT, "0"))
+                : config.getInt(KEY_UNIT, 0);
+    }
+    
     public boolean isDebug() {
         return line.hasOption(KEY_DEBUG)
                 ? true

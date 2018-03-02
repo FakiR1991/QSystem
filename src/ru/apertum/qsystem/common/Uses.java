@@ -77,11 +77,14 @@ import ru.apertum.qsystem.client.forms.FServicePriority;
 import ru.apertum.qsystem.server.ServerProps;
 
 /**
- * @author Evgeniy Egorov Сдесь находятся константы и общеиспользуемые конструкции
+ * @author Evgeniy Egorov Здесь находятся константы и общеиспользуемые конструкции
  *
  */
 public final class Uses {
 
+    //идентификаторы залов совместных с АПБ
+    public static final int UNIT_KARL_MARX = 5; //г. Тирасполь, ул. Карла Маркса
+    
     // ключи системных параметров
     public static final String KEY_ROLL = "ticket_roll";
 
@@ -263,12 +266,14 @@ public final class Uses {
     public static final String TASK_GET_SELF = "Получить описание пользователя";
     public static final String TASK_GET_SELF_SERVICES = "Получить состояние очередей";
     public static final String TASK_GET_POSTPONED_POOL = "Получить состояние пула отложенных";
+    public static final String TASK_GET_MOVED_TO_PAYMENT_LIST = "Получить список ушедших на оплату кастомеров";
     public static final String TASK_GET_BAN_LIST = "Получить список забаненых";
     public static final String TASK_INVITE_POSTPONED = "Вызвать отложенного из пула отложенных";
     public static final String TASK_GET_SELF_SERVICES_CHECK = "Получить состояние очередей с проверкой";
     public static final String TASK_INVITE_NEXT_CUSTOMER = "Получить следующего клиента";
     public static final String TASK_KILL_NEXT_CUSTOMER = "Удалить следующего клиента";
     public static final String TASK_CUSTOMER_TO_POSTPON = "Клиента в пул отложенных";
+    public static final String TASK_CUSTOMER_TO_BANK = "Клиента на оплату в банк";
     public static final String TASK_POSTPON_CHANGE_STATUS = "Сменить статус отложенному";
     public static final String TASK_START_CUSTOMER = "Начать работу с клиентом";
     public static final String TASK_FINISH_CUSTOMER = "Закончить работу с клиентом";

@@ -39,11 +39,12 @@ public class QServiceTree extends ATreeModel<QService> {
 
     @Override
     protected LinkedList<QService> load() {
-        return new LinkedList<>(Spring.getInstance().getHt().findByCriteria(DetachedCriteria.forClass(QService.class).
-                setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).
-                add(Property.forName("deleted").isNull()).
-                addOrder(Property.forName("seqId").asc()).
-                addOrder(Property.forName("id").asc())));
+        return new LinkedList<>(Spring.getInstance().getHt().findByCriteria(
+                                    DetachedCriteria.forClass(QService.class).
+                                        setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).
+                                        add(Property.forName("deleted").isNull()).
+                                        addOrder(Property.forName("seqId").asc()).
+                                        addOrder(Property.forName("id").asc())));
     }
 
     @Override

@@ -37,6 +37,8 @@ import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.controller.Executer;
+import ru.apertum.qsystem.server.model.QService;
+import ru.apertum.qsystem.server.model.QServiceTree;
 
 /**
  *
@@ -64,6 +66,7 @@ public class QPostponedList extends DefaultListModel {
         }
         return this;
     }
+    
     /**
      * Таймер по которому будем выгонять временных отложенных
      */
@@ -85,22 +88,18 @@ public class QPostponedList extends DefaultListModel {
                                 forDel.add(customer);
                                 // в очередь, сукины дети
                                 // время постановки проставляется автоматом при создании кастомера.
-                                if(customer.getPostponedStatus().contains("на оплату"))
-                                {
-                                    if(customer.getPriority().get()<2)
-                                        customer.setPriority(customer.getPriority().get() + 1);
-                                }
-                                /*if(customer.getPriority().get() <2) {
-                                    if(!customer.getPostponedStatus().contains("по неявке"))
-                                    {
-                                      customer.setPriority(customer.getPriority().get() + 1);
-                                    }
-                                }
-                                else {*/
-                                 customer.setPriority(customer.getPriority().get());
-                              //  }
+//                                if (customer.getPostponedStatus().contains("на оплату")) {
+//                                    if (customer.getPriority().get() < 2) {
+//                                        customer.setPriority(customer.getPriority().get() + 1);
+//                                    }
+//                                }
+//                                customer.setPriority(customer.getPriority().get());
+                                //}
                                 //добавим нового пользователя
-                                customer.getService().addCustomer(customer);
+                                final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
+                                service.addCustomer(customer);
+                                //customer.getService().addCustomer(customer);
+                                
                                 // вроде как только что встал в очередь, ну и время проставим, а то ожидание будет огромное
                                 // только что встал типо. Поросто время нахождения в отложенных не считаетка как ожидание очереди. Инвче в statistic ожидание огромное
                                 customer.setStandTime(new Date());

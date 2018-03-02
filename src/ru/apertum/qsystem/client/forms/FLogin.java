@@ -401,15 +401,18 @@ public class FLogin extends javax.swing.JDialog {
         return true;
     }
 
-       public static String MD5(String md5) {
-         try {
-        java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
-        byte[] array = md.digest(md5.getBytes());
-        return  Base64.getEncoder().encodeToString(array);
-            } catch (java.security.NoSuchAlgorithmException e) {
-            }
-           return null;
+    public static String MD5(String md5) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            byte[] array = md.digest(md5.getBytes());
+            return  Base64.getEncoder().encodeToString(array);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            
         }
+        
+        return null;
+    }
+    
     public void pressOK() {
         ok = checkLogin();
         if (ok) {

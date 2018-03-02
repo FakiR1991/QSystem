@@ -42,10 +42,10 @@ import java.util.ServiceLoader;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.swing.Timer;
+import javax.xml.ws.Endpoint;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -70,12 +70,14 @@ import ru.apertum.qsystem.reports.model.WebServer;
 import ru.apertum.qsystem.server.controller.Executer;
 import ru.apertum.qsystem.server.http.JettyRunner;
 import ru.apertum.qsystem.common.EmailSender;
+import ru.apertum.qsystem.server.model.QueueIntegrationImpl;
 import ru.apertum.qsystem.server.model.QNotificationsInfo;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
+import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
 
 /**
  * Класс старта и exit инициализации сервера. Организация потоков выполнения заданий.
@@ -109,10 +111,12 @@ public class QServer extends Thread {
     public static void main(String[] args) throws Exception {
         workloadTimer.start();
         
+        publishWebService();
+        
         About.printdef();
         QLog.initial(args, 0);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
-
+        
         //Установка вывода консольных сообщений в нужной кодировке
         if ("\\".equals(File.separator)) {
             try {
@@ -145,7 +149,7 @@ public class QServer extends Thread {
                 System.out.println("(Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA)");
             }
 
-            System.out.println("Набирите 'exit' чтобы штатно остановить работу сервера.");
+            System.out.println("Наберите 'exit' чтобы штатно остановить работу сервера.");
             System.out.println();
         } else {
             if ("0".equals(FAbout.CMRC_)) {
@@ -187,7 +191,7 @@ public class QServer extends Thread {
         loadPool();
         // запускаем движок индикации сообщения для кастомеров
         MainBoard.getInstance().showBoard();
-        startPostponedTimer();
+        //startPostponedTimer();
         // test ServerProps.getInstance().getProps().getZoneBoardServAddrList();
         if (!(Uses.FORMAT_HH_MM.format(ServerProps.getInstance().getProps().getStartTime()).equals(Uses.FORMAT_HH_MM.format(ServerProps.getInstance().getProps().getFinishTime())))) {
             /**
@@ -337,8 +341,18 @@ public class QServer extends Thread {
         System.exit(0);
     }
     
+    /**
+     * Создаём и публикуем свой веб-сервис для взаимодействия с очередью Агропромбанка.
+     */
+    private static void publishWebService() {
+        Endpoint.publish("http://localhost:9901/queue", new QueueIntegrationImpl());
+    }
+    
     private static class WorkloadStatistics {
+        //максимально допустимое время ожидания для абон. зала
         public static final int MAX_WAITING_MINUTES_ABO = 15;
+        
+        //максимально допустимое время ожидания для СЦ
         public static final int MAX_WAITING_MINUTES_SC = 20;
         
         //количество кастомеров в абон. зале
@@ -530,16 +544,11 @@ public class QServer extends Thread {
         sendMails(workloadStats);
     }
     
+    /**
+     * Логгирование статистики очередей.
+     * @param workloadStats Данные для анализа перед отправкой уведомлений по почте.
+     */
     private static void loggingWorkloadStats(WorkloadStatistics workloadStats) {
-        workloadStats.getClientsCountReadyToWorkAbo();
-        workloadStats.getClientsCountReadyToWorkSC();
-        workloadStats.getCustomersCountAbo();
-        workloadStats.getCustomersCountSC();
-        workloadStats.getMaxWaitingMinutesAbo();
-        workloadStats.getMaxWaitingMinutesSC();
-        workloadStats.getCustomersToClientsRatioForAbo();
-        workloadStats.getCustomersToClientsRatioForSC();
-        
         String logText = "Операторов готовых работать АБО: " + workloadStats.getClientsCountReadyToWorkAbo() + "\n" +
                          "Операторов готовых работать СЦ: " + workloadStats.getClientsCountReadyToWorkSC() + "\n" +
                          "Кол-во клиентов в очереди АБО: " + workloadStats.getCustomersCountAbo() + "\n" +
@@ -893,7 +902,11 @@ public class QServer extends Thread {
         Gson gson = null;
         try {
             gson = GsonPool.getInstance().borrowGson();
-            fos.write(gson.toJson(new TempList(backup, parallelBackup, QPostponedList.getInstance().getPostponedCustomers(), pauses)).getBytes("UTF-8"));
+            fos.write(gson.toJson(new TempList(backup,
+                                               parallelBackup,
+                                               QPostponedList.getInstance().getPostponedCustomers(),
+                                               QMovedToBankList.getInstance().getMovedToBankCustomers(),
+                                               pauses)).getBytes("UTF-8"));
             fos.flush();
             fos.close();
         } catch (IOException ex) {
@@ -915,11 +928,16 @@ public class QServer extends Thread {
             this.postponed = postponed;
         }
 
-        public TempList(LinkedList<QCustomer> backup, LinkedList<QCustomer> parallelBackup, LinkedList<QCustomer> postponed, LinkedList<Long> pauses) {
+        public TempList(LinkedList<QCustomer> backup,
+                        LinkedList<QCustomer> parallelBackup,
+                        LinkedList<QCustomer> postponed,
+                        LinkedList<QCustomer> movedToPayment,
+                        LinkedList<Long> pauses) {
             this.backup = backup;
             this.parallelBackup = parallelBackup;
             this.postponed = postponed;
             this.pauses = pauses;
+            this.movedToPayment = movedToPayment;
         }
         @Expose
         @SerializedName("backup")
@@ -930,6 +948,9 @@ public class QServer extends Thread {
         @Expose
         @SerializedName("postponed")
         public LinkedList<QCustomer> postponed;
+        @Expose
+        @SerializedName("movedToPayment")
+        public LinkedList<QCustomer> movedToPayment;
         @Expose
         @SerializedName("method")
         public String method = null;
@@ -988,9 +1009,12 @@ public class QServer extends Thread {
                 QLog.l().logger().warn("Срок давности хранения состояния истек. Если в системе ничего не происходит 3 часа, то считается что сохраненные данные устарели безвозвратно.");
             } else {
                 // Свежий, загружаем в сервер данные кеша
-
                 try {
+                    //загружаем список отложенных
                     QPostponedList.getInstance().loadPostponedList(recList.postponed);
+                    //загружаем список ушедших на оплату
+                    QMovedToBankList.getInstance().loadMovedToBankList(recList.movedToPayment);
+                    //загружаем список тех, с кем уже работали операторы
                     for (QCustomer recCustomer : recList.backup) {
                         // в эту очередь он был
                         QService.usedTickets.add(recCustomer.getNumber());
@@ -1072,6 +1096,7 @@ public class QServer extends Thread {
         });
         QService.clearNextStNumber();
 
+        QMovedToBankList.getInstance().clear();
         QPostponedList.getInstance().clear();
         MainBoard.getInstance().clear();
 

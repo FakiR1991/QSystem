@@ -69,6 +69,7 @@ import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.cmd.RpcBanList;
 import ru.apertum.qsystem.common.cmd.RpcGetDateTime;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
+import ru.apertum.qsystem.common.cmd.RpcGetMovedToPaymentList;
 import ru.apertum.qsystem.common.cmd.RpcGetProperties;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState;
@@ -88,9 +89,12 @@ import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
+import ru.apertum.qsystem.server.model.QueueIntegration;
+import ru.apertum.qsystem.server.model.QueueIntegrationImplService;
 import ru.apertum.qsystem.server.model.UsersStatistic;
 import ru.apertum.qsystem.server.model.calendar.QCalendarList;
 import ru.apertum.qsystem.server.model.infosystem.QInfoTree;
+import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 import ru.apertum.qsystem.server.model.response.QRespEvent;
 import ru.apertum.qsystem.server.model.response.QResponseTree;
@@ -192,6 +196,10 @@ public final class Executer {
      */
     public static final Lock POSTPONED_TASK_LOCK = new ReentrantLock();
     /**
+     * Ключ блокировки для манипуляции с отправленными на оплату.
+     */
+    public static final Lock MOVED_TO_BANK_TASK_LOCK = new ReentrantLock();
+    /**
      * Ставим кастомера в очередь.
      */
     final AddCustomerTask addCustomerTask = new AddCustomerTask(Uses.TASK_STAND_IN);
@@ -205,6 +213,14 @@ public final class Executer {
         @Override
         public RpcStandInService process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
+            
+            if (cmdParams.unitId == null) {
+                QLog.l().logger().error("UnitId is null. What is going on?!");
+            } else if (cmdParams.unitId == 0) {
+                QLog.l().logger().warn("\nWTF? Идентификатор зала равен нулю - unitId=" + cmdParams.unitId + "." +
+                                       "\nВидимо, нужно у bat-ника терминала (ipAdress=" + ipAdress + ") добавить параметр unitid.");
+            }
+            
             final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
             final QCustomer customer;
             // синхронизируем работу с клиентом
@@ -215,6 +231,8 @@ public final class Executer {
                 // проверка тут если нужно введенное сделать номерком
                 final boolean asNumber = service.getInput_required() && service.getInputedAsNumber() > 0 && cmdParams.textData != null && cmdParams.textData.length() > 0;
                 customer = new QCustomer(asNumber ? -1 : service.getNextNumber());
+                //указываем из какого зала прибыл
+                customer.setUnitId(cmdParams.unitId);
                 // тут если нужно введенное сделать номерком
                 if (asNumber) {
                     customer.setPrefix(cmdParams.textData.length() >= service.getInputedAsNumber() ? cmdParams.textData.substring(0, service.getInputedAsNumber()) : cmdParams.textData);
@@ -225,13 +243,14 @@ public final class Executer {
                     customer.setService(service.getLink());
                 }
                 
+                // если услуга, которую надо поставить в очередь является услугой
+                // по настройке VoLTE, тогда ставим ей максимальный приоритет по умолчанию
                 if (QService.IPHONE_SETTING_FOR_VOLTE_ABO.equals(service.getId()) || QService.IPHONE_SETTING_FOR_VOLTE_SC.equals(service.getId())) {
-                    // если услуга, которую надо поставить в очередь является услугой
-                    // по настройке VoLTE, тогда ставим ей максимальный приоритет по умолчанию
                     customer.setPriority(Uses.PRIORITY_VIP);
-                } else {
-                    // время постановки проставляется автоматом при создании кастомера.
-                    // Приоритет "как все"
+                }
+                // время постановки проставляется автоматом при создании кастомера.
+                // Приоритет "как все"
+                else {
                     customer.setPriority(cmdParams.priority);
                 }
                 
@@ -811,6 +830,7 @@ public final class Executer {
             }
             long stateH = 0; // это хэш всей обстановки по услуге для пользователя.
             final LinkedList<RpcGetSelfSituation.SelfService> servs = new LinkedList<>();
+            //цикл по списку услуг присвоенных юзеру в админском приложении
             for (QPlanService planService : user.getPlanServices()) {
                 final QService service = QServiceTree.getInstance().getById(planService.getService().getId());
                 servs.add(new RpcGetSelfSituation.SelfService(service, service.getCountCustomers(), planService.getCoefficient(), planService.getFlexible_coef()));
@@ -883,6 +903,7 @@ public final class Executer {
             return new RpcGetBool(true);
         }
     };
+    
     /**
      * Получить состояние пула отложенных
      */
@@ -894,6 +915,19 @@ public final class Executer {
             return new RpcGetPostponedPoolInfo(QPostponedList.getInstance().getPostponedCustomers());
         }
     };
+    
+    /**
+     * Получить список ушедших на оплату
+     */
+    final Task getMovedToPaymentList = new Task(Uses.TASK_GET_MOVED_TO_PAYMENT_LIST) {
+
+        @Override
+        public synchronized RpcGetMovedToPaymentList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            return new RpcGetMovedToPaymentList(QMovedToBankList.getInstance().getMovedToBankCustomers());
+        }
+    };
+    
     /**
      * Получить список забаненных
      */
@@ -974,7 +1008,7 @@ public final class Executer {
         public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             final QUser user = QUserList.getInstance().getById(cmdParams.userId);
-            // Время старта работы с юзера с кастомером.
+            // Время старта работы юзера с кастомером.
             if (user.getCustomer() == null) {
                 QLog.l().logger().error("Не найден кастомер для начала работы с ним. А должен быть! Возможно из-за параллельного приема. user=" + user.getName() + "-" + user.getId() + " " + ipAdress);
                 return new JsonRPC20Error(REQUIRED_CUSTOMER_NOT_FOUND, ipAdress + " " + user.toString() + "/" + user.getId());
@@ -989,6 +1023,7 @@ public final class Executer {
             return new JsonRPC20OK();
         }
     };
+    
     /**
      * Перемещение вызванного юзером кастомера в пул отложенных.
      */
@@ -1018,15 +1053,15 @@ public final class Executer {
             // если отложили бессрочно и поставили галку, то можно видеть только отложенному
             customer.setIsMine(cmdParams.isMine != null && cmdParams.isMine ? cmdParams.userId : null);
             
-            if(customer.getStartTime() == null)
-            {
+            if (customer.getStartTime() == null) {
                 customer.setStartTime(new Date());
             }
             // в этом случае завершаем с пациентом
-            //"все что хирург забыл в вас - в пул отложенных"
+            // "все что хирург забыл в вас - в пул отложенных"
             // но сначала обозначим результат работы юзера с кастомером, если такой результат найдется в списке результатов
             // кастомер переходит в состояние "Завершенности", но не "мертвости"
             customer.setState(CustomerState.STATE_POSTPONED);
+            
             try {
                 user.setCustFinishTime(customer.getFinishTime());
                 user.setCustomer(null);//бобик сдох но медалька осталось, отправляем в пулл
@@ -1036,7 +1071,7 @@ public final class Executer {
                 QServer.savePool();
                 //разослать оповещение о том, что посетитель отложен
                 Uses.sendUDPBroadcast(Uses.TASK_REFRESH_POSTPONED_POOL, ServerProps.getInstance().getProps().getClientPort());
-                //рассылаем широковещетельно по UDP на определенный порт. Должно высветитьсяна основном табло
+                //рассылаем широковещетельно по UDP на определенный порт. Должно высветиться на основном табло
                 MainBoard.getInstance().killCustomer(user);
             } catch (Throwable t) {
                 QLog.l().logger().error("Загнулось под конец." + " " + ipAdress, t);
@@ -1044,6 +1079,102 @@ public final class Executer {
             return new JsonRPC20OK();
         }
     };
+    
+    /**
+     * Отправка кастомера на оплату в банк
+     */
+    final Task customerToBankTask = new Task(Uses.TASK_CUSTOMER_TO_BANK) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            // вот он все это творит
+            final QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            //переключение на кастомера при параллельном приеме, должен приехать customerID
+            if (cmdParams.customerId != null) {
+                final QCustomer parallelCust = user.getParallelCustomers().get(cmdParams.customerId);
+                if (parallelCust == null) {
+                    QLog.l().logger().warn("PARALLEL: User have no Customer for switching by customer ID=\"" + cmdParams.customerId + "\"" + " " + ipAdress);
+                } else {
+                    user.setCustomer(parallelCust);
+                    QLog.l().logger().debug("Юзер \"" + user + "\" переключился на кастомера \"" + parallelCust.getFullNumber() + "\"" + " " + ipAdress);
+                }
+            }
+            // вот над этим пациентом
+            final QCustomer customer = user.getCustomer();
+            // статус
+            customer.setPostponedStatus(cmdParams.textData);
+            // на сколько отложили. 0 - бессрочно
+            customer.setPostponPeriod(cmdParams.postponedPeriod);
+            // если отложили бессрочно и поставили галку, то можно видеть только отложенному
+            customer.setIsMine(cmdParams.isMine != null && cmdParams.isMine ? cmdParams.userId : null);
+            
+            if (customer.getStartTime() == null) {
+                customer.setStartTime(new Date());
+            }
+            
+            customer.setState(CustomerState.STATE_PAYMENT);
+            try {
+                //если нужно вернуть после оплаты
+                if (cmdParams.needReturnAfterPayment) {
+//                    user.setCustFinishTime(customer.getFinishTime());
+//                    user.setCustomer(null);//бобик сдох но медалька осталось, отправляем в пулл
+//                    customer.setUser(null);
+
+                    //добавляем его в список ушедших на оплату,
+                    //а завершим работу с ним при вызове метода getStopCustomer(null) в форме FClient
+                    QMovedToBankList.getInstance().addElement(customer);
+                }
+                
+                //сохраняем состояния очередей.
+                QServer.savePool();
+                //разослать оповещение о том, что посетитель отложен
+                //Uses.sendUDPBroadcast(Uses.TASK_REFRESH_POSTPONED_POOL, ServerProps.getInstance().getProps().getClientPort());
+                //рассылаем широковещетельно по UDP на определенный порт. Должно высветиться на основном табло
+                MainBoard.getInstance().killCustomer(user);
+                
+                QueueIntegration apbQueue = new QueueIntegrationImplService().getQueueIntegrationImplPort();
+
+                //отправляем кастомера в очередь АПБ и получаем
+                //идентификатор данного кастомера в системе АПБ
+//                String apbCustomerId = apbQueue.appendRequest(customer.getUnitId(),
+//                                                              customer.getId().toString(),
+//                                                              customer.getNumber(),
+//                                                              customer.getPriority().get(),
+//                                                              cmdParams.needReturnAfterPayment ? 1 : 0,
+//                                                              parseUserPoint(user.getPoint()),
+//                                                              0, //отправляем в любое окно
+//                                                              null); //дополнительные параметры (не обязательные)
+
+                String apbCustomerId = "658426";
+                
+                try {
+                    customer.setExtId(Long.valueOf(apbCustomerId));
+                } catch (NumberFormatException fe) {
+                    QLog.l().logger().trace("Ошибка парсинга идентификатора из системы АПБ, apbCustomerId=\"" + apbCustomerId + "\"", fe);
+                }
+            } catch (Throwable t) {
+                QLog.l().logger().error("Загнулось под конец 2. " + ipAdress, t);
+            }
+            return new JsonRPC20OK();
+        }
+    };
+    
+    /**
+     * Возвращает номер окна оператора в числовом представлении.
+     * @param pointStr Строковое представление номера окна оператора.
+     * @return Возвращает целочисленное значение номера окна оператора. Если возникла ошибка парсинга, то вернёт 0.
+     */
+    private int parseUserPoint(String pointStr) {
+        try {
+            int point = pointStr == null || pointStr.trim().equals("") ? 0 : Integer.valueOf(pointStr.trim());
+            return point;
+        } catch(NumberFormatException e) {
+            QLog.l().logger().trace("Ошибка парсинга поинта юзера", e);
+            return 0;
+        }
+    }
+    
     /**
      * Изменение отложенному кастомеру статуса
      */

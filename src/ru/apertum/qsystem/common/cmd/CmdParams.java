@@ -74,6 +74,9 @@ public class CmdParams {
     @SerializedName("is_only_mine")
     public Boolean isMine;
     @Expose
+    @SerializedName("need_return_after_payment")
+    public Boolean needReturnAfterPayment;
+    @Expose
     @SerializedName("coeff")
     public Integer coeff;
     @Expose
@@ -124,6 +127,9 @@ public class CmdParams {
     @Expose
     @SerializedName("state_in")
     public Integer state_in;
+    @Expose
+    @SerializedName("unit_id")
+    public Integer unitId;
     
     
     /**

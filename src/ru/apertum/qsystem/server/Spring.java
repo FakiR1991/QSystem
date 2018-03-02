@@ -245,6 +245,12 @@ public class Spring {
         ses.saveOrUpdate(obj);
         ses.flush();
     }
+    
+    public void update(Object obj) {
+        final Session ses = getTxManager().getSessionFactory().getCurrentSession();
+        ses.update(obj);
+        ses.flush();
+    }
 
     public void deleteAll(Collection list) {
         final Session ses = getTxManager().getSessionFactory().getCurrentSession();

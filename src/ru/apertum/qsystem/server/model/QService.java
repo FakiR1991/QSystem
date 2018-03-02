@@ -89,6 +89,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     public static final Long ROOT_SERVICES_ABO = 1503466462316L;
     //корень услуг для сервисного центра
     public static final Long ROOT_SERVICES_SC = 1503466512673L;
+    
+    
     public static final Long IPHONE_SETTING_FOR_VOLTE_ABO = 1516101725491L;
     public static final Long IPHONE_SETTING_FOR_VOLTE_SC = 1516101802925L;
 
@@ -639,7 +641,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
             
             while (checkTicketExists(temp))
             {
-                temp = ThreadLocalRandom.current().nextInt(ServerProps.getInstance().getProps().getFirstNumber(), ServerProps.getInstance().getProps().getLastNumber() + 1);
+                temp = ThreadLocalRandom.current().nextInt(ServerProps.getInstance().getProps().getFirstNumber(),
+                                                           ServerProps.getInstance().getProps().getLastNumber() + 1);
             }
             usedTickets.add(temp);
             /* ThreadLocalRandom.current().nextInt(0, 999 + 1);
@@ -940,7 +943,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     // ********************  МЕТОДЫ УПРАВЛЕНИЯ ЭЛЕМЕНТАМИ И СТРУКТУРЫ ************************  
     // ***************************************************************************************
     /**
-     * Добавить в очередь при этом проставится название сервиса, в который всрал, и его описание, если у кастомера нету префикса, то проставится и префикс.
+     * Добавить в очередь при этом проставится название сервиса, в который встал, и его описание, если у кастомера нету префикса, то проставится и префикс.
      *
      * @param customer это кастомер которого добавляем в очередь к услуге
      */

@@ -43,6 +43,7 @@ import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
@@ -96,6 +97,8 @@ import ru.apertum.qsystem.extra.IStartClient;
 import ru.apertum.qsystem.fx.OrangeClientboard;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser;
+import ru.apertum.qsystem.server.model.QueueIntegration;
+import ru.apertum.qsystem.server.model.QueueIntegrationImplService;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 import ru.apertum.qsystem.server.model.UsersStatistic;
 
@@ -198,7 +201,9 @@ public final class FClient extends javax.swing.JFrame {
                 setKeyRegim(KEYS_INVITED);
                 break;
             }
-            case STATE_WORK: {
+            case STATE_WORK:
+            case STATE_PAYMENT:
+            case STATE_WORK_SECONDARY : {
                /* if(denyTimer.isRunning())
                     denyTimer.stop();*/
                 setBlinkBoard(false);
@@ -206,14 +211,14 @@ public final class FClient extends javax.swing.JFrame {
                 buttonFinish.setEnabled(customer.getService().getEnable() == 1);
                 break;
             }
-            case STATE_WORK_SECONDARY: {
-               /* if(denyTimer.isRunning())
-                    denyTimer.stop();*/
+            /*case STATE_WORK_SECONDARY: {
+                //if(denyTimer.isRunning())
+                    //denyTimer.stop();
                 setBlinkBoard(false);
                 setKeyRegim(KEYS_STARTED);
                 buttonFinish.setEnabled(customer.getService().getEnable() == 1);
                 break;
-            }
+            }*/
             case STATE_FINISH: {
                /* if(denyTimer.isRunning())
                     denyTimer.stop();*/
@@ -932,18 +937,35 @@ public final class FClient extends javax.swing.JFrame {
                 //root.add(servNode);
                 serv.getLine().forEach(
                     cu -> {
-                        //если у данного кустомера указано, что он должен быть обслужен конкретным оператором,
-                        //то не отображаем его в очереди для других операторов
-                        if (
-                                (cu.isMine != null && cu.isMine.compareTo(user.getId()) != 0)
-//                                    ||
-//                                getExcludeServiceVoLTE(cu.serviceId)
-                            )
-                        {
-                            excludedCustomersCount.increment();
-                            return;
+                        if (QConfig.cfg().getUnitId() != null && cu.unitId != null) {
+                            //если у оператора и кастомера совпадают unitId,
+                            //то есть физически они находятся в одном и том же зале
+                            if (Objects.equals(QConfig.cfg().getUnitId(), cu.unitId)) {
+                                //если у данного кустомера указано, что он должен быть обслужен конкретным оператором,
+                                //то не отображаем его в очереди для других операторов
+                                if (
+                                        (cu.isMine != null && cu.isMine.compareTo(user.getId()) != 0)
+        //                                    ||
+        //                                getExcludeServiceVoLTE(cu.serviceId)
+                                    )
+                                {
+                                    excludedCustomersCount.increment();
+                                    return;
+                                }
+                                root.add(new DefaultMutableTreeNode(cu.number + (cu.data == null || cu.data.isEmpty() ? "" : (" \"" + cu.data + "\"")) + (cu.waiting == null ? "" : (" " + cu.waiting + " " + mins + "")) ));
+                            }
+                            //кастомер не в одном зале с оператором - увеличим счётчик исключённых кастомеров
+                            else {
+                                excludedCustomersCount.increment();
+                            }
                         }
-                        root.add(new DefaultMutableTreeNode(cu.number + (cu.data == null || cu.data.isEmpty() ? "" : (" \"" + cu.data + "\"")) + (cu.waiting == null ? "" : (" " + cu.waiting + " " + mins + "")) ));
+                        //если у оператора, либо кастомера пустой unitId - что то пошло не так
+                        else {
+                            QLog.l().logger().warn("\nАхтунг!" +
+                                                   "\nПараметр unitId у оператора " + user.getName() + " равен \"" + QConfig.cfg().getUnitId() + "\"" +
+                                                   "\nПараметр unitId у кастомера с талонов №" + cu.number + " равен \"" + cu.unitId + "\"");
+                            excludedCustomersCount.increment();
+                        }
                     }
                 );
                 count -= excludedCustomersCount.getCount();
@@ -1087,9 +1109,9 @@ public final class FClient extends javax.swing.JFrame {
             listPostponed.setSelectedIndex(0);
         }
         
-        menuItemInvitePostponed.setEnabled(customer == null && listPostponed.getModel().getSize() != 0&&!ch.isSelected());
-        menuItemInvitePostponed1.setEnabled(customer == null && tree.getChildCount(root) != 0&&!ch.isSelected());
-        menuItemChangeStatusPostponed.setEnabled(listPostponed.getModel().getSize() != 0&&!ch.isSelected());
+        menuItemInvitePostponed.setEnabled(customer == null && listPostponed.getModel().getSize() != 0 && !ch.isSelected());
+        menuItemInvitePostponed1.setEnabled(customer == null && tree.getChildCount(root) != 0 && !ch.isSelected());
+        menuItemChangeStatusPostponed.setEnabled(listPostponed.getModel().getSize() != 0 && !ch.isSelected());
         // ну и разрешим параллельный вызов если есть доступ и есть кого вызывать. 
         // И если нет процесса вызывания, этот процесс должен быть завершен и не остался висеть в параллели
         if (user.getParallelAccess() && customer != null && (CustomerState.STATE_WORK.equals(customer.getState()) || CustomerState.STATE_WORK_SECONDARY.equals(customer.getState()))) {
@@ -1214,13 +1236,14 @@ public final class FClient extends javax.swing.JFrame {
             QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
             try {
                 new Thread(() -> {
-                                    event.pressButton(user, netProperty, getUserPlan(), evt, keyId);
+                    event.pressButton(user, netProperty, situation, evt, keyId);
                 }).start();
             } catch (Throwable tr) {
                 QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
             }
         }
     }
+    
     /**
      * Действие по нажатию правой кнопки "Вызвать" на списке клиентов 
      *
@@ -1521,7 +1544,7 @@ public final class FClient extends javax.swing.JFrame {
     }
     
     
-    FSendToBank bankForm;
+    FSendToBank2 bankForm;
     /**
      * Действие по нажатию кнопки "Отправить на оплату"
      *
@@ -1531,22 +1554,33 @@ public final class FClient extends javax.swing.JFrame {
     public void redirectCustomerToBank(ActionEvent evt) {
         try {
             final long start = go();
+            
+            boolean isMine = false;
+            boolean needReturnAfterPayment = false;
+            
             if (bankForm == null) {
-                bankForm = new FSendToBank(fClient, true);
+                bankForm = new FSendToBank2(fClient, true);
             }
-            bankForm.init();
+//            bankForm.init();
             Uses.setLocation(bankForm);
             bankForm.setVisible(true);
-            if (!bankForm.isOK()) {
+            if (!bankForm.isOkClicked()) {
                 return;
             }
             
+            isMine = bankForm.isMine();
+            needReturnAfterPayment = bankForm.needReturnAfterPayment();
+            
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
-            NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp + ". Услуга: " + customer.getService().getName(), 10, true);
-           
+            NetCommander.sendCustomerToBank(netProperty, user.getId(), customer.getId(), "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp + ". Услуга: " + customer.getService().getName(), 0, isMine, needReturnAfterPayment);
+            
             workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
             workingPeriod.setDt(workingPeriod.getDtStop());
             NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+            
+            //самостоятельно завершаем работу с кастомером
+            //после его отправки на оплату в банк
+            getStopCustomer(null);
             
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
@@ -1594,8 +1628,11 @@ public final class FClient extends javax.swing.JFrame {
             // Получаем новую обстановку
             //Получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
-            // поддержка расширяемости плагинами
-            extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 6);
+            
+            if (evt != null) {
+                // поддержка расширяемости плагинами
+                extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 6);
+            }
             end(start);
         } catch (HeadlessException | QException th) {
             throw new ClientException(new Exception(th));
@@ -2520,7 +2557,7 @@ public final class FClient extends javax.swing.JFrame {
                 return;
             }
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
-            NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), moveToPostponed.getResult()+  ". Вызван: " + (customer.getRecallCount()) + temp +". Услуга: " + customer.getService().getName(), moveToPostponed.getPeriod(), moveToPostponed.isMine());
+            NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), moveToPostponed.getResult() +  ". Вызван: " + (customer.getRecallCount()) + temp + ". Услуга: " + customer.getService().getName(), moveToPostponed.getPeriod(), moveToPostponed.isMine());
             
             workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
             workingPeriod.setDt(workingPeriod.getDtStop());

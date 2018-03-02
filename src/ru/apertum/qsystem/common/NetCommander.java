@@ -59,6 +59,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfWeek;
 import ru.apertum.qsystem.common.cmd.RpcGetInfoTree;
 import ru.apertum.qsystem.common.cmd.RpcGetInt;
+import ru.apertum.qsystem.common.cmd.RpcGetMovedToPaymentList;
 import ru.apertum.qsystem.common.cmd.RpcGetPostponedPoolInfo;
 import ru.apertum.qsystem.common.cmd.RpcGetProperties;
 import ru.apertum.qsystem.common.cmd.RpcGetRespTree;
@@ -331,9 +332,10 @@ public class NetCommander {
      * @param password пароль того кто пытается выполнить задание.
      * @param priority приоритет.
      * @param inputData
+     * @param unitId Идентификатор зала из которого поступил кастомер
      * @return Созданный кастомер.
      */
-    public static QCustomer standInService(INetProperty netProperty, long serviceId, String password, int priority, String inputData) {
+    public static QCustomer standInService(INetProperty netProperty, long serviceId, String password, int priority, String inputData, Integer unitId) {
         QLog.l().logger().info("Встать в очередь.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -341,6 +343,7 @@ public class NetCommander {
         params.password = password;
         params.priority = priority;
         params.textData = inputData;
+        params.unitId = unitId;
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_STAND_IN, params);
@@ -718,8 +721,8 @@ public class NetCommander {
      * @param userId
      * @param customerId переключиться на этого при параллельном приеме, NULL если переключаться не надо
      * @param status просто строка. берется из возможных состояний завершения работы
-     * @param postponedPeriod
-     * @param isMine
+     * @param postponedPeriod количество времени на которое откладывается кастомер (0 - бессрочно)
+     * @param isMine вернуть после оплаты к конкретному юзеру
      */
     public static void сustomerToPostpone(INetProperty netProperty, long userId, Long customerId, String status, int postponedPeriod, boolean isMine) {
         QLog.l().logger().info("Перемещение вызванного юзером кастомера в пул отложенных.");
@@ -732,6 +735,40 @@ public class NetCommander {
         params.isMine = isMine;
         try {
             send(netProperty, Uses.TASK_CUSTOMER_TO_POSTPON, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        }
+    }
+    
+    /**
+     * Перемещение вызванного юзером кастомера в пул отложенных.
+     *
+     * @param netProperty параметры соединения с сервером
+     * @param userId
+     * @param customerId переключиться на этого при параллельном приеме, NULL если переключаться не надо
+     * @param status просто строка. берется из возможных состояний завершения работы
+     * @param postponedPeriod количество времени на которое откладывается кастомер (0 - бессрочно)
+     * @param isMine вернуть после оплаты к конкретному юзеру
+     * @param needReturnAfterPayment требуется ли вернуть кастомера после оплаты
+     */
+    public static void sendCustomerToBank(INetProperty netProperty,
+                                          long userId,
+                                          Long customerId,
+                                          String status,
+                                          int postponedPeriod,
+                                          boolean isMine,
+                                          boolean needReturnAfterPayment) {
+        QLog.l().logger().info("Отправка кастомера в банк.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.customerId = customerId;
+        params.textData = status;
+        params.postponedPeriod = postponedPeriod;
+        params.isMine = isMine;
+        params.needReturnAfterPayment = needReturnAfterPayment;
+        try {
+            send(netProperty, Uses.TASK_CUSTOMER_TO_BANK, params);
         } catch (QException e) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
@@ -1441,6 +1478,33 @@ public class NetCommander {
         final RpcGetPostponedPoolInfo rpc;
         try {
             rpc = gson.fromJson(res, RpcGetPostponedPoolInfo.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Получить список ушедших на оплату кастомеров
+     *
+     * @param netProperty
+     * @return список ушедших на оплату
+     */
+    public static LinkedList<QCustomer> getMovedToPaymentList(INetProperty netProperty) {
+        QLog.l().logger().info("Команда на обновление списка ушедших на оплату кастомеров.");
+        // загрузим ответ
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_GET_MOVED_TO_PAYMENT_LIST, null);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetMovedToPaymentList rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetMovedToPaymentList.class);
         } catch (JsonSyntaxException ex) {
             throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
         } finally {

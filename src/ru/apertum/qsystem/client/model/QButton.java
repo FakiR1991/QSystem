@@ -46,6 +46,7 @@ import ru.apertum.qsystem.client.forms.FInfoDialogWeb;
 import ru.apertum.qsystem.client.forms.FInputDialog;
 import ru.apertum.qsystem.client.forms.FPreInfoDialog;
 import ru.apertum.qsystem.client.forms.FWelcome;
+import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState.ServiceState;
@@ -99,22 +100,22 @@ public class QButton extends JButton {
     private final static HashMap<String, Image> IMGS = new HashMap<>();
 
     public QButton() {
-        service = null;
-        form = null;
-        parent = null;
-        isActive = true;
-        isVisible = true;
-        isForPrereg = false;
+        this.service = null;
+        this.form = null;
+        this.parent = null;
+        this.isActive = true;
+        this.isVisible = true;
+        this.isForPrereg = false;
     }
 
     public QButton(String resourceName) {
-        service = null;
-        form = null;
-        parent = null;
-        isActive = true;
-        isVisible = true;
-        isForPrereg = false;
-
+        this.service = null;
+        this.form = null;
+        this.parent = null;
+        this.isActive = true;
+        this.isVisible = true;
+        this.isForPrereg = false;
+        
         init(resourceName);
     }
 
@@ -508,7 +509,7 @@ public class QButton extends JButton {
                         }
                         final QCustomer res;
                         try {
-                            res = NetCommander.standInService(parameters.netProperty, parameters.serviceId, parameters.password, parameters.priority, parameters.inputData);
+                            res = NetCommander.standInService(parameters.netProperty, parameters.serviceId, parameters.password, parameters.priority, parameters.inputData, QConfig.cfg().getUnitId());
                         } catch (Exception ex) {
                             // гасим жестоко, пользователю незачем видеть ошибки. выставим блокировку
                             QLog.l().logger().error("Невозможно отправить команду на сервер. ", ex);

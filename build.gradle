@@ -1,6 +1,18 @@
+/*buildscript {
+    ext {
+	springBootVersion = '1.5.10.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}*/
+
 apply plugin: 'java'
 apply plugin: 'idea'
-
+//apply plugin: 'org.springframework.boot'
 
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -58,6 +70,8 @@ dependencies {
     compile( group: 'org.springframework', name: 'spring-context', version: '4.0.0.RELEASE'){ transitive = false }
     compile( group: 'org.springframework', name: 'spring-jdbc', version: '4.0.0.RELEASE'){ transitive = false }
     compile( group: 'org.springframework', name: 'spring-expression', version: '4.0.0.RELEASE'){ transitive = false }
+    
+    //compile('org.springframework.boot:spring-boot-starter-web')
         
     compile( group: 'org.springframework', name: 'spring-tx', version: '4.0.0.RELEASE'){ transitive = false }
     compile( group: 'org.springframework', name: 'spring-orm', version: '4.0.0.RELEASE'){ transitive = false }
@@ -243,6 +257,8 @@ task runClient (dependsOn: 'classes', type: JavaExec) {
         args 'config/clientboardfx.properties'
         args '-point'
         args '10'
+        args '-uid'
+        args '5'
         args '-d'
         args '++terminal'
         args '-np'
@@ -270,6 +286,8 @@ task debugClient (dependsOn: 'classes', type: JavaExec) {
         args 'config/clientboardfx.properties'
         args '++point'
         args '234'
+        args '-uid'
+        args '5'
         args '-d'
         args '++terminal'
         args '-np'
@@ -293,12 +311,14 @@ task runWelcome (dependsOn: 'classes', type: JavaExec) {
         args '--debug'
         args '-wm'
         args 'touch'
+        args '-uid'
+        args '5'
         //args '+-wm,--welcome-mode <touch,info,med,btn,kbd>'
-        args '+demo'
+        /*args '+demo'
         args '+clangs'
         args '+keyboard'
         args '-ndiv'
-        args '->'
+        args '->'*/
     }
     doLast {}
 }
@@ -319,7 +339,9 @@ task debugWelcome (dependsOn: 'classes', type: JavaExec) {
         args '--debug'
         args '-wm'
         args 'touch'
-        args '+info'
+        args '-uid'
+        args '5'
+        /*args '+info'
         args '+buttons'
         args '+demo'
         args '+clangs'
@@ -327,7 +349,7 @@ task debugWelcome (dependsOn: 'classes', type: JavaExec) {
         args '-ndiv'
         args '->'
         args '-httpg'
-        args '8081'
+        args '8081'*/
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}
@@ -346,6 +368,8 @@ task runReception (dependsOn: 'classes', type: JavaExec) {
         args '3129'
         args '-sport'
         args '3128'
+        args '-uid'
+        args '5'
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}
@@ -365,6 +389,8 @@ task debugReception (dependsOn: 'classes', type: JavaExec) {
         args '3129'
         args '-sport'
         args '3128'
+        args '-uid'
+        args '5'
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}

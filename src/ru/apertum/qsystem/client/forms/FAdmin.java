@@ -17,7 +17,6 @@
 package ru.apertum.qsystem.client.forms;
 
 import ru.apertum.qsystem.client.model.PropsTableModel;
-import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.awt.Component;
@@ -35,13 +34,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -136,7 +133,6 @@ import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.common.WysiwygDlg;
 import ru.apertum.qsystem.client.help.Helper;
 import ru.apertum.qsystem.client.model.SectionListModel;
-import ru.apertum.qsystem.common.GsonPool;
 import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.cmd.RpcGetServerState.ServiceInfo;
 import ru.apertum.qsystem.common.exceptions.ClientException;
@@ -307,14 +303,14 @@ public class FAdmin extends javax.swing.JFrame {
         final Toolkit kit = Toolkit.getDefaultToolkit();
         setLocation((Math.round(kit.getScreenSize().width - getWidth()) / 2), (Math.round(kit.getScreenSize().height - getHeight()) / 2));
     }
-
+    
     /**
      * Creates new form FAdmin
      */
     public FAdmin() {
 
         initComponents();
-
+        
         init();
 
         tabbedPaneMain.remove(tabHide);
@@ -1767,26 +1763,26 @@ public class FAdmin extends javax.swing.JFrame {
 
     @Action
     public void getTicket() {
-        final QService service = (QService) treeServices.getLastSelectedPathComponent();
-        if (service != null && service.isLeaf()) {
-            //Если услуга требует ввода данных пользователем, то нужно получить эти данные из диалога ввода
-            String inputData = null;
-            if (service.getInput_required()) {
-                inputData = (String) JOptionPane.showInputDialog(this, service.getInput_caption().replaceAll("<[^>]*>", ""), "***", 3, null, null, "");
-                if (inputData == null || inputData.isEmpty()) {
-                    return;
-                }
-            }
-
-            final QCustomer customer;
-            try {
-                customer = NetCommander.standInService(new ServerNetProperty(), service.getId(), "1", 1, inputData);
-            } catch (Exception ex) {
-                throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
-            }
-            FWelcome.printTicket(customer, ((QService) treeServices.getModel().getRoot()).getTextToLocale(QService.Field.NAME));
-            JOptionPane.showMessageDialog(this, getLocaleMessage("admin.print_ticket.title") + " \"" + service.getName() + "\". " + getLocaleMessage("admin.print_ticket.title_1") + " \"" + customer.getFullNumber() + "\".", getLocaleMessage("admin.print_ticket.caption"), JOptionPane.INFORMATION_MESSAGE);
-        }
+//        final QService service = (QService) treeServices.getLastSelectedPathComponent();
+//        if (service != null && service.isLeaf()) {
+//            //Если услуга требует ввода данных пользователем, то нужно получить эти данные из диалога ввода
+//            String inputData = null;
+//            if (service.getInput_required()) {
+//                inputData = (String) JOptionPane.showInputDialog(this, service.getInput_caption().replaceAll("<[^>]*>", ""), "***", 3, null, null, "");
+//                if (inputData == null || inputData.isEmpty()) {
+//                    return;
+//                }
+//            }
+//
+//            final QCustomer customer;
+//            try {
+//                customer = NetCommander.standInService(new ServerNetProperty(), service.getId(), "1", 1, inputData);
+//            } catch (Exception ex) {
+//                throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
+//            }
+//            FWelcome.printTicket(customer, ((QService) treeServices.getModel().getRoot()).getTextToLocale(QService.Field.NAME));
+//            JOptionPane.showMessageDialog(this, getLocaleMessage("admin.print_ticket.title") + " \"" + service.getName() + "\". " + getLocaleMessage("admin.print_ticket.title_1") + " \"" + customer.getFullNumber() + "\".", getLocaleMessage("admin.print_ticket.caption"), JOptionPane.INFORMATION_MESSAGE);
+//        }
     }
 
     @SuppressWarnings("unchecked")

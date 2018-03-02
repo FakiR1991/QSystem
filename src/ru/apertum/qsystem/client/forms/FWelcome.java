@@ -46,7 +46,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.font.TextAttribute;
 import java.awt.image.MemoryImageSource;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -69,7 +68,6 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.ServiceLoader;
@@ -77,7 +75,6 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -132,13 +129,13 @@ import ru.evgenic.rxtx.serialPort.ISerialPort;
 import ru.evgenic.rxtx.serialPort.RxtxSerialPort;
 
 /**
- * Модуль показа окна выбора услуги для постановки в очередь. Created on 8 Сентябрь 2008 г., 16:07 Класс, который покажит форму с кнопками, соответствующими
+ * Модуль показа окна выбора услуги для постановки в очередь. Created on 8 Сентябрь 2008 г., 16:07 Класс, который покажет форму с кнопками, соответствующими
  * услуга. При нажатии на кнопку, кастомер пытается встать в очередь.
  *
  * @author Evgeniy Egorov
  */
 public class FWelcome extends javax.swing.JFrame {
-
+    
     private static ResourceMap localeMap = null;
 
     public static String getLocaleMessage(String key) {
@@ -499,7 +496,7 @@ public class FWelcome extends javax.swing.JFrame {
                             }
                             final QCustomer customer;
                             try {
-                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "");
+                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "", QConfig.cfg().getUnitId());
                             } catch (Exception ex) {
                                 QLog.l().logger().error("Fail to put in line " + serv.getName() + "  ID=" + serv.getId(), ex);
                                 return;
@@ -536,7 +533,7 @@ public class FWelcome extends javax.swing.JFrame {
                             }
                             final QCustomer customer;
                             try {
-                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "");
+                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "", QConfig.cfg().getUnitId());
                             } catch (Exception ex) {
                                 QLog.l().logger().error("Fail to put in line '" + serv.getName() + "'  ID=" + serv.getId(), ex);
                                 return;
@@ -649,7 +646,7 @@ public class FWelcome extends javax.swing.JFrame {
                                 }
                                 final QCustomer customer;
                                 try {
-                                    customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "");
+                                    customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "", QConfig.cfg().getUnitId());
                                 } catch (Exception ex) {
                                     QLog.l().logger().error("Не поставлен в очередь в " + serv.getName() + "  ID=" + serv.getId(), ex);
                                     return;
@@ -1090,7 +1087,6 @@ public class FWelcome extends javax.swing.JFrame {
         if (btnFreeDesign) {
             panel.setLayout(null);
         } else {
-           
             GridLayout la = new GridLayout(rows, cols, delta, delta / 2);
             if(current == root)
                 la = new GridLayout(2, 2, delta, delta / 2);
@@ -1104,28 +1100,28 @@ public class FWelcome extends javax.swing.JFrame {
         //конец заплатки
         
         //JLabel serviceName = new JLabel();
-       // serviceName.setText(current.getName());
-       // panel.add(getServiceNamePanel(current.getName()));
-       if(current!=root)
-       {
-         JPanel p = new JPanel();
-         JLabel serviceLabel = new JLabel();
-         serviceLabel.setText(current.getName());
-         serviceLabel.setFont(new Font(serviceLabel.getFont().getName(), serviceLabel.getFont().getStyle(),50));
-         serviceLabel.setBounds(0,0,700,50);
-         serviceLabel.setForeground(Color.decode("#3b6bb3"));
-         p.setLayout(new BoxLayout(p,BoxLayout.X_AXIS));
-         p.add(Box.createHorizontalGlue());
-         p.add(serviceLabel);
-         p.add(Box.createHorizontalGlue());
-         p.setBackground(Color.decode("#cce6ff"));
-         panel.add(p);
-       }
+        // serviceName.setText(current.getName());
+        // panel.add(getServiceNamePanel(current.getName()));
+        if (current != root) {
+            JPanel p = new JPanel();
+            JLabel serviceLabel = new JLabel();
+            serviceLabel.setText(current.getName());
+            serviceLabel.setFont(new Font(serviceLabel.getFont().getName(), serviceLabel.getFont().getStyle(),50));
+            serviceLabel.setBounds(0,0,700,50);
+            serviceLabel.setForeground(Color.decode("#3b6bb3"));
+            p.setLayout(new BoxLayout(p,BoxLayout.X_AXIS));
+            p.add(Box.createHorizontalGlue());
+            p.add(serviceLabel);
+            p.add(Box.createHorizontalGlue());
+            p.setBackground(Color.decode("#cce6ff"));
+            panel.add(p);
+        }
         int i = 0;
         int j = 0;
         for (QService service : current.getChildren()) {
             boolean f = true;
-            if (i / (cols * rows) != pageNumber) { // смотрим каая страница из текущего уровня отображается
+            // смотрим каая страница из текущего уровня отображается
+            if (i / (cols * rows) != pageNumber) {
                 f = false;
             }
             final QButton button = new QButton(service, this, panelMain, WelcomeParams.getInstance().buttonType);
@@ -1135,14 +1131,11 @@ public class FWelcome extends javax.swing.JFrame {
                 if (f) {
                     panel.add(button);
                    
-                    if (btnFreeDesign) { 
+                    if (btnFreeDesign) {
                         button.setBounds(service.getButX(), service.getButY(), service.getButB(), service.getButH());
-                       
                     }
-                    if(current == root)
-                    {
-                        
-                        button.setBounds(j*500,0,300,300);
+                    if (current == root) {
+                        button.setBounds(j * 500, 0, 300, 300);
                     }
                     buttonForwardPage.setEnabled((i + 1) != childCount); // это чтоб кнопки листания небыли доступны когда листать дальше некуда
                 }
@@ -1150,17 +1143,10 @@ public class FWelcome extends javax.swing.JFrame {
             }
         }
        
-        if(current == root)
-        {
-         panel.add(numbersPanel1);
-         panel.add(numbersPanel2);
+        if (current == root) {
+            panel.add(numbersPanel1);
+            panel.add(numbersPanel2);
         }
-        
-       // else
-     //   {
-    
-        
-    //    }
         buttonBackPage.setEnabled(pageNumber > 0); // это чтоб кнопки листания небыли доступны когда листать дальше некуда
 
         setVisible(true);

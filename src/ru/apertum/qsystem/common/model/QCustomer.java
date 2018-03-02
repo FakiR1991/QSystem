@@ -74,6 +74,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         // все остальные всойства кастомера об услуге куда попал проставятся в самой услуге при помещении кастомера в нее
         QLog.l().logger().debug("Создали кастомера с номером " + number);
     }
+    
     @Expose
     @SerializedName("id")
     private Long id = new Date().getTime();
@@ -89,6 +90,37 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setId(Long id) {
         this.id = id;
     }
+    
+    /**
+     * Идентификатор внешней системы, в данном случае системы Агропромбанка
+     * когда мы отправляем им клиента на оплату
+     */
+    @Expose
+    @SerializedName("ext_id")
+    private Long extId;
+
+    public void setExtId(Long extId) {
+        this.extId = extId;
+    }
+    
+    @Column(name = "ext_id")
+    public Long getExtId() {
+        return extId;
+    }
+    
+    @Expose
+    @SerializedName("unit_id")
+    private Integer unitId;
+
+    public void setUnitId(Integer unitId) {
+        this.unitId = unitId;
+    }
+    
+    @Column(name = "unit_id")
+    public Integer getUnitId() {
+        return unitId;
+    }
+    
     /**
      * АТРИБУТЫ "ОЧЕРЕДНИКА" персональный номер, именно по нему система ведет учет и управление очередниками номер - целое число Номер клиента. Вообще, он
      * выдается по порядку. Но если номером является нечто введенное пользователем, то этот номер равен -1.
@@ -215,7 +247,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 QLog.l().logger().debug("Статус: С кастомером с номером \"" + getPrefix() + getNumber() + "\" закончили работать");
                 getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
                 setFinishTime(new Date());
-                 QLog.l().logger().debug(getFinishTime() + "FINISH TIME ++++ DEBUG");
+                QLog.l().logger().debug(getFinishTime() + "FINISH TIME ++++ DEBUG");
                 // сохраним кастомера в базе
                 saveToSelfDB();
                 break;
@@ -227,6 +259,28 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 // сохраним кастомера в базе
                 saveToSelfDB();
                 setStandTime(new Date());
+                break;
+            case STATE_PAYMENT:
+                QLog.l().logger().debug("Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет оплачивать услугу");
+                QLog.l().logger().debug(getStartTime());
+                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
+                setFinishTime(new Date());
+                // сохраним кастомера в базе
+                saveToSelfDB();
+                break;
+            case STATE_DEAD_AFTER_PAYMENT:
+                QLog.l().logger().debug("Кастомер с номером \"" + getPrefix() + getNumber() + "\" удаляется по таймеру из очереди ушёдших на оплату");
+                QLog.l().logger().debug(getStartTime());
+                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
+                setFinishTime(new Date());
+                //в данном случае у кастомера getUser равен null,
+                //возникнет ошибка во время сохранения данных
+                //saveToSelfDB();
+                break;
+            case STATE_WAIT_AFTER_PAYMENT:
+                QLog.l().logger().debug("Кастомер вернулся после оплаты и ждет с номером \"" + getPrefix() + getNumber() + "\"");
+                setStandTime(new Date());
+                //saveToSelfDB();
                 break;
         }
 
@@ -247,7 +301,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void addNewRespEvent(QRespEvent event) {
         resps.add(event);
     }
-
+    
     private void saveToSelfDB() {
         // сохраним кастомера в базе
         final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
@@ -592,6 +646,8 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     @Expose
     @SerializedName("start_postpone_period")
     private long startPontpone = 0;
+    @Expose
+    @SerializedName("finish_postpone_period")
     private long finishPontpone = 0;
 
     @Transient
@@ -643,5 +699,4 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public Integer getWaitingMinutes() {
         return new Long((System.currentTimeMillis() - getStandTime().getTime()) / 1000 / 60 + 1).intValue();
     }
-
 }
