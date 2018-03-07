@@ -943,12 +943,7 @@ public final class FClient extends javax.swing.JFrame {
                             if (Objects.equals(QConfig.cfg().getUnitId(), cu.unitId)) {
                                 //если у данного кустомера указано, что он должен быть обслужен конкретным оператором,
                                 //то не отображаем его в очереди для других операторов
-                                if (
-                                        (cu.isMine != null && cu.isMine.compareTo(user.getId()) != 0)
-        //                                    ||
-        //                                getExcludeServiceVoLTE(cu.serviceId)
-                                    )
-                                {
+                                if (cu.isMine != null && cu.isMine.compareTo(user.getId()) != 0) {
                                     excludedCustomersCount.increment();
                                     return;
                                 }
@@ -1119,31 +1114,6 @@ public final class FClient extends javax.swing.JFrame {
         }
         color = plan.getPostponedList().isEmpty() ? "blue" : "purple";
         labelPost.setText("<html><span style='color:" + color + "'>" + plan.getPostponedList().size() + "</span>");
-    }
-    
-    /*
-        Если данная услуга это "Настройка терминалов iPhone на работу в сети VoLTE", то
-        данную услугу отображаем в очереди только для 14 окна
-    */
-    private boolean getExcludeServiceVoLTE(Long serviceId) {
-        //если переданная услуга не является одной из указанных ниже, то отображаем её
-        if (!QService.IPHONE_SETTING_FOR_VOLTE_ABO.equals(serviceId)
-                &&
-            !QService.IPHONE_SETTING_FOR_VOLTE_SC.equals(serviceId))
-        {
-            return false;
-        }
-        //если это одна из услуг для настройки VoLTE
-        //и это 14 окно - НЕ пропускаем услугу
-        else if (placeId != null
-                && placeId.trim().equals("14")) {
-            return false;
-        }
-        //если это одна из услуг для настройки VoLTE
-        //и это НЕ 14 окно - пропускаем услугу
-        else {
-            return true;
-        }
     }
     
     public void expandAll(JTree tree) {

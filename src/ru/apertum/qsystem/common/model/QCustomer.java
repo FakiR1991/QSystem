@@ -646,6 +646,9 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     @Expose
     @SerializedName("start_postpone_period")
     private long startPontpone = 0;
+    /**
+     * Когда заканчивается срок отложения в милисекундах;
+     */
     @Expose
     @SerializedName("finish_postpone_period")
     private long finishPontpone = 0;

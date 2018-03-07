@@ -2139,7 +2139,7 @@ public class FReception extends javax.swing.JFrame {
 
             final QCustomer customer;
             try {
-                customer = NetCommander.standInService(netProperty, service.getId(), "1", 1, inputData, QConfig.cfg().getUnitId()); //NOI18N
+                customer = NetCommander.standInService(netProperty, service.getId(), "1", service.getDefaultPriority(), inputData, QConfig.cfg().getUnitId()); //NOI18N
             } catch (Exception ex) {
                 throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
             }

@@ -497,7 +497,7 @@ public class QButton extends JButton {
 
                     //выполним задание если услуга активна
                     if (isActive) {
-                        IWelcome.StandInParameters parameters = new IWelcome.StandInParameters(FWelcome.netProperty, service.getId(), "1", 1, inputData);
+                        IWelcome.StandInParameters parameters = new IWelcome.StandInParameters(FWelcome.netProperty, service.getId(), "1", service.getDefaultPriority(), inputData);
                         // тут сделать обработчик параметров для постановки в очередь
                         for (final IWelcome event : ServiceLoader.load(IWelcome.class)) {
                             QLog.l().logger().info("Вызов SPI расширения handleStandInParams. Описание: " + event.getDescription());
