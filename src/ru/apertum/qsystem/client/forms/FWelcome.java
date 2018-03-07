@@ -496,7 +496,7 @@ public class FWelcome extends javax.swing.JFrame {
                             }
                             final QCustomer customer;
                             try {
-                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", serv.getDefaultPriority() == null ? 1 : serv.getDefaultPriority(), "", QConfig.cfg().getUnitId());
+                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "", QConfig.cfg().getUnitId());
                             } catch (Exception ex) {
                                 QLog.l().logger().error("Fail to put in line " + serv.getName() + "  ID=" + serv.getId(), ex);
                                 return;
@@ -533,7 +533,7 @@ public class FWelcome extends javax.swing.JFrame {
                             }
                             final QCustomer customer;
                             try {
-                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", serv.getDefaultPriority() == null ? 1 : serv.getDefaultPriority(), "", QConfig.cfg().getUnitId());
+                                customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "", QConfig.cfg().getUnitId());
                             } catch (Exception ex) {
                                 QLog.l().logger().error("Fail to put in line '" + serv.getName() + "'  ID=" + serv.getId(), ex);
                                 return;
@@ -646,7 +646,7 @@ public class FWelcome extends javax.swing.JFrame {
                                 }
                                 final QCustomer customer;
                                 try {
-                                    customer = NetCommander.standInService(netProperty, serv.getId(), "1", serv.getDefaultPriority() == null ? 1 : serv.getDefaultPriority(), "", QConfig.cfg().getUnitId());
+                                    customer = NetCommander.standInService(netProperty, serv.getId(), "1", 1, "", QConfig.cfg().getUnitId());
                                 } catch (Exception ex) {
                                     QLog.l().logger().error("Не поставлен в очередь в " + serv.getName() + "  ID=" + serv.getId(), ex);
                                     return;

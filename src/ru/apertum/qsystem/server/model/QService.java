@@ -89,6 +89,10 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     public static final Long ROOT_SERVICES_ABO = 1503466462316L;
     //корень услуг для сервисного центра
     public static final Long ROOT_SERVICES_SC = 1503466512673L;
+    
+    
+    public static final Long IPHONE_SETTING_FOR_VOLTE_ABO = 1516101725491L;
+    public static final Long IPHONE_SETTING_FOR_VOLTE_SC = 1516101802925L;
 
     /**
      * множество кастомеров, вставших в очередь к этой услуге
@@ -1183,23 +1187,6 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     public String getName() {
         return name;
     }
-    
-    /**
-     * Дефолтный приоритет услуги.
-     */
-    @Expose
-    @SerializedName("default_priority")
-    @Column(name = "default_priority")
-    private Integer defaultPriority;
-
-    public final void setDefaultPriority(Integer defaultPriority) {
-        this.defaultPriority = defaultPriority;
-    }
-
-    public Integer getDefaultPriority() {
-        return defaultPriority;
-    }
-    
     /**
      * Надпись на кнопке услуги.
      */

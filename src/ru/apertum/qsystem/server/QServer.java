@@ -31,10 +31,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -693,46 +691,17 @@ public class QServer extends Thread {
         double ratioForAbo = workloadStats.getCustomersToClientsRatioForAbo();
         double ratioForSC = workloadStats.getCustomersToClientsRatioForSC();
         
-        //если сейчас не рабочее время
-        if (!isNowWorkingTime()) {
-            return false;
-        }
         //если время ожидания в абон. зале больше 15 минут или в СЦ больше 20 минут
-        else if (maxWaitingMinutesAbo > WorkloadStatistics.MAX_WAITING_MINUTES_ABO || maxWaitingMinutesSC > WorkloadStatistics.MAX_WAITING_MINUTES_SC) {
+        if (maxWaitingMinutesAbo > WorkloadStatistics.MAX_WAITING_MINUTES_ABO || maxWaitingMinutesSC > WorkloadStatistics.MAX_WAITING_MINUTES_SC) {
             return true;
         //если отношение показателя "Количество клиентов (зал)" к показателю "Количество работников (зал)" больше или равно 2,5
         //или
-        //если отношение показателя "Количество клиентов (СЦ)" к показателю "Количество работников (СЦ)" больше или равно 5
-        } else if (ratioForAbo >= 2.5 || ratioForSC >= 5) {
+        //если отношение показателя "Количество клиентов (СЦ)" к показателю "Количество работников (СЦ)" больше или равно 4
+        } else if (ratioForAbo >= 2.5 || ratioForSC >= 4) {
             return true;
         }
         
         return false;
-    }
-    
-    private static boolean isNowWorkingTime() {
-        final Date now = new Date();
-        return now.after(getWorkingTimeStart()) && now.before(getWorkingTimeEnd());
-    }
-    
-    private static Date getWorkingTimeStart(){
-        final GregorianCalendar gc = new GregorianCalendar();
-        gc.set(Calendar.HOUR_OF_DAY, 8);
-        gc.set(Calendar.MINUTE, 0);
-        gc.set(Calendar.SECOND, 0);
-        gc.set(Calendar.MILLISECOND, 0);
-        Date date = gc.getTime();
-        return date;
-    }
-    
-    private static Date getWorkingTimeEnd(){
-        final GregorianCalendar gc = new GregorianCalendar();
-        gc.set(Calendar.HOUR_OF_DAY, 19);
-        gc.set(Calendar.MINUTE, 0);
-        gc.set(Calendar.SECOND, 0);
-        gc.set(Calendar.MILLISECOND, 0);
-        Date date = gc.getTime();
-        return date;
     }
     
     private static void startPostponedTimer()
