@@ -123,7 +123,11 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
     public synchronized void inviteCustomer(QUser user, QCustomer customer) {
         super.inviteCustomer(user, customer);
         if (indicatorBoard != null) {
-            indicatorBoard.showCallPanel(customer.getFullNumber(), user.getPoint(), user.getTabloText(), customer.getService().getTabloText(), customer.getService().getInputedAsExt() ? (customer.getInput_data() == null ? "" : customer.getInput_data()) : "");
+            indicatorBoard.showCallPanel(String.format("%03d", customer.getNumber()),
+                                         user.getPoint(),
+                                         user.getTabloText(),
+                                         customer.getService().getTabloText(),
+                                         customer.getService().getInputedAsExt() ? (customer.getInput_data() == null ? "" : customer.getInput_data()) : "");
         }
     }
 

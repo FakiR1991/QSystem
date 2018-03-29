@@ -122,6 +122,23 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     }
     
     /**
+     * Если кастомер был инициирован АПБ и пришёл от них к нам и
+     * был указан redirection=1, то записываем сюда значение параметра pointIdFrom
+     */
+    @Expose
+    @SerializedName("point_id_to")
+    private Integer pointIdTo;
+
+    public void setPointIdTo(Integer pointIdTo) {
+        this.pointIdTo = pointIdTo;
+    }
+    
+    @Column(name = "point_id_to")
+    public Integer getPointIdTo() {
+        return pointIdTo;
+    }
+    
+    /**
      * АТРИБУТЫ "ОЧЕРЕДНИКА" персональный номер, именно по нему система ведет учет и управление очередниками номер - целое число Номер клиента. Вообще, он
      * выдается по порядку. Но если номером является нечто введенное пользователем, то этот номер равен -1.
      */
@@ -673,7 +690,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
      */
     @Override
     public String toString() {
-        return getFullNumber()
+        return String.format("%03d", this.getNumber())
                 + (getInput_data().isEmpty() ? "" : " " + getInput_data())
                 + (postponedStatus.isEmpty() ? "" : " " + postponedStatus + (" (" + (postponPeriod > 0 ? postponPeriod : "...") + " / " + (System.currentTimeMillis() - startPontpone) / 1000 / 60 + " min.)")
                         + (isMine != null ? " Private!" : ""));

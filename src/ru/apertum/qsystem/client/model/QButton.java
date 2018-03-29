@@ -528,7 +528,7 @@ public class QButton extends JButton {
                         clock.stop();
                         form.showDelayFormPrint(WelcomeParams.getInstance().patternGetTicket.replace("dialogue_text.take_ticket", FWelcome.getLocaleMessage("qbutton.take_ticket")).
                                 replace("dialogue_text.your_nom", FWelcome.getLocaleMessage("qbutton.your_nom")).
-                                replace("dialogue_text.number", res.getFullNumber()),
+                                replace("dialogue_text.number", String.format("%03d", res.getNumber())),
                                 WelcomeParams.getInstance().getTicketImg);
 
                         QLog.l().logger().info("Печать этикетки.");

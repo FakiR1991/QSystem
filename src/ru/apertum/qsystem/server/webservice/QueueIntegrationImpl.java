@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package ru.apertum.qsystem.server.model;
+package ru.apertum.qsystem.server.webservice;
 
 import java.util.Date;
 import javax.jws.WebService;
@@ -12,13 +12,15 @@ import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.controller.Executer;
+import ru.apertum.qsystem.server.model.QService;
+import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
 
 /**
  *
  * @author zaikov
  */
-@WebService(endpointInterface = "ru.apertum.qsystem.server.model.QueueIntegration")
+@WebService(endpointInterface = "ru.apertum.qsystem.server.webservice.QueueIntegration")
 public class QueueIntegrationImpl implements QueueIntegration {
 
     /**
@@ -30,7 +32,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
      * @param redirection Признак необходимости редиректа обратно
      * @param pointIdFrom Номер окна из которого пришёл кастомер
      * @param pointIdTo Номер окна в которое требуется отправить кастомера
-     * @param additioninfo Доп. параметры
+     * @param additionInfo Доп. параметры
      * @return Признак удачности выполнения функции
      */
     @Override
@@ -41,7 +43,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
                                 int redirection,
                                 int pointIdFrom,
                                 int pointIdTo,
-                                String additioninfo) {
+                                String additionInfo) {
         String logInfo = "\n unitId=" + unitId +
                          "\n requestId=" + requestId +
                          "\n ticketId=" + ticketId + 
@@ -49,17 +51,33 @@ public class QueueIntegrationImpl implements QueueIntegration {
                          "\n redirection=" + redirection + 
                          "\n pointIdFrom=" + pointIdFrom + 
                          "\n pointIdTo=" + pointIdTo + 
-                         "\n additioninfo=" + additioninfo;
+                         "\n additionInfo=" + additionInfo;
+        
+//        добавить в класс QCustomer поле pointIdTo
+//        1. если redirection не пустой тогда пишем комментарий к кастомеру "Требуется вернуть клиента в банк"
+//        2. если pointIdFrom не пустой тогда указать у кастомера, что его требуется вернуть в конкретное окно в банке
+//        3. обрабатывать поле pointIdTo при отправке кастомера в банк
+        
         
         QLog.l().logger().info("Принимаем клиента от АПБ");
         QLog.l().logger().info(logInfo);
         
         //выполняем проверки и получаем пользователя из списка ушедших на оплату
         QCustomer customer = getCustomerByRequestId(requestId);
+        //если кастомер пришёл из АПБ и его нужно вернуть,
+        //то указываем в какую точку обслуживания его отправить
+        if (redirection == 1) {
+            customer.setPointIdTo(pointIdFrom);
+        }
         
         if (customer == null) {
-            QLog.l().logger().error("Не найден кастомер в списке ушедших на оплату: requestId=" + requestId == null ? "null" : requestId);
-            return "0";
+            QLog.l().logger().error("Не найден кастомер в списке ушедших на оплату: requestId=" + requestId);
+            return requestId;
+        }
+        
+        //если нам венрули кастомера с redirection=1, то пишем комментарий, что его нужно вернуть снова в банк
+        if (redirection == 1) {
+            customer.setTempComments("Оператор банка запросил вернуть клиента после обслуживания");
         }
         
         //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
@@ -80,7 +98,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
         //состояние - "жду после оплаты"
         customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
         
-        return "1";
+        return requestId;
     }
     
     private QCustomer getCustomerByRequestId(String requestId) {

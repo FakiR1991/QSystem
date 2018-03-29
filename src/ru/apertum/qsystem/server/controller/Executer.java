@@ -16,6 +16,8 @@
  */
 package ru.apertum.qsystem.server.controller;
 
+import com.agroprombank.services.QMSServiceSoapProxy;
+import java.math.BigDecimal;
 import org.springframework.transaction.TransactionStatus;
 import ru.apertum.qsystem.common.SoundPlayer;
 
@@ -89,8 +91,7 @@ import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
-import ru.apertum.qsystem.server.model.QueueIntegration;
-import ru.apertum.qsystem.server.model.QueueIntegrationImplService;
+import ru.apertum.qsystem.server.webservice.QueueIntegration;
 import ru.apertum.qsystem.server.model.UsersStatistic;
 import ru.apertum.qsystem.server.model.calendar.QCalendarList;
 import ru.apertum.qsystem.server.model.infosystem.QInfoTree;
@@ -110,6 +111,9 @@ import ru.apertum.qsystem.server.model.schedule.QSchedule;
  * @author Evgeniy Egorov
  */
 public final class Executer {
+    
+//    @WebServiceRef(wsdlLocation = "D:\\Projects\\Java\\Workspace.qs\\Apertum-qsystem-8e3c1327905c\\src\\ru\\apertum\\qsystem\\server\\webclient2\\IDC.Services.QMSService.wsdl")
+//    QMSService service;
 
     public static Executer getInstance() {
         return ExecuterHolder.INSTANCE;
@@ -370,7 +374,7 @@ public final class Executer {
                         || user.getCustomer().getState() == CustomerState.STATE_WAIT_AFTER_POSTPONED
                         || user.getCustomer().getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE)) {
                     SoundPlayer.inviteClient(user.getCustomer().getService(), user.getCustomer().getPrefix() + (user.getCustomer().getNumber() < 1 ? "" : user.getCustomer().getNumber()), user.getPoint(), isFrst);
-                    // Должно высветитьсяна основном табло
+                    // Должно высветиться на основном табло
                     MainBoard.getInstance().inviteCustomer(user, user.getCustomer());
                 }
                 usrs.remove(user);
@@ -1124,25 +1128,50 @@ public final class Executer {
                 //рассылаем широковещетельно по UDP на определенный порт. Должно высветиться на основном табло
                 MainBoard.getInstance().killCustomer(user);
                 
-                QueueIntegration apbQueue = new QueueIntegrationImplService().getQueueIntegrationImplPort();
-
+                String apbCustomerId = null;
+                
                 //отправляем кастомера в очередь АПБ и получаем
                 //идентификатор данного кастомера в системе АПБ
-//                String apbCustomerId = apbQueue.appendRequest(customer.getUnitId(),
-//                                                              customer.getId().toString(),
-//                                                              customer.getNumber(),
-//                                                              customer.getPriority().get(),
-//                                                              cmdParams.needReturnAfterPayment ? 1 : 0,
-//                                                              parseUserPoint(user.getPoint()),
-//                                                              0, //отправляем в любое окно
-//                                                              null); //дополнительные параметры (не обязательные)
-
-                String apbCustomerId = "658426";
-                
                 try {
+                    //идентификатор зала
+                    BigDecimal unitId = new BigDecimal(customer.getUnitId());
+                    //идентификатор кастомера
+                    String customerId = customer.getId().toString();
+                    //номер талона
+                    String ticketId = String.valueOf(customer.getNumber());
+                    //приоритет согласно таблице приоритетов
+                    BigDecimal priorityId = internalPriorityToExternal(customer);
+                    BigDecimal redirection = cmdParams.needReturnAfterPayment ? BigDecimal.ONE : BigDecimal.ZERO;
+                    //если указан id оператора к которому нужно вернуть клиента,
+                    //то отправляем номер окна куда вернуть, иначе - 9999 (вернуть к любому оператору)
+                    BigDecimal pointIdFrom = customer.getIsMine() != null ? new BigDecimal(parseUserPoint(user.getPoint())) : new BigDecimal(9999);
+                    //если указано куда отправлять, то берём это значение, а иначе - ноль (т.е. в любую точку обслуживания)
+                    BigDecimal pointIdTo = customer.getPointIdTo() != null ? new BigDecimal(customer.getPointIdTo()) : BigDecimal.ZERO;
+                    //дополнительные параметры
+                    String additionalInfo = " ";
+                    
+                    //инициализируем веб-клиента для работы с веб-сервисом АПБ
+                    QMSServiceSoapProxy apb = new QMSServiceSoapProxy();
+                    
+                    apbCustomerId = apb.AppendRequest(unitId,
+                                                      customerId,
+                                                      ticketId,
+                                                      priorityId,
+                                                      redirection,
+                                                      pointIdFrom,
+                                                      pointIdTo,
+                                                      additionalInfo);
                     customer.setExtId(Long.valueOf(apbCustomerId));
                 } catch (NumberFormatException fe) {
                     QLog.l().logger().trace("Ошибка парсинга идентификатора из системы АПБ, apbCustomerId=\"" + apbCustomerId + "\"", fe);
+                }
+//                catch (RemoteException re) {
+//                    QLog.l().logger().trace("Ошибка при отправке клиента в очередь АПБ, apbCustomerId=\"" + apbCustomerId + "\"", re);
+//                    throw re;
+//                }
+                catch (Exception e) {
+                    QLog.l().logger().trace("Ошибка до попытки отправки клиента в очередь АПБ", e);
+                    throw e;
                 }
             } catch (Throwable t) {
                 QLog.l().logger().error("Загнулось под конец 2. " + ipAdress, t);
@@ -1150,6 +1179,33 @@ public final class Executer {
             return new JsonRPC20OK();
         }
     };
+    
+    /**
+     * Отражает значение внутреннего приоритета системы на систему приоритетов для взаимодействия с внешней системой.
+     * @param customer Пользователь для которого тербуется определить приоритет.
+     * @return Вернёт значение, которое является отражением внутреннего приоритета на приоритет для внешнего взаимодействия.
+     */
+    private BigDecimal internalPriorityToExternal(QCustomer customer) {
+        //если extId != null, то по идее этот клиент
+        //уже отправлялся в АПБ и отправляется туда ещё раз
+        switch(customer.getPriority().get()) {
+            case Uses.PRIORITY_LOW:
+            case Uses.PRIORITY_NORMAL:
+                return customer.getExtId() == null
+                            ? new BigDecimal(QueueIntegration.PRIORITY_NORMAL)
+                            : new BigDecimal(QueueIntegration.PRIORITY_NORMAL_AGAIN);
+            case Uses.PRIORITY_HI:
+                return customer.getExtId() == null
+                            ? new BigDecimal(QueueIntegration.PRIORITY_INCREASED)
+                            : new BigDecimal(QueueIntegration.PRIORITY_INCREASED_AGAIN);
+            case Uses.PRIORITY_VIP:
+                return customer.getExtId() == null
+                            ? new BigDecimal(QueueIntegration.PRIORITY_VIP)
+                            : new BigDecimal(QueueIntegration.PRIORITY_VIP_AGAIN);
+            default:
+                return new BigDecimal(QueueIntegration.PRIORITY_NORMAL);
+        }
+    }
     
     /**
      * Возвращает номер окна оператора в числовом представлении.

@@ -4,41 +4,25 @@
  * and open the template in the editor.
  */
 package ru.apertum.qsystem.server.model;
-import com.google.gson.annotations.Expose;
-
-import com.google.gson.annotations.SerializedName;
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import javax.persistence.Id;
-import java.util.List;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.Transient;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Type;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ServerException;
-import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.Spring;
 
 /**

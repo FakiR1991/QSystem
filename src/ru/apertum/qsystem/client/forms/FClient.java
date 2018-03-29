@@ -95,10 +95,7 @@ import ru.apertum.qsystem.common.model.IClientNetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IStartClient;
 import ru.apertum.qsystem.fx.OrangeClientboard;
-import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser;
-import ru.apertum.qsystem.server.model.QueueIntegration;
-import ru.apertum.qsystem.server.model.QueueIntegrationImplService;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 import ru.apertum.qsystem.server.model.UsersStatistic;
 
@@ -144,9 +141,9 @@ public final class FClient extends javax.swing.JFrame {
         }
         QLog.l().logger().trace("Установливаем кастомера работающему клиенту и выводем его.");
         // выведем на экран некую инфу о приглашенном кастомере
-        final String textCust = customer.getFullNumber();
+        final String textCust = String.format("%03d", customer.getNumber());
         // Выведем номер вызванного.
-        printCustomerNumber(customer.getPrefix(), customer.getNumber(), 0);
+        printCustomerNumber("", customer.getNumber(), 0);
 
         final String priority;
         switch (customer.getPriority().get()) {
@@ -247,7 +244,7 @@ public final class FClient extends javax.swing.JFrame {
      */
     private void setBlinkBoard(boolean blinked) {
         if (indicatorBoard != null) {
-            indicatorBoard.printRecord(0, customer.getPrefix(), customer.getNumber(), "", "", blinked ? 0 : -1);
+            indicatorBoard.printRecord(0, "", customer.getNumber(), "", "", blinked ? 0 : -1);
         }
         if (clientboardFX) {
             //todo   board.showData(customer.getPrefix() + customer.getNumber(), blinked);
@@ -1589,7 +1586,7 @@ public final class FClient extends javax.swing.JFrame {
             // вернется кастомер и возможно он еще не домой а по списку услуг. Список определяется при старте кастомера в обработку специяльным юзером в регистратуре
             final QCustomer cust = NetCommander.getFinishCustomer(netProperty, user.getId(), customer.getId(), res, resComments);
             if (cust != null && cust.getService() != null && cust.getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE) {
-                JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + cust.getFullNumber() + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + String.format("%03d", cust.getNumber()) + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
             }
             
             workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));

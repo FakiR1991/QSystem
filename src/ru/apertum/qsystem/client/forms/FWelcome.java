@@ -1419,7 +1419,7 @@ public class FWelcome extends javax.swing.JFrame {
                 g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), WelcomeParams.getInstance().ticketFontH1Size));
                 int h = comp.getFontMetrics(g2.getFont()).getHeight();
                 initY = initY + Math.round(new Float(h * (h > 30 ? (h > 60 ? 0.65 : 0.7) : 1)));
-                final String num = customer.getPrefix() + QConfig.cfg().getNumDivider(customer.getPrefix()) + String.format("%03d", customer.getNumber());
+                final String num = /*customer.getPrefix() + QConfig.cfg().getNumDivider(customer.getPrefix()) + */String.format("%03d", customer.getNumber());
                 write(g2, num, line, getHAlignment(g2, num, 0, 1), 1, 1, initY);
                 initY = initY + WelcomeParams.getInstance().lineHeigth / 3;
                 g2.setFont(f_standard);
@@ -2614,7 +2614,7 @@ private void buttonStandAdvanceActionPerformed(java.awt.event.ActionEvent evt) {
 
             showDelayFormPrint("<HTML><b><p align=center><span style='font-size:50.0pt;color:green'>" + getLocaleMessage("ticket.get_caption") + "<br></span>"
                     + "<span style='font-size:60.0pt;color:blue'>" + getLocaleMessage("ticket.get_caption_number") + "<br></span>"
-                    + "<span style='font-size:100.0pt;color:blue'>" + res.getResult().getPrefix() + res.getResult().getNumber() + "</span></p>",
+                    + "<span style='font-size:100.0pt;color:blue'>" + /*res.getResult().getPrefix() + */res.getResult().getNumber() + "</span></p>",
                     Uses.firstMonitor.getDefaultConfiguration().getBounds().height > 900 || this.getHeight() > 900 ? "/ru/apertum/qsystem/client/forms/resources/getTicket.png" : "/ru/apertum/qsystem/client/forms/resources/getTicketSmall.png");
 
             QLog.l().logger().info("Печать этикетки.");

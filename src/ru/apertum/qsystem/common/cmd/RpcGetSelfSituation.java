@@ -209,7 +209,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.id = service.getId();
             this.line = new LinkedList<>();
             for (QCustomer cu : service.getClients()) {// не переделывать на лямбду.
-                final String fn = cu.getFullNumber();
+                final String fn = String.format("%03d", cu.getNumber());
                 final StPair sp = new StPair(fn, cu.getPostponedStatus(), cu.getWaitingMinutes(), cu.getIsMine(), cu.getService().getId(), cu.getUnitId());
                 line.addLast(sp);
             }

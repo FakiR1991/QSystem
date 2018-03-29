@@ -23,6 +23,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.awt.event.ActionEvent;
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.*;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executors;
@@ -72,7 +74,8 @@ import ru.apertum.qsystem.reports.model.WebServer;
 import ru.apertum.qsystem.server.controller.Executer;
 import ru.apertum.qsystem.server.http.JettyRunner;
 import ru.apertum.qsystem.common.EmailSender;
-import ru.apertum.qsystem.server.model.QueueIntegrationImpl;
+import ru.apertum.qsystem.common.exceptions.ClientException;
+import ru.apertum.qsystem.server.webservice.QueueIntegrationImpl;
 import ru.apertum.qsystem.server.model.QNotificationsInfo;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
@@ -80,6 +83,8 @@ import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
+import ru.apertum.qsystem.server.webservice.QueueIntegration;
+import ru.apertum.qsystem.server.webservice.QueueIntegrationImplService;
 
 /**
  * Класс старта и exit инициализации сервера. Организация потоков выполнения заданий.
@@ -111,9 +116,18 @@ public class QServer extends Thread {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
+        
+//        System.setProperty("http.proxyHost", "217.19.213.225");
+//        System.setProperty("http.proxyPort", "8080");
+        
         workloadTimer.start();
         
         publishWebService();
+
+//        веб-клиент для моего веб-сервиса
+//        QueueIntegrationImplService queueService = new QueueIntegrationImplService();
+//        QueueIntegration queue = queueService.getUCImplPort();
+//        queue.appendRequest(new BigDecimal(5), "1234567891234", new BigDecimal(666), BigDecimal.ONE, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, "");
         
         About.printdef();
         QLog.initial(args, 0);
@@ -343,11 +357,35 @@ public class QServer extends Thread {
         System.exit(0);
     }
     
+    private static String serviceAddress;
+    
     /**
      * Создаём и публикуем свой веб-сервис для взаимодействия с очередью Агропромбанка.
      */
     private static void publishWebService() {
-        Endpoint.publish("http://localhost:9901/queue", new QueueIntegrationImpl());
+        loadWebServiceSettings();
+        Endpoint.publish(serviceAddress, new QueueIntegrationImpl());
+    }
+    
+    private static void loadWebServiceSettings() {
+        QLog.l().logger().debug("\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u043c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u0438\u0437 \u0444\u0430\u0439\u043b\u0430 \"config" + File.separator + "admin.property\"");
+        final Properties settings = new Properties();
+        final FileInputStream in;
+        InputStreamReader inR = null;
+        try {
+            in = new FileInputStream("config" + File.separator + "admin.properties");
+            inR = new InputStreamReader(in, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            throw new ClientException("\u041f\u0440\u043e\u0431\u043b\u0435\u043c\u044b \u0441 \u043a\u043e\u0434\u0438\u0440\u043e\u0432\u043a\u043e\u0439 \u043f\u0440\u0438 \u0447\u0442\u0435\u043d\u0438\u0438. " + ex);
+        } catch (FileNotFoundException ex) {
+            throw new ClientException("\u041f\u0440\u043e\u0431\u043b\u0435\u043c\u044b \u0441 \u0444\u0430\u0439\u043b\u043e\u043c \u043f\u0440\u0438 \u0447\u0442\u0435\u043d\u0438\u0438. " + ex);
+        }
+        try {
+            settings.load(inR);
+        } catch (IOException ex) {
+            throw new ClientException("\u041f\u0440\u043e\u0431\u043b\u0435\u043c\u044b \u0441 \u0447\u0442\u0435\u043d\u0438\u0435\u043c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432. " + ex);
+        }
+        serviceAddress = settings.getProperty("service_address");
     }
     
     private static class WorkloadStatistics {
@@ -687,7 +725,7 @@ public class QServer extends Thread {
      * @param workloadStats Данные для анализа перед отправкой уведомлений по почте.
      * @return Возвращает true если требуется уведомить о большой очереди и false если нагрузка соответствует норме и уведомлять не требуется.
      */
-    private static boolean needNotification(WorkloadStatistics workloadStats) {
+        private static boolean needNotification(WorkloadStatistics workloadStats) {
         int maxWaitingMinutesAbo = workloadStats.getMaxWaitingMinutesAbo();
         int maxWaitingMinutesSC = workloadStats.getMaxWaitingMinutesSC();
         double ratioForAbo = workloadStats.getCustomersToClientsRatioForAbo();
