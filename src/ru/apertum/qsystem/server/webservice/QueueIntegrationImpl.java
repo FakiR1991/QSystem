@@ -10,8 +10,11 @@ import javax.jws.WebService;
 import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
+import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.QCustomer;
+import ru.apertum.qsystem.server.QServer;
 import ru.apertum.qsystem.server.controller.Executer;
+import static ru.apertum.qsystem.server.controller.Executer.CLIENT_TASK_LOCK;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
@@ -38,12 +41,13 @@ public class QueueIntegrationImpl implements QueueIntegration {
     @Override
     public String appendRequest(int unitId,
                                 String requestId,
-                                int ticketId,
+                                String ticketId,
                                 int priorityId,
                                 int redirection,
                                 int pointIdFrom,
                                 int pointIdTo,
                                 String additionInfo) {
+        
         String logInfo = "\n unitId=" + unitId +
                          "\n requestId=" + requestId +
                          "\n ticketId=" + ticketId + 
@@ -53,31 +57,35 @@ public class QueueIntegrationImpl implements QueueIntegration {
                          "\n pointIdTo=" + pointIdTo + 
                          "\n additionInfo=" + additionInfo;
         
-//        добавить в класс QCustomer поле pointIdTo
-//        1. если redirection не пустой тогда пишем комментарий к кастомеру "Требуется вернуть клиента в банк"
-//        2. если pointIdFrom не пустой тогда указать у кастомера, что его требуется вернуть в конкретное окно в банке
-//        3. обрабатывать поле pointIdTo при отправке кастомера в банк
-        
-        
         QLog.l().logger().info("Принимаем клиента от АПБ");
         QLog.l().logger().info(logInfo);
         
+        boolean initFromApb = false;
+        
         //выполняем проверки и получаем пользователя из списка ушедших на оплату
         QCustomer customer = getCustomerByRequestId(requestId);
-        //если кастомер пришёл из АПБ и его нужно вернуть,
-        //то указываем в какую точку обслуживания его отправить
+        
+        //если кустомера не нашли в списке ушедших на оплату, значит нужно
+        //создать нового и поставить в очередь на дефолтную услугу
+        if (customer == null) {
+            QLog.l().logger().warn("Не найден кастомер в списке ушедших на оплату: requestId=" + requestId +
+                                   ". Значит клиент инициирован Агропромбанком. Нужно создать нового клиента и поставить в очередь.");
+            
+            customer = initCustomerFromBank(unitId, requestId, ticketId, priorityId, pointIdFrom);
+            initFromApb = true;
+        }
+        
+        //не получилось создать нового кустомера и поставить его в услугу
+        //в теории такого не должно быть
+        if (customer == null) {
+            QLog.l().logger().error("Не удалось поставить клиента в очередь на дефолтную услугу.");
+            throw new ServerException("Не удалось поставить клиента в очередь на дефолтную услугу.");
+        }
+        
+        //если нам вернули кастомера с redirection=1, то пишем комментарий, что его нужно вернуть снова в банк
         if (redirection == 1) {
             customer.setPointIdTo(pointIdFrom);
-        }
-        
-        if (customer == null) {
-            QLog.l().logger().error("Не найден кастомер в списке ушедших на оплату: requestId=" + requestId);
-            return requestId;
-        }
-        
-        //если нам венрули кастомера с redirection=1, то пишем комментарий, что его нужно вернуть снова в банк
-        if (redirection == 1) {
-            customer.setTempComments("Оператор банка запросил вернуть клиента после обслуживания");
+            customer.setTempComments("Автоматический текст: оператор банка запросил вернуть клиента обратно после обслуживания.");
         }
         
         //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
@@ -92,13 +100,93 @@ public class QueueIntegrationImpl implements QueueIntegration {
         //удалим из списка ушедших на оплату
         removeCustomerFromList(customer);
         
-        //вроде как только что встал в очередь, ну и время проставим, а то ожидание будет огромное
-        //только что встал типо; просто время нахождения в отложенных не считается как ожидание очереди, иначе в statistic ожидание огромное
-        customer.setStandTime(new Date());
+        //если кустомер вернулся после оплаты
         //состояние - "жду после оплаты"
-        customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
+        if (!initFromApb) {
+            //вроде как только что встал в очередь, ну и время проставим, а то ожидание будет огромное
+            //только что встал типо; просто время нахождения в отложенных не считается как ожидание очереди, иначе в statistic ожидание огромное
+            customer.setStandTime(new Date());
+            customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
+        }
+        //если кустомер был инициирован АПБ и создан только что
+        else {
+            customer.setState(CustomerState.STATE_WAIT);
+        }
         
-        return requestId;
+        try {
+            // сохраняем состояния очередей.
+            QServer.savePool();
+        } catch (Exception ex) {
+            QLog.l().logger().error("Ошибка сохранения состояния очередей", ex);
+        }
+        
+        return customer.getId().toString();
+    }
+    
+    private QCustomer initCustomerFromBank(int unitId,
+                                         String externalId,
+                                         String ticketId,
+                                         int externalPriority,
+                                         int pointIdFrom) {
+        
+        final QService service = QServiceTree.getInstance().getById(QService.SERVICE_CONSULTATION_CDMA);
+        final QCustomer customer;
+        int priority = externalPriorityToInternal(externalPriority);
+        // синхронизируем работу с клиентом
+        CLIENT_TASK_LOCK.lock();
+        try {
+            // Создадим вновь испеченного кастомера
+            customer = new QCustomer(Integer.valueOf(ticketId));
+            customer.setUnitId(unitId);
+            customer.setPriority(priority);
+            customer.setPointIdTo(pointIdFrom);
+            try {
+                customer.setExtId(Long.valueOf(externalId));
+            } catch (NumberFormatException nfe) {
+                customer.setExtId(null);
+                QLog.l().logger().warn("Ошибка парсинга идентификатора из системы АПБ, apbCustomerId=\"" + externalId + "\"", nfe);
+            }
+            customer.setService(service);
+
+//            // Определим кастомера в очередь
+//            customer.setService(service);
+//            if (service.getLink() != null) {
+//                customer.setService(service.getLink());
+//            }
+//
+//            //добавим нового пользователя
+//            (service.getLink() != null ? service.getLink() : service).addCustomer(customer);
+//            // Состояние у него "Стою, жду".
+//            customer.setState(CustomerState.STATE_WAIT);
+        } finally {
+            CLIENT_TASK_LOCK.unlock();
+        }
+        QLog.l().logger().trace("С приоритетом " + priority + " К услуге \"" + QService.SERVICE_CONSULTATION_CDMA +
+                                "\" -> " + service.getPrefix() + '\'' + service.getName() + '\'');
+        
+        return customer;
+    }
+    
+    /**
+     * Отражает значение приоритета для внешнего взаимодействия на внутреннюю систему приоритетов.
+     * @param externalPriority Значение приоритета для внешнего взаимодействия.
+     * @return Вернёт значение, которое является отражением приоритета для внешнего взаимодействия на систему приоритетов внутри системы.
+     */
+    private int externalPriorityToInternal(int externalPriority) {
+        switch(externalPriority) {
+            case QueueIntegration.PRIORITY_NORMAL:
+            case QueueIntegration.PRIORITY_NORMAL_AGAIN:
+                return Uses.PRIORITY_NORMAL;
+            case QueueIntegration.PRIORITY_INCREASED:
+            case QueueIntegration.PRIORITY_INCREASED_AGAIN:
+                return Uses.PRIORITY_HI;
+            case QueueIntegration.PRIORITY_VIP:
+            case QueueIntegration.PRIORITY_VIP_AGAIN:
+            case QueueIntegration.PRIORITY_HIGHEST:
+                return Uses.PRIORITY_VIP;
+            default:
+                return Uses.PRIORITY_NORMAL;
+        }
     }
     
     private QCustomer getCustomerByRequestId(String requestId) {
@@ -115,12 +203,6 @@ public class QueueIntegrationImpl implements QueueIntegration {
             customer = QMovedToBankList.getInstance().getById(Long.valueOf(requestId.trim()));
         } catch (NumberFormatException e) {
             QLog.l().logger().error("Ошибка парсинга requestId=\"" + requestId + "\"", e);
-        }
-        
-        //кастомер не найден в списке ушедших на оплату
-        //что то пошло не так
-        if (customer == null) {
-            QLog.l().logger().error("В списке ушедших на оплату не найден кастомер с requestId=\"" + requestId.trim() + "\"");
         }
         
         return customer;

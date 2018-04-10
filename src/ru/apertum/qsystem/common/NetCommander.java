@@ -31,7 +31,6 @@ import java.net.Socket;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -822,7 +821,7 @@ public class NetCommander {
      * @param comments это если закончили работать с редиректенным и его нужно вернуть
      * @return
      */
-    public static QCustomer getFinishCustomer(INetProperty netProperty, long userId, Long customerId, Long resultId, String comments) {
+    public static QCustomer getFinishCustomer(INetProperty netProperty, long userId, Long customerId, Long resultId, String comments, boolean movedToBank) {
         QLog.l().logger().info("Закончить работу с вызванным кастомером.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -830,6 +829,7 @@ public class NetCommander {
         params.customerId = customerId;
         params.resultId = resultId;
         params.textData = comments;
+        params.movedToBank = movedToBank;
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_FINISH_CUSTOMER, params);
@@ -1704,8 +1704,9 @@ public class NetCommander {
         return rpc.getResult();
     }
     */
-            /**
-     *Сохранение статистики юзера
+    
+    /**
+     * Сохранение статистики юзера
      *
      * @param netProperty
      * @param userId id юзера который вызывает
@@ -1747,8 +1748,58 @@ public class NetCommander {
         return rpc.getResult();
     }
     
-                /**
-     *Сохранение статистики юзера
+    /**
+     * Сохранение статистики юзера
+     *
+     * @param netProperty
+     * @param userId id юзера который вызывает
+     * @return
+     */
+//    public static boolean sendUserStat2(INetProperty netProperty, long userId, US st) {
+//        QLog.l().logger().info("Сохранить статистику юзера 2");
+//        
+//        if(st == null) {
+//                QLog.l().logger().error("++++++ USERSTATISTIC 2 NULL");
+//        }
+//        
+//        final CmdParams params = new CmdParams();
+//        params.userId = userId;
+//        
+//        if (st instanceof WorkingPeriod) {
+//            params.dt = ((WorkingPeriod)st).getDt();
+//            params.dt_start = ((WorkingPeriod)st).getDtStart();
+//            params.dt_stop = ((WorkingPeriod)st).getDtStop();
+//            params.oper_id = ((WorkingPeriod)st).getOperationId();
+//            params.comments = ((WorkingPeriod)st).getPlaceId();
+//        } else if (st instanceof UsersStatistic2) {
+//            params.dt = ((UsersStatistic2)st).getDt();
+//            params.dt_start = ((UsersStatistic2)st).getDtStart();
+//            params.dt_stop = ((UsersStatistic2)st).getDtStop();
+//            params.oper_id = ((UsersStatistic2)st).getOperationId();
+//            params.comments = ((UsersStatistic2)st).getPlaceId();
+//        }
+//        
+//        // загрузим ответ
+//        final String res;
+//        try {
+//            res = send(netProperty, Uses.TASK_SAVE_USER_STAT_2, params);
+//        } catch (QException ex) {// вывод исключений
+//            throw new ClientException(Locales.locMes("command_error"), ex);
+//        }
+//        final Gson gson = GsonPool.getInstance().borrowGson();
+//        final RpcGetBool rpc;
+//        try {
+//            rpc = gson.fromJson(res, RpcGetBool.class);
+//        } catch (JsonSyntaxException ex) {
+//            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+//        } finally {
+//            GsonPool.getInstance().returnGson(gson);
+//        }
+//        return rpc.getResult();
+//    }
+    
+    /**
+     * Сохранение статистики юзера
      *
      * @param netProperty
      * @param userId id юзера который вызывает
@@ -1780,6 +1831,40 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+    
+    /**
+     * Сохранение статистики юзера
+     *
+     * @param netProperty
+     * @param userId id юзера который вызывает
+     * @return
+     */
+//    public static boolean sendWorkTimeForSave2(INetProperty netProperty, long userId, WorkingPeriod st) {
+//        QLog.l().logger().info("Сохранить dt_stop юзера 2");
+//        final CmdParams params = new CmdParams();
+//        params.userId = userId;
+//        params.dt = st.getDt();
+//        params.dt_stop = st.getDtStop();
+//        params.oper_id = st.getOperationId();
+//        
+//        // загрузим ответ
+//        final String res;
+//        try {
+//            res = send(netProperty, Uses.TASK_SET_DATE_STOP_1_2, params);
+//        } catch (QException ex) {// вывод исключений
+//            throw new ClientException(Locales.locMes("command_error"), ex);
+//        }
+//        final Gson gson = GsonPool.getInstance().borrowGson();
+//        final RpcGetBool rpc;
+//        try {
+//            rpc = gson.fromJson(res, RpcGetBool.class);
+//        } catch (JsonSyntaxException ex) {
+//            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+//        } finally {
+//            GsonPool.getInstance().returnGson(gson);
+//        }
+//        return rpc.getResult();
+//    }
     
     /**
      * Сохранение статистики юзера

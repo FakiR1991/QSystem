@@ -77,6 +77,9 @@ public class CmdParams {
     @SerializedName("need_return_after_payment")
     public Boolean needReturnAfterPayment;
     @Expose
+    @SerializedName("moved_to_bank")
+    public Boolean movedToBank;
+    @Expose
     @SerializedName("coeff")
     public Integer coeff;
     @Expose

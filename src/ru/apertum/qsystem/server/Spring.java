@@ -223,13 +223,11 @@ public class Spring {
         
     }
     
-       public void executeUpdateQuery(String q, Date dt) {
+       public void executeUpdateQuery(String q) {
         final Session ses = getTxManager().getSessionFactory().getCurrentSession();  
         Query query = ses.createQuery(q);
         int result = query.executeUpdate();
         ses.flush();
-
-        
     }
 
     public void saveOrUpdateAll(Collection list) {

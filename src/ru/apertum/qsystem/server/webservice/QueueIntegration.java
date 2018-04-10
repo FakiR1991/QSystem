@@ -17,6 +17,9 @@ import javax.jws.WebService;
 @WebService
 public interface QueueIntegration
 {
+    /**
+     * Приоритеты которые используются для взаимодействия с АПБ.
+     */
     public static final int PRIORITY_NORMAL = 1;
     public static final int PRIORITY_STANDARD = 2;
     public static final int PRIORITY_NORMAL_AGAIN = 3;
@@ -40,7 +43,7 @@ public interface QueueIntegration
                                     @WebParam(name = "requestId", mode = WebParam.Mode.IN)
                                     String requestId,   // ID заявки в вашем/нашем зале
                                     @WebParam(name = "ticketId", mode = WebParam.Mode.IN)
-                                    int ticketId,       // Номер талона в нашем/вашем зале
+                                    String ticketId,    // Номер талона в нашем/вашем зале
                                     @WebParam(name = "priorityId", mode = WebParam.Mode.IN)
                                     int priorityId,     // ID приоритета обслуживания
                                     @WebParam(name = "redirection", mode = WebParam.Mode.IN)

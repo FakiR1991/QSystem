@@ -1095,20 +1095,86 @@ public final class Executer {
                     QLog.l().logger().debug("Юзер \"" + user + "\" переключился на кастомера \"" + parallelCust.getFullNumber() + "\"" + " " + ipAdress);
                 }
             }
+            
             // вот над этим пациентом
             final QCustomer customer = user.getCustomer();
+            // если отложили бессрочно и поставили галку, то можно видеть только отложенному
+            customer.setIsMine(cmdParams.isMine != null && cmdParams.isMine ? cmdParams.userId : null);
+            //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
+            if (customer.getExtId() != null && customer.getPriority().get() < Uses.PRIORITY_HI) {
+                customer.setPriority(customer.getPriority().get() + 1);
+            }
+            
+            String apbCustomerId = null;
+            
+            //отправляем кастомера в очередь АПБ и получаем
+            //идентификатор данного кастомера в системе АПБ
+            try {
+                //идентификатор зала
+                BigDecimal unitId = new BigDecimal(customer.getUnitId());
+                //идентификатор кастомера
+                String customerId = customer.getId().toString();
+                //номер талона
+                String ticketId = String.valueOf(customer.getNumber());
+                //приоритет согласно таблице приоритетов
+                BigDecimal priorityId = internalPriorityToExternal(customer);
+                BigDecimal redirection = cmdParams.needReturnAfterPayment ? BigDecimal.ONE : BigDecimal.ZERO;
+                //если указан id оператора к которому нужно вернуть клиента,
+                //то отправляем номер окна куда вернуть, иначе - 9999 (вернуть к любому оператору)
+                BigDecimal pointIdFrom = customer.getIsMine() != null ? new BigDecimal(parseUserPoint(user.getPoint())) : new BigDecimal(9999);
+                //если указано куда отправлять, то берём это значение, а иначе - ноль (т.е. в любую точку обслуживания)
+                BigDecimal pointIdTo = customer.getPointIdTo() != null ? new BigDecimal(customer.getPointIdTo()) : BigDecimal.ZERO;
+                //дополнительные параметры
+                String additionInfo = "";
+
+                //инициализируем веб-клиента для работы с веб-сервисом АПБ
+                QMSServiceSoapProxy apb = new QMSServiceSoapProxy();
+
+                String logInfo = "\n unitId=" + unitId +
+                                 "\n requestId=" + customerId +
+                                 "\n ticketId=" + ticketId + 
+                                 "\n priorityId=" + priorityId + 
+                                 "\n redirection=" + redirection + 
+                                 "\n pointIdFrom=" + pointIdFrom + 
+                                 "\n pointIdTo=" + pointIdTo + 
+                                 "\n additionInfo=" + additionInfo;
+
+                QLog.l().logger().info("Отправляем клиента в АПБ");
+                QLog.l().logger().info(logInfo);
+
+                try {
+                    apbCustomerId = apb.AppendRequest(unitId,
+                                                      customerId,
+                                                      ticketId,
+                                                      priorityId,
+                                                      redirection,
+                                                      pointIdFrom,
+                                                      pointIdTo,
+                                                      additionInfo);
+                } catch (Exception e) {
+                    throw e;
+                }
+                customer.setExtId(Long.valueOf(apbCustomerId));
+            }
+            catch (NumberFormatException fe) {
+                QLog.l().logger().trace("Ошибка парсинга идентификатора из системы АПБ, apbCustomerId=\"" + apbCustomerId + "\"", fe);
+            } catch (Exception e) {
+                QLog.l().logger().trace("Ошибка до попытки отправки клиента в очередь АПБ", e);
+                throw new ServerException(e);
+            }
+            
+            
             // статус
             customer.setPostponedStatus(cmdParams.textData);
             // на сколько отложили. 0 - бессрочно
             customer.setPostponPeriod(cmdParams.postponedPeriod);
-            // если отложили бессрочно и поставили галку, то можно видеть только отложенному
-            customer.setIsMine(cmdParams.isMine != null && cmdParams.isMine ? cmdParams.userId : null);
             
             if (customer.getStartTime() == null) {
                 customer.setStartTime(new Date());
             }
             
-            customer.setState(CustomerState.STATE_PAYMENT);
+            //здесь не меняем статус, он поменяется когда вызовется метод для завершения с кастомером
+//            customer.setState(CustomerState.STATE_PAYMENT);
             try {
                 //если нужно вернуть после оплаты
                 if (cmdParams.needReturnAfterPayment) {
@@ -1123,56 +1189,11 @@ public final class Executer {
                 
                 //сохраняем состояния очередей.
                 QServer.savePool();
+                
                 //разослать оповещение о том, что посетитель отложен
                 //Uses.sendUDPBroadcast(Uses.TASK_REFRESH_POSTPONED_POOL, ServerProps.getInstance().getProps().getClientPort());
                 //рассылаем широковещетельно по UDP на определенный порт. Должно высветиться на основном табло
                 MainBoard.getInstance().killCustomer(user);
-                
-                String apbCustomerId = null;
-                
-                //отправляем кастомера в очередь АПБ и получаем
-                //идентификатор данного кастомера в системе АПБ
-                try {
-                    //идентификатор зала
-                    BigDecimal unitId = new BigDecimal(customer.getUnitId());
-                    //идентификатор кастомера
-                    String customerId = customer.getId().toString();
-                    //номер талона
-                    String ticketId = String.valueOf(customer.getNumber());
-                    //приоритет согласно таблице приоритетов
-                    BigDecimal priorityId = internalPriorityToExternal(customer);
-                    BigDecimal redirection = cmdParams.needReturnAfterPayment ? BigDecimal.ONE : BigDecimal.ZERO;
-                    //если указан id оператора к которому нужно вернуть клиента,
-                    //то отправляем номер окна куда вернуть, иначе - 9999 (вернуть к любому оператору)
-                    BigDecimal pointIdFrom = customer.getIsMine() != null ? new BigDecimal(parseUserPoint(user.getPoint())) : new BigDecimal(9999);
-                    //если указано куда отправлять, то берём это значение, а иначе - ноль (т.е. в любую точку обслуживания)
-                    BigDecimal pointIdTo = customer.getPointIdTo() != null ? new BigDecimal(customer.getPointIdTo()) : BigDecimal.ZERO;
-                    //дополнительные параметры
-                    String additionalInfo = " ";
-                    
-                    //инициализируем веб-клиента для работы с веб-сервисом АПБ
-                    QMSServiceSoapProxy apb = new QMSServiceSoapProxy();
-                    
-                    apbCustomerId = apb.AppendRequest(unitId,
-                                                      customerId,
-                                                      ticketId,
-                                                      priorityId,
-                                                      redirection,
-                                                      pointIdFrom,
-                                                      pointIdTo,
-                                                      additionalInfo);
-                    customer.setExtId(Long.valueOf(apbCustomerId));
-                } catch (NumberFormatException fe) {
-                    QLog.l().logger().trace("Ошибка парсинга идентификатора из системы АПБ, apbCustomerId=\"" + apbCustomerId + "\"", fe);
-                }
-//                catch (RemoteException re) {
-//                    QLog.l().logger().trace("Ошибка при отправке клиента в очередь АПБ, apbCustomerId=\"" + apbCustomerId + "\"", re);
-//                    throw re;
-//                }
-                catch (Exception e) {
-                    QLog.l().logger().trace("Ошибка до попытки отправки клиента в очередь АПБ", e);
-                    throw e;
-                }
             } catch (Throwable t) {
                 QLog.l().logger().error("Загнулось под конец 2. " + ipAdress, t);
             }
@@ -1308,8 +1329,14 @@ public final class Executer {
                 }
                 ((QCustomer) customer).setResult(result);
                 customer.setFinishTime(new Date());
-                // кастомер переходит в состояние "Завершенности", но не "мертвости"
-                customer.setState(CustomerState.STATE_FINISH);
+                
+                if (cmdParams.movedToBank) {
+                    //если кустомер был отправлен в банк
+                    customer.setState(CustomerState.STATE_PAYMENT);
+                } else {
+                    // кастомер переходит в состояние "Завершенности", но не "мертвости"
+                    customer.setState(CustomerState.STATE_FINISH);
+                }
                 user.setCustFinishTime(customer.getFinishTime());
                 // дело такое, кастомер может идти по списку услуг, т.е. есть набор услуг, юзер завершает работу, а система его ведет по списку услуг
                 // тут посмотрим может его уже провели по списку комплексных услуг, если у него вообще они были
@@ -2233,6 +2260,7 @@ public final class Executer {
             return new RpcGetBool(QUserList.getInstance().getById(cmdParams.userId).isPause());
         }
     };
+    
     /**
      * Сохранить статистику
      */
@@ -2243,15 +2271,15 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
             try {
                 UsersStatistic st = new UsersStatistic();
-                st.setClientId(cmdParams.client_id);
+//                st.setClientId(cmdParams.client_id);
+//                st.setServiceId(cmdParams.serviceId);
+//                st.setStateIn(cmdParams.state_in);
+                st.setUserId(cmdParams.userId);
+                st.setPlaceId(cmdParams.comments);
                 st.setDt(cmdParams.dt);
                 st.setDtStart(cmdParams.dt_start);
                 st.setDtStop(cmdParams.dt_stop);
-                st.setOperationId(cmdParams.oper_id); 
-                st.setServiceId(cmdParams.serviceId);
-                st.setStateIn(cmdParams.state_in);
-                st.setUserId(cmdParams.userId);
-                st.setPlaceId(cmdParams.comments);
+                st.setOperationId(cmdParams.oper_id);
                 st.Save();
                 
                 return new RpcGetBool(true);
@@ -2261,7 +2289,49 @@ public final class Executer {
         }
     };
     
-        /**
+    /**
+     * Сохранить статистику
+     */
+//    final Task saveUsersStat2 = new Task(Uses.TASK_SAVE_USER_STAT_2) {
+//
+//        @Override
+//        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+//            super.process(cmdParams, ipAdress, IP);
+//            try {
+//                UsersStatistic2 st = new UsersStatistic2();
+//                st.setUserId(cmdParams.userId);
+//                st.setPlaceId(cmdParams.comments); //placeId
+//                st.setDt(cmdParams.dt);
+//                st.setDtStart(cmdParams.dt_start);
+//                st.setDtStop(cmdParams.dt_stop);
+//                st.setOperationId(cmdParams.oper_id);
+//                
+//                saveUsersStat(st);
+//                
+//                return new RpcGetBool(true);
+//            } catch(Exception ex) {
+//                return new RpcGetBool(false);
+//            }
+//        }
+//        
+//        public void saveUsersStat(UsersStatistic2 st) {
+//            // сохраним статистику в базе
+//            final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+//            def.setName("SomeTxName");
+//            def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+//            TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+//            try {
+//                Spring.getInstance().getHt().saveOrUpdate(st);
+//            } catch (Exception ex) {
+//                Spring.getInstance().getTxManager().rollback(status);
+//                throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+//            }
+//            Spring.getInstance().getTxManager().commit(status);
+//            QLog.l().logger().debug("Сохранили. " + st.getOperationId());
+//        }
+//    };
+    
+    /**
      *  Получить серверное время
      */
     final Task setDateTime = new Task(Uses.TASK_GET_SERVER_TIME) {
@@ -2282,7 +2352,8 @@ public final class Executer {
             return new RpcGetDateTime(new Date());
         }
     };
-            /**
+    
+    /**
      * Сохранить операцию date_stop у операции 1
      */
     final Task setDateStopOperation1 = new Task(Uses.TASK_SET_DATE_STOP_1) {
@@ -2299,6 +2370,59 @@ public final class Executer {
             return new RpcGetBool(true);
         }
     };
+    
+    /**
+     * Сохранить операцию date_stop у операции 1
+     */
+//    final Task setDateStopOperation1_2 = new Task(Uses.TASK_SET_DATE_STOP_1_2) {
+//
+//        @Override
+//        public RpcGetBool process (CmdParams cmdParams, String ipAdress, byte[] IP) {
+//            super.process(cmdParams, ipAdress, IP);
+//           
+//            UsersStatistic2 st = new UsersStatistic2();
+//            st.setOperationId(cmdParams.oper_id);
+//            st.setUserId(cmdParams.userId);
+//            st.setDtStop(cmdParams.dt_stop);
+//            saveWorkingPeriod(st);
+//            return new RpcGetBool(true);
+//        }
+//        
+//        public void saveWorkingPeriod(UsersStatistic2 st) {
+//            final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+//            def.setName("SomeTxName");
+//            def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+//            TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+//            //DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
+//            String query = "select max(id) from UsersStatistic where user_id =" + st.getUserId() + " and operation_id =" + Uses.WORK_STAT + " and dt >= :today"; // + " and dt >= '"+ df.format(new Date()) + "' and operation_id =" + Uses.WORK_STAT
+//            Long id = Spring.getInstance().executeSelectQuery(query, st, query);
+//            try {
+//                SaveOp(id, st);
+//            } catch (Exception ex) {
+//                Spring.getInstance().getTxManager().rollback(status);
+//                throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+//            }
+//            Spring.getInstance().getTxManager().commit(status);
+//            QLog.l().logger().debug("Сохранили логин. ");
+//        }
+//
+//        private void SaveOp(Long id, UsersStatistic2 st) {
+//            final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+//            def.setName("SomeTxName1");
+//            def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+//            TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+//            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//            String q2 = "update UsersStatistic set dt_stop='" + df.format(st.getDtStop()) + "', dt='" + df.format(st.getDt()) + "' where id=" + id;
+//            try {
+//                Spring.getInstance().executeUpdateQuery(q2);
+//            } catch (Exception ex) {
+//                Spring.getInstance().getTxManager().rollback(status);
+//                throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+//            }
+//            Spring.getInstance().getTxManager().commit(status);
+//        }
+//    };
+    
     /**
      * Поставить время логина юзеру
      */

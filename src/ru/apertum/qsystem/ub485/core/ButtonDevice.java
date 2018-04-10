@@ -249,7 +249,7 @@ public class ButtonDevice extends Object implements IButtonDevice {
             //команда завершения работы
 
             System.out.println("get Finish Customer by " + user.getName());
-            NetCommander.getFinishCustomer(UBForm.form.netProperty, userId, null, -1L, "");
+            NetCommander.getFinishCustomer(UBForm.form.netProperty, userId, null, -1L, "", false);
             user.getShadow().setCustomerState(CustomerState.STATE_FINISH);
             //ответ о результате на кнопку
             if (qsize == 0) {

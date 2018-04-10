@@ -16,13 +16,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import org.hibernate.annotations.Type;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ServerException;
+import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.server.Spring;
 
 /**
@@ -32,9 +35,14 @@ import ru.apertum.qsystem.server.Spring;
 @Entity
 @Table(name = "users_statistic")
 public class UsersStatistic {
-    public UsersStatistic(){
-        
-    }
+    
+    @Transient
+    private Integer currentState = null;
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name="id")
+    public long id;
     
     Date dt;
     @Column(name = "dt")
@@ -130,6 +138,79 @@ public class UsersStatistic {
         client_id = clientId;
     }
     
+    public UsersStatistic() { }
+    
+    public UsersStatistic(Long userId, String placeId, UsersStatistic workingPeriod, INetProperty netProperty) {
+        setUserId(userId);
+        setPlaceId(placeId);
+        
+        saveWorkingPeriod(workingPeriod, netProperty);
+    }
+    
+    /**
+     * Инициализируем переменную с operationId=1 и сохраняем новой записью в таблице users_statistic
+     * @param netProperty Сетевые параметры для взаимодействия с сервером
+     */
+    private void saveWorkingPeriod(UsersStatistic workingPeriod, INetProperty netProperty) {
+        NetCommander.sendUserStat(netProperty, getUserId(), workingPeriod);
+    }
+    
+    public void completeCurrentState(UsersStatistic workingPeriod, INetProperty netProperty) {
+        Date currDate = NetCommander.getServerTime(netProperty, getUserId());
+        
+        completePreviousState(currentState, currDate, workingPeriod, netProperty);
+        
+        currentState = null;
+    }
+    
+    /**
+     * Изменить состояние оператора
+     * @param newState Идентификатор состояние в которое нужно переключить оператора
+     * @param netProperty Сетевые параметры для взаимодействия с сервером
+     */
+    public void changeState(Integer newState, UsersStatistic workingPeriod, INetProperty netProperty) {
+        //если состояние на которое требуется перейти
+        //является тем же, что действует в данный момент
+        //нужно чтобы в setSituation каждые 5 секунд не
+        //сохранялось в таблицу одно и то же состояние оператора
+        if (currentState != null && newState.equals(currentState)) {
+            return;
+        }
+        
+        Date currDate = NetCommander.getServerTime(netProperty, getUserId());
+        
+        completePreviousState(currentState, currDate, workingPeriod, netProperty);
+        
+        initNewState(newState, currDate);
+    }
+    
+    private void completePreviousState(Integer previousState, Date currDate, UsersStatistic workingPeriod, INetProperty netProperty) {
+        if (previousState != null) {
+            setDt(currDate);
+            setDtStop(currDate);
+            
+            NetCommander.sendUserStat(netProperty, getUserId(), this);
+        }
+        
+        sendForSaveWorkingPeriod(currDate, workingPeriod, netProperty);
+    }
+    
+    public void sendForSaveWorkingPeriod(Date currDate, UsersStatistic workingPeriod, INetProperty netProperty) {
+        workingPeriod.setDt(currDate);
+        workingPeriod.setDtStop(currDate);
+        
+        NetCommander.sendWorkTimeForSave(netProperty, getUserId(), workingPeriod);
+    }
+    
+    private void initNewState(Integer newState, Date currDate) {
+        currentState = newState;
+        
+        //если время завершения предыдущей операции не пустое,
+        //то берём его, иначе - текущее время сервера
+//        setDtStart(getDtStop() != null ? getDtStop() : currDate);
+        setDtStart(currDate);
+        setOperationId(newState);
+    }
     
     private void saveToSelfDB() {
         // сохраним кастомера в базе
@@ -138,11 +219,7 @@ public class UsersStatistic {
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
         try {
-           // if (input_data == null) { // вот жеж черд дернул выставить констрейнт на то что введенные данные не нул, а они этот ввод редко нужкн
-           //     input_data = "";
-         //   }
             Spring.getInstance().getHt().saveOrUpdate(this);
-            // костыль. Если кастомер оставил отзывы прежде чем попал в БД, т.е. во время работы еще с ним.
         } catch (Exception ex) {
             Spring.getInstance().getTxManager().rollback(status);
             throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
@@ -153,25 +230,25 @@ public class UsersStatistic {
         
         
     public void Save() {
-            saveToSelfDB();
-        }
+        saveToSelfDB();
+    }
     
     public void saveOperation1() {
-        
         final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("SomeTxName");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
         //DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
         String query = "select max(id) from UsersStatistic where user_id ="+ user_id + " and operation_id =" + Uses.WORK_STAT + " and dt >= :today"; // + " and dt >= '"+ df.format(new Date()) + "' and operation_id =" + Uses.WORK_STAT
-        Long id = Spring.getInstance().executeSelectQuery(query, this,query);
-        try {SaveOp(id); }
-        catch (Exception ex) {
+        Long id = Spring.getInstance().executeSelectQuery(query, this, query);
+        try {
+            SaveOp(id);
+        } catch (Exception ex) {
             Spring.getInstance().getTxManager().rollback(status);
             throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
         }
         Spring.getInstance().getTxManager().commit(status);
-                QLog.l().logger().debug("Сохранили логин. ");
+        QLog.l().logger().debug("Сохранили логин. ");
        // System.out.println("++++++++++++++++++++++++++");
        // System.out.println(obj.size());
     }
@@ -182,17 +259,13 @@ public class UsersStatistic {
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String q2 = "update UsersStatistic set dt_stop='"+ df.format(dt_stop) +"', dt='"+ df.format(dt_stop) +"' where id=" + id;
-        try {Spring.getInstance().executeUpdateQuery(q2, dt_stop);}
-        catch (Exception ex) {
+        String q2 = "update UsersStatistic set dt_stop='" + df.format(dt_stop) + "', dt='" + df.format(dt_stop) + "' where id=" + id;
+        try {
+            Spring.getInstance().executeUpdateQuery(q2);
+        } catch (Exception ex) {
             Spring.getInstance().getTxManager().rollback(status);
             throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
         }
         Spring.getInstance().getTxManager().commit(status);
     }
-        
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name="id")
-    public long id;
 }

@@ -16,6 +16,7 @@ import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.QCustomer;
+import ru.apertum.qsystem.server.QServer;
 import ru.apertum.qsystem.server.controller.Executer;
 
 /**
@@ -48,15 +49,19 @@ public class QMovedToBankList extends DefaultListModel {
                             //добавляем запись в таблицу clients
                             //состояние не сохранится в БД, потому что user у текущего кастомера равен null
                             //т.к. мы завершили работу с ним [сделали setUser(null)] и проставили перед этим stateIn = 10
-                            customer.setState(CustomerState.STATE_DEAD_AFTER_PAYMENT);
+//                            customer.setState(CustomerState.STATE_DEAD_AFTER_PAYMENT);
                             
                         }
                     }
                     forDel.stream().forEach((qCustomer) -> {
                         removeElement(qCustomer);
                     });
+                    
+                    QServer.savePool();
+                    
                 } catch (Exception ex) {
-                    throw new ServerException("Ошибка при удалении кастомера из списка ушедших на оплату по таймеру " + ex);
+//                    throw new ServerException("Ошибка при удалении кастомера из списка ушедших на оплату по таймеру " + ex.getMessage());
+                    QLog.l().logger().trace("Ошибка при удалении кастомера из списка ушедших на оплату по таймеру", ex);
                 } finally {
                     Executer.MOVED_TO_BANK_TASK_LOCK.unlock();
                 }
