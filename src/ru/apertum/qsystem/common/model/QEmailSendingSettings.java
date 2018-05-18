@@ -24,8 +24,6 @@ public class QEmailSendingSettings implements Serializable {
     public static final int COLUMN_SMTP_PORT = 2;
     public static final int COLUMN_EMAIL = 3;
     public static final int COLUMN_PASSWORD = 4;
-    public static final int COLUMN_SUBJECT = 5;
-    public static final int COLUMN_MESSAGE = 6;
 
     public QEmailSendingSettings() { }
     
@@ -88,29 +86,5 @@ public class QEmailSendingSettings implements Serializable {
     
     public void setPassword(String password) {
         this.password = password;
-    }
-    
-    //subject
-    private String subject;
-    
-    @Column(name = "subject")
-    public String getSubject() {
-        return this.subject;
-    }
-    
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
-    
-    //message
-    private String message;
-    
-    @Column(name = "message")
-    public String getMessage() {
-        return this.message;
-    }
-    
-    public void setMessage(String message) {
-        this.message = message;
     }
 }

@@ -3,6 +3,6 @@
 rem Запустим выбор услуги
 echo Старт выбора услуги
 
-java -cp dist/QSystem.jar ru.apertum.qsystem.client.forms.FWelcome -sport 3128 -cport 3129 -s localhost -wm touch -debug +med +info
+java -cp dist/QSystem.jar ru.apertum.qsystem.client.forms.FWelcome -sport 3128 -cport 3129 -s localhost -wm touch -debug -uid 5 +med +info
 
 pause

@@ -102,6 +102,26 @@ public class UsersStatistic {
         return place_id;
     }
     
+    Integer unit_id;
+    @Column(name = "unit_id")
+    public Integer getUnitId() {
+        return unit_id;
+    }
+    
+    Integer adress_rs;
+    @Column(name = "adress_rs")
+    public Integer getAdressRs() {
+        return adress_rs;
+    }
+    
+    public void setUnitId(Integer unitId) {
+        this.unit_id = unitId;
+    }
+    
+    public void setAdressRs(Integer adressRs) {
+        this.adress_rs = adressRs;
+    }
+    
     public void setPlaceId(String place) {
         place_id = place;
     }
@@ -140,9 +160,11 @@ public class UsersStatistic {
     
     public UsersStatistic() { }
     
-    public UsersStatistic(Long userId, String placeId, UsersStatistic workingPeriod, INetProperty netProperty) {
+    public UsersStatistic(Long userId, String placeId, Integer adressRs, Integer unitId, UsersStatistic workingPeriod, INetProperty netProperty) {
         setUserId(userId);
         setPlaceId(placeId);
+        setAdressRs(adressRs);
+        setUnitId(unitId);
         
         saveWorkingPeriod(workingPeriod, netProperty);
     }

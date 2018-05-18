@@ -176,19 +176,22 @@ public final class FClient extends javax.swing.JFrame {
         labelNextNumber.setContentType("text/html");
         labelNextNumber.setText("");
         labelNextNumber.setText("<html>"
-                + "<div style='text-align: center;'><span style='font-size:32.0pt;color:purple;'>" + textCust + "</span>"
-                + "<span style='font-size:14.0pt;color:gray'> " + priority + "</span>"
-                + "</div>"
-                + "<div style='margin: 0px 0px 0px 2px'>"
-                + "<span style='font-size:14.0pt;color:black'> " + getLocaleMessage("messages.service") + ": " + customer.getService().getName() + "</span><br>"
-                + "<span style='font-size:14.0pt;color:gray'> " + s + "</span>"
-                + "</div>");
+            + "<div style='text-align: center;'><span style='font-size:32.0pt;color:purple;'>" + textCust + "</span>"
+            + "<span style='font-size:14.0pt;color:gray'> " + priority + "</span>"
+            + "</div>"
+            + "<div style='margin: 0px 0px 0px 2px'>"
+            + (customer.getState() == CustomerState.STATE_WORK || customer.getState() == CustomerState.STATE_WORK_SECONDARY
+               ? "<span style='font-size:14.0pt;color:black'> " + getLocaleMessage("messages.service") + ": " + customer.getService().getName() + "</span><br>"
+               : "")
+            + "<span style='font-size:14.0pt;color:gray'> " + s + "</span>"
+            + "</div>");
         textAreaComments.setText(customer.getTempComments());
         textAreaComments.setCaretPosition(0);
         // прикроем кнопки, которые недоступны на этом этапе работы с кастомером.
         // тут в зависимости от состояния кастомера открываем разные наборы кнопок
         switch (customer.getState()) {
-            case STATE_INVITED: {
+            case STATE_INVITED:
+            case STATE_REDIRECT: {
                 setBlinkBoard(true);
                 setKeyRegim(KEYS_INVITED);
                 break;
@@ -990,7 +993,7 @@ public final class FClient extends javax.swing.JFrame {
         }
         final String allClients = getLocaleMessage("messages.allClients") + ": ";
         labelResume.setText("<html><span style='color:" + color + "'>" + allClients + inCount + "</span>");
-        temp1 = temp1 + allClients + inCount;
+        temp1 = /*temp1 + */allClients + inCount;
 
         // Обозначим очередь иконкой
         if (inCount == 0) {
@@ -1219,7 +1222,7 @@ public final class FClient extends javax.swing.JFrame {
             QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
             try {
                 new Thread(() -> {
-                    event.pressButton(user, netProperty, situation, evt, keyId);
+                    event.pressButton(user, netProperty, situation, evt, keyId, QConfig.cfg().getUnitId());
                 }).start();
             } catch (Throwable tr) {
                 QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
@@ -1473,7 +1476,13 @@ public final class FClient extends javax.swing.JFrame {
 //                    
 //                    techPeriod = null;
 //                }
-                NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), "Отложен по неявке. Вызван: " + (customer.getRecallCount()) + temp + ". Услуга: " + customer.getService().getName(), 10, isMine);
+                NetCommander.сustomerToPostpone(netProperty,
+                                                user.getId(),
+                                                customer.getId(),
+                                                "Отложен по неявке. Вызван: " + (customer.getRecallCount()) + temp, // + ". Услуга: " + customer.getService().getName(),
+                                                10,
+                                                isMine,
+                                                false);
             }
             // получаем новую обстановку
             // получаем состояние очередей для юзера
@@ -1535,8 +1544,7 @@ public final class FClient extends javax.swing.JFrame {
     }
     
     
-    FSendToBank2 bankForm;
-    boolean movedToBank = false;
+    FSendToBank bankForm;
     
     
     /**
@@ -1549,54 +1557,24 @@ public final class FClient extends javax.swing.JFrame {
         try {
             final long start = go();
             
-            boolean isMine = false;
-            boolean needReturnAfterPayment = false;
-            
             if (bankForm == null) {
-                bankForm = new FSendToBank2(fClient, true);
+                bankForm = new FSendToBank(fClient, true);
             }
-//            bankForm.init();
+            bankForm.init();
             Uses.setLocation(bankForm);
             bankForm.setVisible(true);
-            if (!bankForm.isOkClicked()) {
+            if (!bankForm.isOK()) {
                 return;
             }
-            
-            isMine = bankForm.isMine();
-            needReturnAfterPayment = bankForm.needReturnAfterPayment();
             
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
-            try {
-                NetCommander.sendCustomerToBank(netProperty,
-                                                user.getId(),
-                                                customer.getId(),
-                                                "Отправлен на оплату. Вызван: " + (customer.getRecallCount()) + temp +
-                                                        ". Услуга: " + customer.getService().getName(),
-                                                0, //postponedPeriod - если 0, то откладывается на неопределённый срок
-                                                isMine,
-                                                needReturnAfterPayment);
-            } catch (Exception e) {
-                QLog.l().logger().trace("Возникла ошибка во время отправки клиента в банк.", e);
-                JOptionPane.showMessageDialog(this, "Возникла ошибка во время отправки клиента в банк. Попробуйте повторить попытку.\n\n" + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            
-            //здесь у оператора состояние 2, но так как мы при нажатии на кнопку
-            //"Начать приём" завершаем состояние 3, а состояние 2 записывается в таблицу триггером,
-            //то здесь нам можно было бы лишь обновить состояние 1, но это не критично, так как
-            //при выходе из клиента будет обновлено состояние 1
-            
-//            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
-//            workingPeriod.setDt(workingPeriod.getDtStop());
-//            NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
-            
-            //флаг указывающий на то, что клиент ушёл в банк
-            //нужно для того чтобы ставить ему нужный статус при завершении работы с ним
-            movedToBank = true;
-
-            //самостоятельно завершаем работу с кастомером
-            //после его отправки на оплату в банк
-            buttonFinish.doClick();
+            NetCommander.сustomerToPostpone(netProperty,
+                                            user.getId(),
+                                            customer.getId(),
+                                            "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp, // + ". Услуга: " + customer.getService().getName(),
+                                            10,
+                                            true,
+                                            false);
             
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
@@ -1633,12 +1611,12 @@ public final class FClient extends javax.swing.JFrame {
                 }
             }
             // вернется кастомер и возможно он еще не домой а по списку услуг. Список определяется при старте кастомера в обработку специяльным юзером в регистратуре
-            final QCustomer cust = NetCommander.getFinishCustomer(netProperty, user.getId(), customer.getId(), res, resComments, movedToBank);
+            final QCustomer cust = NetCommander.getFinishCustomer(netProperty, user.getId(), customer.getId(), res, resComments/*, movedToBank*/);
             if (cust != null && cust.getService() != null && cust.getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE) {
                 JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + String.format("%03d", cust.getNumber()) + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
             }
             
-            movedToBank = false;
+//            movedToBank = false;
             
 //            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
 //            workingPeriod.setDt(workingPeriod.getDtStop());
@@ -2461,6 +2439,18 @@ public final class FClient extends javax.swing.JFrame {
         }
         // Определим кто работает на данном месте.
         final QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
+        
+        try {
+            //обновляем параметры юзера на сервере
+            NetCommander.setUserParamsById(netProperty,
+                                           user.getId(),
+                                           QConfig.cfg().getPointType(),
+                                           QConfig.cfg().getUnitId(),
+                                           QConfig.cfg().getAddressRs());
+        } catch (Exception e) {
+            
+        }
+        
         Uses.showSplash();
         try {
             //Определим, надо ли выводить кастомера на второй экран.
@@ -2490,8 +2480,10 @@ public final class FClient extends javax.swing.JFrame {
             workingPeriod.setDt(currDate);
             workingPeriod.setDtStart(currDate);
             workingPeriod.setDtStop(currDate);
+            workingPeriod.setAdressRs(user.getAdressRS());
+            workingPeriod.setUnitId(QConfig.cfg().getUnitId());
             
-            userStatistic = new UsersStatistic(user.getId(), placeId, workingPeriod, netProperty);
+            userStatistic = new UsersStatistic(user.getId(), placeId, user.getAdressRS(), QConfig.cfg().getUnitId(), workingPeriod, netProperty);
             
             //Показываем форму и передаем в нее описание того кто залогинился
             fClient = new FClient(user, netProperty);
@@ -2556,9 +2548,27 @@ public final class FClient extends javax.swing.JFrame {
     public void refreshSituation(Boolean forced) {
         //Получаем состояние очередей для юзера
         try {
-            setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
+            //если было зафиксировано, что сервер прекращал работу (перезапуск сервера, например),
+            //то нужно заново отправить доп. информацию о юзере на сервере
+            if (isServerWarning) {
+                try {
+                    NetCommander.setUserParamsById(netProperty,
+                                                   user.getId(),
+                                                   QConfig.cfg().getPointType(),
+                                                   QConfig.cfg().getUnitId(),
+                                                   QConfig.cfg().getAddressRs());
+                } catch (Exception e) {
+                    return;
+                }
+                
+                isServerWarning = false;
+                setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
+            } else {
+                setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
+            }
             spd = -1;
         } catch (Throwable th) {
+            isServerWarning = true;
             spd++;
             QLog.l().logger().error("Ошибка при обновлении состояния: ", th);
             if (spd % 20 == 0) {
@@ -2566,6 +2576,8 @@ public final class FClient extends javax.swing.JFrame {
             }
         }
     }
+    
+    private boolean isServerWarning = false;
     private int spd = -1;
 
     @Action
@@ -2595,7 +2607,13 @@ public final class FClient extends javax.swing.JFrame {
                 return;
             }
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
-            NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), moveToPostponed.getResult() +  ". Вызван: " + (customer.getRecallCount()) + temp + ". Услуга: " + customer.getService().getName(), moveToPostponed.getPeriod(), moveToPostponed.isMine());
+            NetCommander.сustomerToPostpone(netProperty,
+                                            user.getId(),
+                                            customer.getId(),
+                                            moveToPostponed.getResult() +  ". Вызван: " + (customer.getRecallCount()) + temp,// + ". Услуга: " + customer.getService().getName(),
+                                            moveToPostponed.getPeriod(),
+                                            moveToPostponed.isMine(),
+                                            true);
             
 //            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
 //            workingPeriod.setDt(workingPeriod.getDtStop());

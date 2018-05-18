@@ -234,7 +234,7 @@ public final class Executer {
 
                 // проверка тут если нужно введенное сделать номерком
                 final boolean asNumber = service.getInput_required() && service.getInputedAsNumber() > 0 && cmdParams.textData != null && cmdParams.textData.length() > 0;
-                customer = new QCustomer(asNumber ? -1 : service.getNextNumber());
+                customer = new QCustomer(asNumber ? -1 : service.getNextNumber(cmdParams.unitId));
                 //указываем из какого зала прибыл
                 customer.setUnitId(cmdParams.unitId);
                 // тут если нужно введенное сделать номерком
@@ -409,7 +409,8 @@ public final class Executer {
 
             // есть ли у юзера вызванный кастомер? Тогда поторный вызов
             if (isRecall) {
-                user.getCustomer().upRecallCount(); // еще один повторный вызов
+                //при повторном нажатии на кнопку "Вызвать" не накручиваем счётчик повторных вызовов
+//                user.getCustomer().upRecallCount(); // еще один повторный вызов
                 QLog.l().logger().debug("Повторный вызов " + user.getCustomer().getRecallCount() + " кастомера №" + user.getCustomer().getPrefix() + user.getCustomer().getNumber() + " пользователем " + cmdParams.userId + " " + ipAdress);
 
                // if (ServerProps.getInstance().getProps().getLimitRecall() != 0 && user.getCustomer().getRecallCount() > ServerProps.getInstance().getProps().getLimitRecall()) {
@@ -477,27 +478,32 @@ public final class Executer {
                     QService rollService = null;
                     for (QPlanService plan : user.getPlanServices()) {
                         final QService serv = QServiceTree.getInstance().getById(plan.getService().getId()); // очередная очередь
-                        if (serv.getStatus() == 5) {
-                            rollService = serv;
-                        }
+                        //только услуги, которые соответствуют его pointType (то есть если он сидит в СЦ,
+                        //то ему не нужно показывать очередь для абон. зальских услуг назначенных ему)
+                        if (user.getPointType() != null && user.getPointType().toString().compareTo(serv.getPrefix()) == 0) {
+                            if (serv.getStatus() == 5) {
+                                rollService = serv;
+                            }
 
-                        final QCustomer cust = serv.peekCustomer(); // первый в этой очереди
-                        // если очередь пуста
-                        if (cust == null) {
-                            continue;
-                        }
-                        // учтем приоритетность кастомеров и приоритетность очередей для юзера в которые они стоят
-                        final Integer prior = plan.getCoefficient();
-                        if (prior > servPriority || (prior == servPriority && customer != null && customer.compareTo(cust) == 1)) {
-                            servPriority = prior;
-                            customer = cust;
+                            final QCustomer cust = serv.peekCustomer(); // первый в этой очереди
+                            // если очередь пуста или данный кастомер находится не в одном зале с оператором
+                            if (cust == null || cust.getUnitId().compareTo(user.getUnitId()) != 0) {
+                                continue;
+                            }
+                            // учтем приоритетность кастомеров и приоритетность очередей для юзера в которые они стоят
+                            final Integer prior = plan.getCoefficient();
+                            if (prior > servPriority || (prior == servPriority && customer != null && customer.compareTo(cust) == 1)) {
+                                servPriority = prior;
+                                customer = cust;
+                            }
                         }
                     }
                     // Если в основных очередях нет клиентов, но есть услуга-рулон. Тогда крутим рулон, создаем кастомера и его считаем вызванным.
                     if (customer == null && rollService != null) {
                         // и так, нету клиентов, но есть рулонная услуга.
                         // Создадим рулонного кастомера, у него управление номерами особое, сбрасывать можно.
-                        customer = new QCustomer(rollService.getNextNumber());
+                        //рулоны не используются, вроде, так что передаём рандомный ИД зала
+                        customer = new QCustomer(rollService.getNextNumber(5));
                         customer.setService(rollService);
                         // время постановки проставляется автоматом при создании кастомера.
                         // Приоритет "как все"
@@ -828,8 +834,12 @@ public final class Executer {
             //цикл по списку услуг присвоенных юзеру в админском приложении
             for (QPlanService planService : user.getPlanServices()) {
                 final QService service = QServiceTree.getInstance().getById(planService.getService().getId());
-                servs.add(new RpcGetSelfSituation.SelfService(service, service.getCountCustomers(), planService.getCoefficient(), planService.getFlexible_coef()));
-                stateH = stateH + service.getId() + service.getCountCustomers() * (planService.getCoefficient() + 17);
+                //только услуги, которые соответствуют его pointType (то есть если он сидит в СЦ,
+                //то ему не нужно показывать очередь для абон. зальских услуг назначенных ему)
+                if (user.getPointType() != null && user.getPointType().toString().compareTo(service.getPrefix()) == 0) {
+                    servs.add(new RpcGetSelfSituation.SelfService(service, service.getCountCustomers(), planService.getCoefficient(), planService.getFlexible_coef()));
+                    stateH = stateH + service.getId() + service.getCountCustomers() * (planService.getCoefficient() + 17);
+                }
             }
             // нужно сделать вставочку приглашенного юзера, если он есть
             stateH = stateH
@@ -924,6 +934,29 @@ public final class Executer {
     };
     
     /**
+     * Получить список ушедших на оплату
+     */
+    final Task getTicketsList = new Task(Uses.TASK_GET_TICKETS_LIST) {
+
+        @Override
+        public synchronized RpcGetMovedToPaymentList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            LinkedList<QCustomer> ticketsList = new LinkedList<>();
+            
+            for (QService service: QServiceTree.getInstance().getNodes()) {
+                if (service.getClients().size() > 0) {
+                    ticketsList.addAll(service.getClients());
+                }
+            }
+            
+            ticketsList.addAll(QPostponedList.getInstance().getPostponedCustomers());
+            
+            return new RpcGetMovedToPaymentList(ticketsList);
+        }
+    };
+    
+    /**
      * Получить список забаненных
      */
     final Task getBanList = new Task(Uses.TASK_GET_BAN_LIST) {
@@ -993,6 +1026,86 @@ public final class Executer {
             return new JsonRPC20OK();
         }
     };
+    
+    /**
+     * Удалить вызванного юзером кастомера по неявке.
+     */
+    final Task killCustomerFromReceptionTask = new Task(Uses.TASK_KILL_CUSTOMER_FRECEPTION) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            final QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            //переключение на кастомера при параллельном приеме, должен приехать customerID
+            if (cmdParams.customerId != null) {
+                final QCustomer parallelCust = user.getParallelCustomers().get(cmdParams.customerId);
+                if (parallelCust == null) {
+                    QLog.l().logger().warn("PARALLEL: User have no Customer for switching by customer ID=\"" + cmdParams.customerId + "\"" + " " + ipAdress);
+                } else {
+                    user.setCustomer(parallelCust);
+                    QLog.l().logger().debug("Юзер \"" + user + "\" переключился на кастомера \"" + parallelCust.getFullNumber() + "\"" + " " + ipAdress);
+                }
+            }
+            
+            QCustomer customer = getCustomerById(cmdParams.customerId);
+            
+            if (customer == null) {
+                for (QCustomer cust : QPostponedList.getInstance().getPostponedCustomers()) {
+                    if (cust.getId().equals(cmdParams.customerId)) {
+                        customer = cust;
+                    }
+                }
+            }
+            
+            if (customer == null) {
+                throw new ServerException("В очереди не найден клиент по id=" + cmdParams.customerId);
+            }
+            
+            user.setCustomer(customer);
+            
+            QLog.l().logger().warn("УДАЛЕНИЕ: Удалили из FReception " + customer.getPrefix() + "-" + customer.getNumber() + " " + ipAdress);
+
+            QService service = QServiceTree.getInstance().getById(customer.getService().getId());
+            
+            if (customer.getState() == CustomerState.STATE_POSTPONED || customer.getState() == CustomerState.STATE_POSTPONED_AFTER_SERVICE) {
+                Executer.POSTPONED_TASK_LOCK.lock();
+                try {
+                    QPostponedList.getInstance().removeElement(customer);
+                } finally {
+                    Executer.POSTPONED_TASK_LOCK.unlock();
+                }
+            } else {
+                //удаляем талон из очереди по id
+                service.polCustomer(cmdParams.customerId);
+            }
+            
+            // кастомер переходит в состояние "умерщвленности"
+            KILLED_CUSTOMERS.put(customer.getFullNumber().toUpperCase(), new Date());
+            customer.setState(CustomerState.STATE_DEAD, true);
+            try {
+                user.setCustFinishTime(customer.getFinishTime());
+                user.setCustomer(null);//бобик сдох и медальки не осталось
+                // сохраняем состояния очередей.
+                QServer.savePool();
+            } catch (Exception ex) {
+                QLog.l().logger().error(ex);
+            }
+            return new JsonRPC20OK();
+        }
+        
+        private QCustomer getCustomerById(Long customerId) {
+            for (QService service : QServiceTree.getInstance().getNodes()) {
+                for (QCustomer customer : service.getClients()) {
+                    if (customer.getId().equals(customerId)) {
+                        return customer;
+                    }
+                }
+            }
+            return null;
+        }
+    };
+    
     private static final HashMap<String, Date> KILLED_CUSTOMERS = new HashMap<>();
     /**
      * Начать работу с вызванноым кастомером.
@@ -1055,7 +1168,13 @@ public final class Executer {
             // "все что хирург забыл в вас - в пул отложенных"
             // но сначала обозначим результат работы юзера с кастомером, если такой результат найдется в списке результатов
             // кастомер переходит в состояние "Завершенности", но не "мертвости"
-            customer.setState(CustomerState.STATE_POSTPONED);
+            if (cmdParams.isPostponedAfterService) {
+                customer.setState(CustomerState.STATE_POSTPONED_AFTER_SERVICE);
+            } else {
+                customer.setState(CustomerState.STATE_POSTPONED);
+            }
+            
+//            customer.setState(CustomerState.STATE_POSTPONED);
             
             try {
                 user.setCustFinishTime(customer.getFinishTime());
@@ -1151,6 +1270,7 @@ public final class Executer {
                                                       pointIdFrom,
                                                       pointIdTo,
                                                       additionInfo);
+                    QLog.l().logger().info("Ответ сервиса АПБ=" + apbCustomerId);
                 } catch (Exception e) {
                     throw e;
                 }
@@ -1330,13 +1450,16 @@ public final class Executer {
                 ((QCustomer) customer).setResult(result);
                 customer.setFinishTime(new Date());
                 
-                if (cmdParams.movedToBank) {
-                    //если кустомер был отправлен в банк
-                    customer.setState(CustomerState.STATE_PAYMENT);
-                } else {
-                    // кастомер переходит в состояние "Завершенности", но не "мертвости"
-                    customer.setState(CustomerState.STATE_FINISH);
-                }
+//                if (cmdParams.movedToBank) {
+//                    //если кустомер был отправлен в банк
+//                    customer.setState(CustomerState.STATE_PAYMENT);
+//                } else {
+//                    // кастомер переходит в состояние "Завершенности", но не "мертвости"
+//                    customer.setState(CustomerState.STATE_FINISH);
+//                }
+                // кастомер переходит в состояние "Завершенности", но не "мертвости"
+                customer.setState(CustomerState.STATE_FINISH);
+                    
                 user.setCustFinishTime(customer.getFinishTime());
                 // дело такое, кастомер может идти по списку услуг, т.е. есть набор услуг, юзер завершает работу, а система его ведет по списку услуг
                 // тут посмотрим может его уже провели по списку комплексных услуг, если у него вообще они были
@@ -2100,6 +2223,25 @@ public final class Executer {
         }
     };
     /**
+     * Назначение параметров юзеру
+     */
+    final Task setUserPointType = new Task(Uses.TASK_SET_USER_PARAMS) {
+
+        @Override
+        public AJsonRPC20 process(final CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            user.setPointType(cmdParams.pointType);
+            user.setUnitId(cmdParams.unitId);
+            if (cmdParams.adressRs != null && cmdParams.adressRs.compareTo(0) != 0) {
+                user.setAdressRS(cmdParams.adressRs);
+            }
+            
+            return new JsonRPC20OK();
+        }
+    };
+    /**
      * Проверить номер кастомера
      */
     final Task checkCustomerNumber = new Task(Uses.TASK_CHECK_CUSTOMER_NUMBER) {
@@ -2274,6 +2416,8 @@ public final class Executer {
 //                st.setClientId(cmdParams.client_id);
 //                st.setServiceId(cmdParams.serviceId);
 //                st.setStateIn(cmdParams.state_in);
+                st.setUnitId(cmdParams.unitId);
+                st.setAdressRs(cmdParams.adressRs);
                 st.setUserId(cmdParams.userId);
                 st.setPlaceId(cmdParams.comments);
                 st.setDt(cmdParams.dt);

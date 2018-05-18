@@ -267,11 +267,13 @@ public final class Uses {
     public static final String TASK_GET_SELF_SERVICES = "Получить состояние очередей";
     public static final String TASK_GET_POSTPONED_POOL = "Получить состояние пула отложенных";
     public static final String TASK_GET_MOVED_TO_PAYMENT_LIST = "Получить список ушедших на оплату кастомеров";
+    public static final String TASK_GET_TICKETS_LIST = "Получить список талонов";
     public static final String TASK_GET_BAN_LIST = "Получить список забаненых";
     public static final String TASK_INVITE_POSTPONED = "Вызвать отложенного из пула отложенных";
     public static final String TASK_GET_SELF_SERVICES_CHECK = "Получить состояние очередей с проверкой";
     public static final String TASK_INVITE_NEXT_CUSTOMER = "Получить следующего клиента";
     public static final String TASK_KILL_NEXT_CUSTOMER = "Удалить следующего клиента";
+    public static final String TASK_KILL_CUSTOMER_FRECEPTION = "FReception - удалить клиента из очереди";
     public static final String TASK_CUSTOMER_TO_POSTPON = "Клиента в пул отложенных";
     public static final String TASK_CUSTOMER_TO_BANK = "Клиента на оплату в банк";
     public static final String TASK_POSTPON_CHANGE_STATUS = "Сменить статус отложенному";
@@ -296,6 +298,7 @@ public final class Uses {
     public static final String REPORT_CURRENT_SERVICES = "current_services";
     public static final String TASK_GET_CLIENT_AUTHORIZATION = "Идентифицировать клиента";
     public static final String TASK_SET_CUSTOMER_PRIORITY = "Изменить приоритет";
+    public static final String TASK_SET_USER_PARAMS = "Установить указанному юзеру переданные параметры";
     public static final String TASK_CHECK_CUSTOMER_NUMBER = "Проверить номер";
     public static final String TASK_CHANGE_FLEX_PRIORITY = "Изменить гибкий приоритет";
     public static final String TASK_CHANGE_RUNNING_TEXT_ON_BOARD = "Изменить бегущий текст на табло";

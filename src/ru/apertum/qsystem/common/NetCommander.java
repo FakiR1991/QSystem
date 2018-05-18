@@ -712,6 +712,27 @@ public class NetCommander {
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
     }
+    
+    /**
+     * FReception - удаление кастомера из очереди.
+     *
+     * @param netProperty параметры соединения с сервером
+     * @param userId
+     * @param customerId переключиться на этого при параллельном приеме, NULL если переключаться не надо
+     */
+    public static void killCustomer(INetProperty netProperty, long userId, Long customerId, String fullNumer) {
+        QLog.l().logger().info("FReception - удаление кастомера из очереди.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.customerId = customerId;
+        params.comments = fullNumer;
+        try {
+            send(netProperty, Uses.TASK_KILL_CUSTOMER_FRECEPTION, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        }
+    }
 
     /**
      * Перемещение вызванного юзером кастомера в пул отложенных.
@@ -722,8 +743,9 @@ public class NetCommander {
      * @param status просто строка. берется из возможных состояний завершения работы
      * @param postponedPeriod количество времени на которое откладывается кастомер (0 - бессрочно)
      * @param isMine вернуть после оплаты к конкретному юзеру
+     * @param isPostponedAfterService был ли клиент отложен после того как его начали обслуживать
      */
-    public static void сustomerToPostpone(INetProperty netProperty, long userId, Long customerId, String status, int postponedPeriod, boolean isMine) {
+    public static void сustomerToPostpone(INetProperty netProperty, long userId, Long customerId, String status, int postponedPeriod, boolean isMine, boolean isPostponedAfterService) {
         QLog.l().logger().info("Перемещение вызванного юзером кастомера в пул отложенных.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -732,6 +754,7 @@ public class NetCommander {
         params.textData = status;
         params.postponedPeriod = postponedPeriod;
         params.isMine = isMine;
+        params.isPostponedAfterService = isPostponedAfterService;
         try {
             send(netProperty, Uses.TASK_CUSTOMER_TO_POSTPON, params);
         } catch (QException e) {// вывод исключений
@@ -821,7 +844,7 @@ public class NetCommander {
      * @param comments это если закончили работать с редиректенным и его нужно вернуть
      * @return
      */
-    public static QCustomer getFinishCustomer(INetProperty netProperty, long userId, Long customerId, Long resultId, String comments, boolean movedToBank) {
+    public static QCustomer getFinishCustomer(INetProperty netProperty, long userId, Long customerId, Long resultId, String comments/*, boolean movedToBank*/) {
         QLog.l().logger().info("Закончить работу с вызванным кастомером.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -829,7 +852,7 @@ public class NetCommander {
         params.customerId = customerId;
         params.resultId = resultId;
         params.textData = comments;
-        params.movedToBank = movedToBank;
+//        params.movedToBank = movedToBank;
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_FINISH_CUSTOMER, params);
@@ -1428,6 +1451,29 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+    
+    /**
+     * Присвоить экземпляру юзера на сервере некоторые параметры
+     * @param netProperty
+     * @param userId - идентификатор пользователя
+     * @param pointType - идентификатор типа места в зале (1 - абон. зал, 2 - СЦ)
+     * @param unitId - идентификатор зала (г. Тирасполь, г. Бендеры и т.д.)
+     * @param addressRs - идентификатор для вывода на монитор (параметр определяет на какой монитор будет выведена информация)
+     */
+    public static void setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId, int addressRs) throws QException {
+        QLog.l().logger().info("Установить указанному юзеру переданные параметры");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.pointType = pointType;
+        params.unitId = unitId;
+        params.adressRs = addressRs;
+        try {
+            send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
+        } catch (QException ex) {// вывод исключений
+            throw new QException(Locales.locMes("command_error"), ex);
+        }
+    }
 
     /**
      * Пробить номер клиента. Стоит в очереди или отложен или вообще не найден.
@@ -1498,6 +1544,33 @@ public class NetCommander {
         final String res;
         try {
             res = send(netProperty, Uses.TASK_GET_MOVED_TO_PAYMENT_LIST, null);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetMovedToPaymentList rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetMovedToPaymentList.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Получить список талонов
+     *
+     * @param netProperty
+     * @return список талонов
+     */
+    public static LinkedList<QCustomer> getTickets(INetProperty netProperty) {
+        QLog.l().logger().info("Команда на получение списка талонов.");
+        // загрузим ответ
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_GET_TICKETS_LIST, null);
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }
@@ -1729,6 +1802,8 @@ public class NetCommander {
         params.serviceId = st.getServiceId();
         params.state_in = st.getStateIn();
         params.comments = st.getPlaceId();
+        params.unitId = st.getUnitId();
+        params.adressRs = st.getAdressRs();
         // загрузим ответ
         final String res;
         try {

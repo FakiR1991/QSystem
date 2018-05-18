@@ -25,6 +25,7 @@ package ru.apertum.qsystem.client.forms;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -51,6 +52,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -75,6 +77,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
+import static ru.apertum.qsystem.client.forms.FClient.getLocaleMessage;
 import ru.apertum.qsystem.client.model.JTreeComboBox;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.CustomerState;
@@ -118,6 +121,7 @@ import ru.apertum.qsystem.server.model.postponed.QPostponedList;
  */
 public class FReception extends javax.swing.JFrame {
 
+    private final static int USER_RECEPTION_ID = 3351;
     private static ResourceMap localeMap = null;
 
     private static String getLocaleMessage(String key) {
@@ -146,7 +150,7 @@ public class FReception extends javax.swing.JFrame {
         
         initComponents();
         initManuallyAddedComponents();
-        loadMovedToPaymentList();
+        loadRelativeData();
 
         // инициализим trayIcon, т.к. setSituation() требует работу с tray
         final JFrame fr = this;
@@ -171,13 +175,176 @@ public class FReception extends javax.swing.JFrame {
     }
     
     private void initManuallyAddedComponents() {
+        initMovedToBankTab();
+        initTicketsManagementTab();
+    }
+    
+    private void changePriority() {
+        if (jListTickets.getSelectedValue() != null) {
+            QCustomer cust = (QCustomer)jListTickets.getSelectedValue();
+            String num = cust.getPrefix() +
+                         String.valueOf(cust.getNumber());
+
+            final String name = (String) JOptionPane.showInputDialog(fReception,
+                                                                     getLocaleMessage("admin.action.change_priority.get.message"),
+                                                                     getLocaleMessage("admin.action.change_priority.get.title"),
+                                                                     JOptionPane.QUESTION_MESSAGE,
+                                                                     null,
+                                                                     Uses.get_PRIORITYS_WORD().values().toArray(),
+                                                                     Uses.get_PRIORITYS_WORD().values().toArray()[1]);
+            //Если не выбрали, то выходим
+            if (name != null) {
+                for (int i = 0; i < Uses.get_PRIORITYS_WORD().size(); i++) {
+                    if (name.equals(Uses.get_PRIORITYS_WORD().get(i))) {
+                        JOptionPane.showMessageDialog(fReception,
+                                                      NetCommander.setCustomerPriority(netProperty, i, num),
+                                                      getLocaleMessage("admin.action.change_priority.title"),
+                                                      JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(fReception, "Выделите талон из списка которому требуется изменить приоритет", "Внимание", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
+    private void removeTicket() {
+        if (jListTickets.getSelectedValue() != null) {
+            removeTicket((QCustomer)jListTickets.getSelectedValue());
+        } else {
+            JOptionPane.showMessageDialog(fReception, "Выделите талон из списка, чтобы удалить его из очереди", "Внимание", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
+    private void removeTicket(QCustomer customer) {
+        try {
+            if (JOptionPane.showConfirmDialog(this,
+                                              "Вы действительно хотите удалить клиента из очереди?",
+                                              "Удалить клиента по неявке",
+                                              JOptionPane.YES_NO_OPTION) == 1) {
+                return;
+            }
+            NetCommander.killCustomer(netProperty,
+                                      USER_RECEPTION_ID,
+                                      customer.getId(),
+                                      customer.getPrefix() + String.format("%03d", customer.getNumber()));
+            loadTickets();
+        } catch (Exception th) {
+            throw new ClientException(new Exception(th));
+        }
+    }
+    
+    private void initTicketsManagementTab() {
+        jPopupMenuTickets = new javax.swing.JPopupMenu();
+        
+        jPopupMenuItemRemoveTicket = new javax.swing.JMenuItem();
+        jPopupMenuItemEditPriority = new javax.swing.JMenuItem();
+        jPopupMenuItemRefreshList = new javax.swing.JMenuItem();
+        
+        jPanelTickets = new javax.swing.JPanel();
+        jScrollTickets = new javax.swing.JScrollPane();
+        jListTickets = new javax.swing.JList<>();
+        
+        jButtonRemoveTicket = new javax.swing.JButton();
+        jButtonChangePriority = new javax.swing.JButton();
+        jButtonRefreshTickets = new javax.swing.JButton();
+        
+        jListTickets.setComponentPopupMenu(jPopupMenuTickets);
+        jListTickets.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        jPopupMenuItemRefreshList.setText("Обновить список");
+        jPopupMenuItemEditPriority.setText("Изменить приоритет");
+        jPopupMenuItemRemoveTicket.setText("Удалить из очереди");
+        
+        jPopupMenuTickets.add(jPopupMenuItemRefreshList);
+        jPopupMenuTickets.addSeparator();
+        jPopupMenuTickets.add(jPopupMenuItemEditPriority);
+        jPopupMenuTickets.add(jPopupMenuItemRemoveTicket);
+        
+        jPopupMenuItemRefreshList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                
+                loadTickets();
+            }
+        });
+        
+        jPopupMenuItemRemoveTicket.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                
+                removeTicket();
+            }
+        });
+        
+        jPopupMenuItemEditPriority.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                
+                changePriority();
+            }
+        });
+        
+        jButtonRemoveTicket.setText("Удалить из очереди");
+        jButtonRemoveTicket.addActionListener((ActionEvent evt) -> {
+            removeTicket();
+        });
+        
+        jButtonChangePriority.setText("Изменить приоритет");
+        jButtonChangePriority.addActionListener((ActionEvent evt) -> {
+            changePriority();
+        });
+        
+        jButtonRefreshTickets.setText("Обновить список");
+        jButtonRefreshTickets.addActionListener((ActionEvent evt) -> {
+            loadTickets();
+        });
+        
+        jScrollTickets.setViewportView(jListTickets);
+
+        jListTickets.setName("jListTickets");
+        jPanelTickets.setName("jPanelTickets");
+
+        javax.swing.GroupLayout jPanelTicketsLayout = new javax.swing.GroupLayout(jPanelTickets);
+        jPanelTickets.setLayout(jPanelTicketsLayout);
+        jPanelTicketsLayout.setHorizontalGroup(
+            jPanelTicketsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollTickets)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTicketsLayout.createSequentialGroup()
+                .addContainerGap(640, Short.MAX_VALUE)
+                .addComponent(jButtonChangePriority)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonRemoveTicket)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonRefreshTickets)
+                .addContainerGap())
+        );
+        jPanelTicketsLayout.setVerticalGroup(
+            jPanelTicketsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTicketsLayout.createSequentialGroup()
+                .addComponent(jScrollTickets, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
+                .addGroup(jPanelTicketsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonRemoveTicket)
+                    .addComponent(jButtonChangePriority)
+                    .addComponent(jButtonRefreshTickets))
+                .addContainerGap())
+        );
+
+        tabsPane.addTab("Талоны", jPanelTickets);
+    }
+    
+    private void initMovedToBankTab() {
         jPanelMovedToPayment = new javax.swing.JPanel();
         jScrollMovedToPayment = new javax.swing.JScrollPane();
         jListMovedToPayment = new javax.swing.JList<>();
-        jButtonRefresh = new javax.swing.JButton();
+        jButtonRefreshMovedToPaymentList = new javax.swing.JButton();
         
-        jButtonRefresh.setText("Обновить");
-        jButtonRefresh.addActionListener((java.awt.event.ActionEvent evt) -> {
+        jButtonRefreshMovedToPaymentList.setText("Обновить");
+        jButtonRefreshMovedToPaymentList.addActionListener((java.awt.event.ActionEvent evt) -> {
             loadMovedToPaymentList();
         });
         
@@ -193,7 +360,7 @@ public class FReception extends javax.swing.JFrame {
             .addComponent(jScrollMovedToPayment)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelMovedToPaymentLayout.createSequentialGroup()
                 .addContainerGap(640, Short.MAX_VALUE)
-                .addComponent(jButtonRefresh)
+                .addComponent(jButtonRefreshMovedToPaymentList)
                 .addContainerGap())
         );
         jPanelMovedToPaymentLayout.setVerticalGroup(
@@ -201,11 +368,27 @@ public class FReception extends javax.swing.JFrame {
             .addGroup(jPanelMovedToPaymentLayout.createSequentialGroup()
                 .addComponent(jScrollMovedToPayment, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
-                .addComponent(jButtonRefresh)
+                .addComponent(jButtonRefreshMovedToPaymentList)
                 .addContainerGap())
         );
 
         tabsPane.addTab("Ушедшие на оплату", jPanelMovedToPayment);
+    }
+    
+    private void loadRelativeData() {
+        loadMovedToPaymentList();
+        loadTickets();
+    }
+    
+    private void loadTickets() {
+        DefaultListModel<QCustomer> lm = new DefaultListModel<>();
+        LinkedList<QCustomer> tickets = NetCommander.getTickets(netProperty);
+        
+        for (QCustomer customer : tickets) {
+            lm.addElement(customer);
+        }
+        
+        jListTickets.setModel(lm);
     }
     
     private void loadMovedToPaymentList() {
@@ -2331,6 +2514,10 @@ public class FReception extends javax.swing.JFrame {
                 {
                    c = c.replace("STATE_POSTPONED", "Отложен");
                 }
+                if(c.contains("STATE_POSTPONED_AFTER_SERVICE"))
+                {
+                   c = c.replace("STATE_POSTPONED_AFTER_SERVICE", "Отложен");
+                }
                 sb.append(c).append("<br>");
             });
             f.setHistory(sb.toString());
@@ -2412,7 +2599,18 @@ public class FReception extends javax.swing.JFrame {
     private javax.swing.JPanel jPanelMovedToPayment;
     private javax.swing.JScrollPane jScrollMovedToPayment;
     private javax.swing.JList jListMovedToPayment;
-    private javax.swing.JButton jButtonRefresh;
+    private javax.swing.JButton jButtonRefreshMovedToPaymentList;
+    
+    private javax.swing.JPanel jPanelTickets;
+    private javax.swing.JScrollPane jScrollTickets;
+    private javax.swing.JList jListTickets;
+    private javax.swing.JButton jButtonRemoveTicket;
+    private javax.swing.JButton jButtonChangePriority;
+    private javax.swing.JButton jButtonRefreshTickets;
+    private javax.swing.JPopupMenu jPopupMenuTickets;
+    private javax.swing.JMenuItem jPopupMenuItemRemoveTicket;
+    private javax.swing.JMenuItem jPopupMenuItemRefreshList;
+    private javax.swing.JMenuItem jPopupMenuItemEditPriority;
 
     
     private static FReception fReception;

@@ -21,6 +21,7 @@ import com.google.gson.annotations.SerializedName;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -50,6 +51,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.Transient;
+import javax.swing.Timer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
@@ -82,15 +84,16 @@ import ru.apertum.qsystem.server.model.schedule.QSchedule;
 @Table(name = "services")
 public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, Transferable, Serializable {
     
-    /*
-    * Идентификаторы услуг
-    */
+    //префикс услуги абон. зала
+    public static final String SERVICE_PREFIX_ABO = "1";
+    //префикс услуги СЦ
+    public static final String SERVICE_PREFIX_SC = "2";
     //корень услуг для абон. зала
     public static final Long ROOT_SERVICES_ABO = 1503466462316L;
     //корень услуг для сервисного центра
     public static final Long ROOT_SERVICES_SC = 1503466512673L;
-    //услуга "Консультация. Сотовая связь (CDMA)"
-    public static final Long SERVICE_CONSULTATION_CDMA = 1503473953581L;
+    //услуга "Консультация. Перенаправление от банка"
+    public static final Long SERVICE_CONSULTATION_CLIENT_FROM_BANK = 1524202059591L;
 
     /**
      * множество кастомеров, вставших в очередь к этой услуге
@@ -592,8 +595,14 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      */
 
 
+//    @Transient
+//    public static LinkedList<Integer> usedTickets = new LinkedList<>();
+    
+    /*
+    * Ключ это ИД зала, а значение это список использованных талонов
+    */
     @Transient
-    public static LinkedList<Integer> usedTickets = new LinkedList<>();
+    public static HashMap<Integer, LinkedList<Integer>> usedTickets = new HashMap<Integer, LinkedList<Integer>>();
     
     /**
      * последний номер, выданный последнему кастомеру при номерировании клиентов обособлено в услуге. тут такой замут. когда услугу создаешь из json где-то на
@@ -618,31 +627,37 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     }
 
     /**
-     * Получить номер для сделующего кастомера. Произойдет инкремент счетчика номеров.
+     * Получить номер для следующего кастомера. Произойдет инкремент счетчика номеров.
      *
      * @return
      */
-    
-    private boolean checkTicketExists(int ticket)
+    private boolean checkTicketExists(int ticket, int unitId)
     {
         if(ticket == -1) 
             return true;
         else 
-            return usedTickets.contains(ticket);
+//            return usedTickets.contains(ticket);
+            return usedTickets.get(unitId).contains(ticket);
     }
-    public int getNextNumber() {
+    
+    public int getNextNumber(int unitId) {
         synchronized (QService.class) {
             // услуга-рулон сбрасывается по своему, у нее в пропертях есть первый и последний номер.
             // У услуги-рулона всегда своя нумерация! Не сквозная.
             
             int temp = -1;
             
-            while (checkTicketExists(temp))
-            {
+            if (!usedTickets.containsKey(unitId)) {
+                usedTickets.put(unitId, new LinkedList<>());
+            }
+            
+            while (checkTicketExists(temp, unitId)) {
                 temp = ThreadLocalRandom.current().nextInt(ServerProps.getInstance().getProps().getFirstNumber(),
                                                            ServerProps.getInstance().getProps().getLastNumber() + 1);
             }
-            usedTickets.add(temp);
+//            usedTickets.add(temp);
+            usedTickets.get(unitId).add(temp);
+            
             /* ThreadLocalRandom.current().nextInt(0, 999 + 1);
             if (getStatus() == 5) {
                 QProperty prop = ServerProps.getInstance().getProperty(getSectionName(), Uses.KEY_ROLL);
@@ -1057,6 +1072,17 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         clients.clear();
         clients.addAll(getCustomers());
         return customer;
+    }
+    
+    public void polCustomer(Long customerId) {
+        for (QCustomer customer : getCustomers()) {
+            if (customer.getId().equals(customerId)) {
+                getCustomers().remove(customer);
+            }
+        }
+        
+        clients.clear();
+        clients.addAll(getCustomers());
     }
 
     /**

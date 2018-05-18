@@ -33,6 +33,7 @@ public class ButtonDevice extends Object implements IButtonDevice {
                 || user.getShadow().getCustomerState() == CustomerState.STATE_DEAD
                 || user.getShadow().getCustomerState() == CustomerState.STATE_FINISH
                 || user.getShadow().getCustomerState() == CustomerState.STATE_POSTPONED
+                || user.getShadow().getCustomerState() == CustomerState.STATE_POSTPONED_AFTER_SERVICE
                 || user.getShadow().getCustomerState() == CustomerState.STATE_REDIRECT
                 || user.getShadow().getCustomerState() == CustomerState.STATE_REDIRECT)
                 && (this.qsize == 0 && qsize != 0)) {
@@ -118,6 +119,7 @@ public class ButtonDevice extends Object implements IButtonDevice {
                 || user.getShadow().getCustomerState() == CustomerState.STATE_DEAD
                 || user.getShadow().getCustomerState() == CustomerState.STATE_FINISH
                 || user.getShadow().getCustomerState() == CustomerState.STATE_POSTPONED
+                || user.getShadow().getCustomerState() == CustomerState.STATE_POSTPONED_AFTER_SERVICE
                 || user.getShadow().getCustomerState() == CustomerState.STATE_REDIRECT)
                 && (b == 0x31)) {
             //команда вызова кастомера
@@ -249,7 +251,7 @@ public class ButtonDevice extends Object implements IButtonDevice {
             //команда завершения работы
 
             System.out.println("get Finish Customer by " + user.getName());
-            NetCommander.getFinishCustomer(UBForm.form.netProperty, userId, null, -1L, "", false);
+            NetCommander.getFinishCustomer(UBForm.form.netProperty, userId, null, -1L, ""/*, false*/);
             user.getShadow().setCustomerState(CustomerState.STATE_FINISH);
             //ответ о результате на кнопку
             if (qsize == 0) {

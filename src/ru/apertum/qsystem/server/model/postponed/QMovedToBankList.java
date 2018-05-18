@@ -11,10 +11,8 @@ import java.util.LinkedList;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
 import org.apache.commons.collections.CollectionUtils;
-import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.QLog;
-import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.QServer;
 import ru.apertum.qsystem.server.controller.Executer;
@@ -98,6 +96,16 @@ public class QMovedToBankList extends DefaultListModel {
         for (Object object : toArray()) {
             QCustomer c = (QCustomer)object;
             if (id == c.getId()) {
+                return c;
+            }
+        }
+        return null;
+    }
+    
+    public QCustomer getByExtId(long extId) {
+        for (Object object : toArray()) {
+            QCustomer c = (QCustomer)object;
+            if (extId == c.getExtId()) {
                 return c;
             }
         }

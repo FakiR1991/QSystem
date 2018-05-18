@@ -188,7 +188,15 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     private CustomerState state;
 
     public void setState(CustomerState state) {
-        setState(state, new Long(-1));
+        setState(state, new Long(-1), false);
+    }
+    
+    public void setState(CustomerState state, boolean isFReception) {
+        setState(state, new Long(-1), isFReception);
+    }
+    
+    public void setState(CustomerState state, Long newServiceId) {
+        setState(state, newServiceId, false);
     }
 
     /**
@@ -197,8 +205,9 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
      * @param state
      * @param newServiceId - при редиректе и возврате после редиректа тут будет ID той услуги куда редиректим или возвращвем, причем услуга у кастомера все еще
      * прежняя, т.е. так в которой завершили с ним работать
+     * @param isFReception - флаг, указывающий на то, что вызов произведён из FReception при удалении талона из очереди
      */
-    public void setState(CustomerState state, Long newServiceId) {
+    public void setState(CustomerState state, Long newServiceId, boolean isFReception) {
         this.state = state;
         stateIn = state.ordinal();
 
@@ -210,7 +219,9 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         switch (state) {
             case STATE_DEAD:
                 QLog.l().logger().debug("Статус: Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет домой по неявке");
-                getUser().getPlanService(getService()).inkKilled();
+                if (!isFReception) {
+                    getUser().getPlanService(getService()).inkKilled();
+                }
                 // хер с ним, сохраним чтоб потом почекать неподошедших. сохраним кастомера в базе
                 // только финиш_тайм надо проставить, хер сним, и старт_тайм тоже, ядренбатон
                 setStartTime(new Date());
@@ -269,6 +280,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 saveToSelfDB();
                 break;
             case STATE_POSTPONED:
+            case STATE_POSTPONED_AFTER_SERVICE:
                 QLog.l().logger().debug("Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет ждать в список отложенных");
                 QLog.l().logger().debug(getStartTime());
                 getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
@@ -300,14 +312,14 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 //saveToSelfDB();
                 break;
         }
-
+        
         // поддержка расширяемости плагинами
         for (final IChangeCustomerStateEvent event : ServiceLoader.load(IChangeCustomerStateEvent.class)) {
-            QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
+            QLog.l().logger().info("Вызов SPI расширения. State=" + state.name() + ". Описание: " + event.getDescription());
             try {
                 event.change(this, state, newServiceId);
             } catch (Throwable tr) {
-                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. Описание: " + tr);
+                QLog.l().logger().error("Вызов SPI расширения завершился ошибкой. State=" + state.name() + ". Описание: " + tr);
             }
         }
     }
@@ -410,9 +422,9 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setService(QService service) {
         this.service = service;
         // Префикс для кастомера проставится при его создании, один раз и на всегда.
-        if (getPrefix() == null) {
+//        if (getPrefix() == null) {
             setPrefix(service.getPrefix());
-        }
+//        }
         QLog.l().logger().debug("Клиента \"" + getFullNumber() + "\" поставили к услуге \"" + service.getName() + "\"");
     }
     /**

@@ -156,8 +156,21 @@ public class Spring {
             String fio = (String)item[QNotificationsInfo.COLUMN_FIO];
             String email = (String)item[QNotificationsInfo.COLUMN_EMAIL];
             String phone = (String)item[QNotificationsInfo.COLUMN_PHONE];
+            int maxWaitingMinutesAbo = (int)item[QNotificationsInfo.COLUMN_MAX_WAITING_MINUTES_ABO];
+            int maxWaitingMinutesSc = (int)item[QNotificationsInfo.COLUMN_MAX_WAITING_MINUTES_SC];
+            double ratioAbo = (double)item[QNotificationsInfo.COLUMN_RATIO_ABO];
+            double ratioSc = (double)item[QNotificationsInfo.COLUMN_RATIO_SC];
+            int unitId = (int)item[QNotificationsInfo.COLUMN_UNIT_ID];
             
-            ni.add(new QNotificationsInfo(id, fio, email, phone));
+            ni.add(new QNotificationsInfo(id,
+                                          fio,
+                                          email,
+                                          phone,
+                                          maxWaitingMinutesAbo,
+                                          maxWaitingMinutesSc,
+                                          ratioAbo,
+                                          ratioSc,
+                                          unitId));
         }
         ses.flush();
         
@@ -180,16 +193,12 @@ public class Spring {
             String smtpPort = (String)item[QEmailSendingSettings.COLUMN_SMTP_PORT];
             String email = (String)item[QEmailSendingSettings.COLUMN_EMAIL];
             String pass = (String)item[QEmailSendingSettings.COLUMN_PASSWORD];
-            String subject = (String)item[QEmailSendingSettings.COLUMN_SUBJECT];
-            String message = (String)item[QEmailSendingSettings.COLUMN_MESSAGE];
             
             sendingSettings.setId(id);
             sendingSettings.setSmtpHost(smtpHost);
             sendingSettings.setSmtpPort(smtpPort);
             sendingSettings.setEmail(email);
             sendingSettings.setPassword(pass);
-            sendingSettings.setSubject(subject);
-            sendingSettings.setMessage(message);
         }
         ses.flush();
         

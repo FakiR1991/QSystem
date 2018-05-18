@@ -119,6 +119,9 @@ public class CmdParams {
     @SerializedName("oper_id")
     public Integer oper_id;
     @Expose
+    @SerializedName("point_type")
+    public Integer pointType;
+    @Expose
     @SerializedName("dt_start")
     public Date dt_start;
     @Expose
@@ -133,6 +136,12 @@ public class CmdParams {
     @Expose
     @SerializedName("unit_id")
     public Integer unitId;
+    @Expose
+    @SerializedName("adress_rs")
+    public Integer adressRs;
+    @Expose
+    @SerializedName("is_postponed_after_service")
+    public Boolean isPostponedAfterService;
     
     
     /**

@@ -50,6 +50,9 @@ import ru.apertum.qsystem.server.Spring;
 @Entity
 @Table(name = "users")
 public class QUser implements IidGetter, Serializable, Comparable<QUser> {
+    
+    public static final int POINT_TYPE_ABO = 1;
+    public static final int POINT_TYPE_SC = 2;
 
     /**
      * Конструктор для формирования из БД.
@@ -229,6 +232,36 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
         return point;
     }
     /**
+     * Тип рабочего места (абон. зал или СЦ).
+     */
+    @Expose
+    @SerializedName("point_type")
+    private Integer pointType;
+
+    public void setPointType(Integer pointType) {
+        this.pointType = pointType;
+    }
+
+    @Transient
+    public Integer getPointType() {
+        return pointType;
+    }
+    /**
+     * Идентификатор зала (Тирасполь - 5, Бендеры - 6 и т. д.)
+     */
+    @Expose
+    @SerializedName("unit_id")
+    private Integer unitId;
+
+    public void setUnitId(Integer unitId) {
+        this.unitId = unitId;
+    }
+
+    @Transient
+    public Integer getUnitId() {
+        return unitId;
+    }
+    /**
      * Название пользователя.
      */
     @Expose
@@ -253,6 +286,7 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
     }
 
     @Column(name = "adress_rs")
+//    @Transient
     public Integer getAdressRS() {
         return adressRS;
     }

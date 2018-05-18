@@ -42,7 +42,7 @@ public class EmailSender {
         def.setName("SomeTxName");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
-        String query = "select id, smtpHost, smtpPort, email, password, subject, message from QEmailSendingSettings";
+        String query = "select id, smtpHost, smtpPort, email, password from QEmailSendingSettings";
         QEmailSendingSettings sendingSettings;
         try {
             sendingSettings = Spring.getInstance().executeSelectEmailSendingSettings(query);
@@ -57,22 +57,19 @@ public class EmailSender {
     
     /**
      * Метод, который отправляет уведомления о большой очереди в системе электронной очереди.
-     * @param emails Список email-ов, на которые требуется отправить оповещение.
      */
-    public void sendMessages(List<String> emails) {
+    public void sendMessages(String email, String subject, String messageText) {
         Session session = getSession();
 
         try {
-            for (String email : emails) {
-                Message message = new MimeMessage(session);
-                message.setFrom(new InternetAddress(emailSendingSettings.getEmail()));
-                message.setRecipients(Message.RecipientType.TO,
-                                      InternetAddress.parse(email));
-                message.setSubject(emailSendingSettings.getSubject());
-                message.setText(emailSendingSettings.getMessage());
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(emailSendingSettings.getEmail()));
+            message.setRecipients(Message.RecipientType.TO,
+                                  InternetAddress.parse(email));
+            message.setSubject(subject);
+            message.setText(messageText);
 
-                Transport.send(message);
-            }
+            Transport.send(message);
         } catch (MessagingException e) {
             QLog.l().logger().error("Ошибка отправки уведомления на e-mail.\n" + e.getMessage());
         }

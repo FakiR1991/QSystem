@@ -36,5 +36,5 @@ public interface IStartClient extends IExtra {
      */
     public void start(FClient form);
 
-    public void pressButton(QUser user, INetProperty netProperty, RpcGetSelfSituation.SelfSituation situation, ActionEvent evt, int keyId);
+    public void pressButton(QUser user, INetProperty netProperty, RpcGetSelfSituation.SelfSituation situation, ActionEvent evt, int keyId, int unitId);
 }

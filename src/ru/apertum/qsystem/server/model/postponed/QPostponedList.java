@@ -17,15 +17,9 @@
 package ru.apertum.qsystem.server.model.postponed;
 
 import java.awt.event.ActionEvent;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
 import org.apache.commons.collections.CollectionUtils;

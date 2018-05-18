@@ -1,1 +1,1 @@
-start javaw  -cp dist/QSystem.jar ru.apertum.qsystem.client.forms.FClient -point 15 -sport 3128 -cport 3129 -s localhost -debug -cfg config/clientboard.xml +cfgfx config/clientboardfx.properties --terminal
+start javaw  -cp dist/QSystem.jar ru.apertum.qsystem.client.forms.FClient -point 15 -sport 3128 -cport 3129 -s localhost -uid 5 -ptype 1 -ars 32 -debug -cfg config/clientboard.xml +cfgfx config/clientboardfx.properties --terminal
