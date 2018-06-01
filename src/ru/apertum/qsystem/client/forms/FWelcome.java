@@ -733,6 +733,7 @@ public class FWelcome extends javax.swing.JFrame {
     
     static void initNumbers()
     {
+        JLabel number0 = new JLabel();
         JLabel number1 = new JLabel();
         JLabel number2 = new JLabel();
         JLabel number3 = new JLabel();
@@ -741,40 +742,33 @@ public class FWelcome extends javax.swing.JFrame {
         JLabel number6 = new JLabel();
         
         numbersPanel1 = new JPanel();
+       // numbersPanel1.setBounds(0,0,1500,1500);
         numbersPanel2 = new JPanel();
-        number1.setText("1199 - Справочная служба мобильной сети");
-        number1.setForeground(Color.decode("#3b6bb3"));
-        
         //  g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), 7));
    
-        number1.setBounds(0, 60, 700, 50);
-        number2.setText("1144 - Справочная служба сети Интернет");
+        number0.setBounds(0, 60, 900, 100);
+        number0.setText("<html>1198 - единый номер информационной и<br>технической поддержки абонентов IDC по всем<br>услугам связи</html>");
+        number0.setForeground(Color.decode("#3b6bb3"));
+        number1.setBounds(0,160, 700, 100);
+        number1.setText("<html>888 - Автоматическая Система<br>Самообслуживания Абонентов [АССА]</html>");
+        number1.setForeground(Color.decode("#3b6bb3"));
+        number2.setText("<html>195 - Информация о состоянии лицевого счета<br>местной телефонной сети</html>");
         number2.setForeground(Color.decode("#3b6bb3"));
-        number2.setBounds(0,120,700,50);
-        number3.setText("1188 - Справочная служба абонентов ТВ");
-        number3.setForeground(Color.decode("#3b6bb3"));
-        number3.setBounds(0,180,700,50);
-        number4.setText("194 - Справочная служба проводной сети");
-        number4.setForeground(Color.decode("#3b6bb3"));
-        number4.setBounds(0,60,700,50);
-        number5.setText("198 - Техническая поддержка");
-        number5.setBounds(0,120,700,50);
-        number5.setForeground(Color.decode("#3b6bb3"));
-        number6.setText("199 - Справочная служба");
-        number6.setBounds(0,180,700,50);
-        number6.setForeground(Color.decode("#3b6bb3"));
-        number1.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),25));
-        number2.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),25));
-        number3.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),25));
-        number4.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),25));
-        number5.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),25));
-        number6.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),25));
+        number2.setBounds(0,60,900,70);
+        
+        
+        number0.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
+        number1.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
+        number2.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
+       
+        
+        numbersPanel1.add(number0);
         numbersPanel1.add(number1);
-        numbersPanel1.add(number2);
-        numbersPanel1.add(number3);
-        numbersPanel2.add(number4);
-        numbersPanel2.add(number5);
-        numbersPanel2.add(number6);
+        //numbersPanel1.add(number2);
+        numbersPanel2.add(number2);
+       // numbersPanel2.add(number4);
+       // numbersPanel2.add(number5);
+       // numbersPanel2.add(number6);
         numbersPanel1.setBackground(Color.decode("#cce6ff"));
         numbersPanel2.setBackground(Color.decode("#cce6ff"));
         numbersPanel1.setLayout(null);
@@ -1092,16 +1086,7 @@ public class FWelcome extends javax.swing.JFrame {
                 la = new GridLayout(2, 2, delta, delta / 2);
             panel.setLayout(la);
         }
-        //заплатка для кнопки АПБ ***** ВРЕМЕННО *****
         
-       // QButton buttonAPB = new QButton(new QService(),this,panelMain,WelcomeParams.getInstance().buttonType);
-       
-       
-        //конец заплатки
-        
-        //JLabel serviceName = new JLabel();
-        // serviceName.setText(current.getName());
-        // panel.add(getServiceNamePanel(current.getName()));
         if (current != root) {
             JPanel p = new JPanel();
             JLabel serviceLabel = new JLabel();

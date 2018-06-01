@@ -81,7 +81,7 @@ public class QPostponedList extends DefaultListModel {
                                 // время сидения вышло, пора отправляться в очередь.
                                 forDel.add(customer);
                                 // в очередь, сукины дети
-                                // время постановки проставляется автоматом при создании кастомера.
+                              /// время постановки проставляется автоматом при создании кастомера.
 //                                if (customer.getPostponedStatus().contains("на оплату")) {
 //                                    if (customer.getPriority().get() < 2) {
 //                                        customer.setPriority(customer.getPriority().get() + 1);
@@ -89,6 +89,15 @@ public class QPostponedList extends DefaultListModel {
 //                                }
 //                                customer.setPriority(customer.getPriority().get());
                                 //}
+                                
+                                if (customer.getPostponedStatus().contains("на оплату")) {
+                                    if (customer.getPriority().get() < 2) {
+                                        customer.setPriority(customer.getPriority().get() + 1);
+                                    } 
+                                    else {
+                                        customer.setPriority(customer.getPriority().get());
+                                    }
+                                }
                                 //добавим нового пользователя
                                 final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
                                 service.addCustomer(customer);

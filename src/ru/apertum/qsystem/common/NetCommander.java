@@ -952,6 +952,27 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+    
+        public static LinkedList<ServiceInfo> getServerState(INetProperty netProperty, Integer unitId) {
+        QLog.l().logger().info("Получение описания состояния сервера.");
+        // загрузим ответ
+        String res = null;
+        try {
+            res = send(netProperty, Uses.TASK_SERVER_STATE, null);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetServerState rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetServerState.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
 
     /**
      * Получение описания состояния пункта регистрации.
@@ -1460,14 +1481,14 @@ public class NetCommander {
      * @param unitId - идентификатор зала (г. Тирасполь, г. Бендеры и т.д.)
      * @param addressRs - идентификатор для вывода на монитор (параметр определяет на какой монитор будет выведена информация)
      */
-    public static void setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId, int addressRs) throws QException {
+    public static void setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId/*, int addressRs*/) throws QException {
         QLog.l().logger().info("Установить указанному юзеру переданные параметры");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
         params.pointType = pointType;
         params.unitId = unitId;
-        params.adressRs = addressRs;
+//        params.adressRs = addressRs;
         try {
             send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
         } catch (QException ex) {// вывод исключений

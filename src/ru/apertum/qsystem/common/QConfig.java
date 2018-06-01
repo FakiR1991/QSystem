@@ -42,7 +42,7 @@ public final class QConfig {
 
     private static final String KEY_UNIT_ID = "unitid";
     private static final String KEY_POINT_TYPE = "pointtype";
-    private static final String KEY_ADDRESS_RS = "addressrs";
+//    private static final String KEY_ADDRESS_RS = "addressrs";
     private static final String KEY_DEBUG = "debug";
     // ключ, отвечающий за режим демонстрации. При нем не надо прятать мышку и убирать шапку формы
     // Режим демонстрации. При нем не надо прятать мышку и убирать шапку формы.
@@ -113,7 +113,7 @@ public final class QConfig {
             options.addOption("uid", KEY_UNIT_ID, true, "Идентификатор зала, используется для разделения разных залов внутри системы.");
         //}
         options.addOption("ptype", KEY_POINT_TYPE, true, "Тип рабочего места (1 - абон. зал, 2 - СЦ).");
-        options.addOption("ars", KEY_ADDRESS_RS, true, "AddressRs - адрес (идентификатор) монитора для вывода информации для оператора.");
+//        options.addOption("ars", KEY_ADDRESS_RS, true, "AddressRs - адрес (идентификатор) монитора для вывода информации для оператора.");
         /*
          CLIENT: ide -s 127.0.0.1 -cport 3129 -sport 3128 -cfg config/clientboard.xml -cfgfx1 config/clientboardfx.properties -point1 234 debug -terminal1
          RECEPTION: ide -s 127.0.0.1 -cport 3129 -sport 3128  debug
@@ -325,11 +325,11 @@ public final class QConfig {
                 : config.getInt(KEY_POINT_TYPE, 0);
     }
     
-    public Integer getAddressRs() {
-        return line.hasOption(KEY_ADDRESS_RS)
-                ? Integer.parseInt(line.getOptionValue(KEY_ADDRESS_RS, "0"))
-                : config.getInt(KEY_ADDRESS_RS, 0);
-    }
+//    public Integer getAddressRs() {
+//        return line.hasOption(KEY_ADDRESS_RS)
+//                ? Integer.parseInt(line.getOptionValue(KEY_ADDRESS_RS, "0"))
+//                : config.getInt(KEY_ADDRESS_RS, 0);
+//    }
     
     public boolean isDebug() {
         return line.hasOption(KEY_DEBUG)

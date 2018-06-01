@@ -480,23 +480,26 @@ public final class Executer {
                         final QService serv = QServiceTree.getInstance().getById(plan.getService().getId()); // очередная очередь
                         //только услуги, которые соответствуют его pointType (то есть если он сидит в СЦ,
                         //то ему не нужно показывать очередь для абон. зальских услуг назначенных ему)
-                        if (user.getPointType() != null && user.getPointType().toString().compareTo(serv.getPrefix()) == 0) {
+//                        if (user.getPointType() != null && user.getPointType().toString().compareTo(serv.getPrefix()) == 0) {
                             if (serv.getStatus() == 5) {
                                 rollService = serv;
                             }
 
-                            final QCustomer cust = serv.peekCustomer(); // первый в этой очереди
-                            // если очередь пуста или данный кастомер находится не в одном зале с оператором
-                            if (cust == null || cust.getUnitId().compareTo(user.getUnitId()) != 0) {
+//                            final QCustomer cust = serv.peekCustomer(); // первый в этой очереди
+                            final QCustomer cust = serv.peekCustomerByUid(user.getUnitId());
+
+                            // если очередь пуста
+                            if (cust == null) {
                                 continue;
                             }
+                            
                             // учтем приоритетность кастомеров и приоритетность очередей для юзера в которые они стоят
                             final Integer prior = plan.getCoefficient();
                             if (prior > servPriority || (prior == servPriority && customer != null && customer.compareTo(cust) == 1)) {
                                 servPriority = prior;
                                 customer = cust;
                             }
-                        }
+//                        }
                     }
                     // Если в основных очередях нет клиентов, но есть услуга-рулон. Тогда крутим рулон, создаем кастомера и его считаем вызванным.
                     if (customer == null && rollService != null) {
@@ -522,7 +525,8 @@ public final class Executer {
                             return new RpcInviteCustomer(null);
                         }
                         // подотрем выбранного кастомера из очереди ожидания, он уже уехал к юзеру теперь.
-                        customer = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer();
+                        customer = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer(customer.getId());
+                       // customer = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer();
                     }
                 }
             } catch (Exception ex) {
@@ -836,18 +840,24 @@ public final class Executer {
                 final QService service = QServiceTree.getInstance().getById(planService.getService().getId());
                 //только услуги, которые соответствуют его pointType (то есть если он сидит в СЦ,
                 //то ему не нужно показывать очередь для абон. зальских услуг назначенных ему)
-                if (user.getPointType() != null && user.getPointType().toString().compareTo(service.getPrefix()) == 0) {
+//                if (user.getPointType() != null && user.getPointType().toString().compareTo(service.getPrefix()) == 0) {
                     servs.add(new RpcGetSelfSituation.SelfService(service, service.getCountCustomers(), planService.getCoefficient(), planService.getFlexible_coef()));
                     stateH = stateH + service.getId() + service.getCountCustomers() * (planService.getCoefficient() + 17);
-                }
+//                }
             }
             // нужно сделать вставочку приглашенного юзера, если он есть
             stateH = stateH
                     + (user.getCustomer() == null ? -1703 : (user.getCustomer().getId() + user.getCustomer().getState().ordinal() * 747))
                     + ServerProps.getInstance().getProps().getLimitRecall()
                     + (user.getShadow() == null ? -147 : user.getShadow().getOldNom());
+            
+            LinkedList<QCustomer> postponedList = new LinkedList<QCustomer>();
+            
             for (QCustomer cu : QPostponedList.getInstance().getPostponedCustomers()) {
-                stateH = stateH + cu.getId() + cu.getState().ordinal() * 117 + cu.getPostponedStatus().hashCode();
+                if (cu.getUnitId().compareTo(user.getUnitId()) == 0) {
+                    postponedList.add(cu);
+                    stateH = stateH + cu.getId() + cu.getState().ordinal() * 117 + cu.getPostponedStatus().hashCode();
+                }
             }
             final Long hash = hashState.get(cmdParams.userId);
             if (hash == null) {
@@ -862,7 +872,8 @@ public final class Executer {
             return new RpcGetSelfSituation(new RpcGetSelfSituation.SelfSituation(servs,
                                                                                  user.getCustomer(),
                                                                                  new LinkedList(user.getParallelCustomers().values()),
-                                                                                 QPostponedList.getInstance().getPostponedCustomers(),
+                                                                                 /*QPostponedList.getInstance().getPostponedCustomers(),*/
+                                                                                 postponedList,
                                                                                  ServerProps.getInstance().getProps().getLimitRecall(),
                                                                                  ServerProps.getInstance().getProps().getExtPriorNumber(),
                                                                                  user.getShadow()));
@@ -2234,9 +2245,9 @@ public final class Executer {
             QUser user = QUserList.getInstance().getById(cmdParams.userId);
             user.setPointType(cmdParams.pointType);
             user.setUnitId(cmdParams.unitId);
-            if (cmdParams.adressRs != null && cmdParams.adressRs.compareTo(0) != 0) {
-                user.setAdressRS(cmdParams.adressRs);
-            }
+//            if (cmdParams.adressRs != null && cmdParams.adressRs.compareTo(0) != 0) {
+//                user.setAdressRS(cmdParams.adressRs);
+//            }
             
             return new JsonRPC20OK();
         }

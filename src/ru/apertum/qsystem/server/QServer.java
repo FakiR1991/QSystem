@@ -826,8 +826,7 @@ public class QServer extends Thread {
         cleanUpTicketsTimer.start();
     }
     
-    private static void startPostponedTimer()
-    {
+    private static void startPostponedTimer() {
         Timer timerOut = new Timer(240 * 1000, (ActionEvent e) -> {
             String connectionString = "jdbc:oracle:thin:@(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1-vip.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node2-vip.int.idknet.com)(PORT = 1521)) (FAILOVER = yes) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = SHARED) (SERVICE_NAME = amar_s1) (FAILOVER_MODE = (TYPE = SELECT) (METHOD = BASIC) (RETRIES = 180) (DELAY = 5))))";
             String strUserID = "qsystem";
