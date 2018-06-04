@@ -1,0 +1,7 @@
+dist
+.nb-gradle
+.gradle
+build
+logs
+/plugins/ClientboardRS485Plugin.jar
+/plugins/ZoneboardPlugin.jar

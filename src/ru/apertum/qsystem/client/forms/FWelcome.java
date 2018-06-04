@@ -1082,16 +1082,7 @@ public class FWelcome extends javax.swing.JFrame {
                 la = new GridLayout(2, 2, delta, delta / 2);
             panel.setLayout(la);
         }
-        //заплатка для кнопки АПБ ***** ВРЕМЕННО *****
         
-       // QButton buttonAPB = new QButton(new QService(),this,panelMain,WelcomeParams.getInstance().buttonType);
-       
-       
-        //конец заплатки
-        
-        //JLabel serviceName = new JLabel();
-        // serviceName.setText(current.getName());
-        // panel.add(getServiceNamePanel(current.getName()));
         if (current != root) {
             JPanel p = new JPanel();
             JLabel serviceLabel = new JLabel();

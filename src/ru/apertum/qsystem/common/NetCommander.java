@@ -952,6 +952,27 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+    
+        public static LinkedList<ServiceInfo> getServerState(INetProperty netProperty, Integer unitId) {
+        QLog.l().logger().info("Получение описания состояния сервера.");
+        // загрузим ответ
+        String res = null;
+        try {
+            res = send(netProperty, Uses.TASK_SERVER_STATE, null);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetServerState rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetServerState.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
 
     /**
      * Получение описания состояния пункта регистрации.
