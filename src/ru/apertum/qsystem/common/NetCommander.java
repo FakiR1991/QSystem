@@ -1460,14 +1460,14 @@ public class NetCommander {
      * @param unitId - идентификатор зала (г. Тирасполь, г. Бендеры и т.д.)
      * @param addressRs - идентификатор для вывода на монитор (параметр определяет на какой монитор будет выведена информация)
      */
-    public static void setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId, int addressRs) throws QException {
+    public static void setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId/*, int addressRs*/) throws QException {
         QLog.l().logger().info("Установить указанному юзеру переданные параметры");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
         params.pointType = pointType;
         params.unitId = unitId;
-        params.adressRs = addressRs;
+//        params.adressRs = addressRs;
         try {
             send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
         } catch (QException ex) {// вывод исключений

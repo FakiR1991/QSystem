@@ -268,8 +268,8 @@ task runClient (dependsOn: 'classes', type: JavaExec) {
         args '5'
         args '-ptype'
         args '1'
-        args '-ars'
-        args '32'
+        /*args '-ars'
+        args '32'*/
         args '-d'
         args '++terminal'
         args '-np'
@@ -301,8 +301,8 @@ task debugClient (dependsOn: 'classes', type: JavaExec) {
         args '5'
         args '-ptype'
         args '1'
-        args '-ars'
-        args '32'
+        /*args '-ars'
+        args '32'*/
         args '-d'
         args '++terminal'
         args '-np'

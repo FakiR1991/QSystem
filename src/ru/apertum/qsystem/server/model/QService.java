@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import javax.persistence.Id;
 import java.util.PriorityQueue;
 import java.util.ServiceLoader;
@@ -1053,6 +1054,35 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     public QCustomer peekCustomer() {
         return getCustomers().peek();
     }
+    
+    /*public QCustomer peekCustomerByUid(Integer uid) {
+//        QCustomer tmp = getCustomers().peek();
+//        if (tmp != null && tmp.getUnitId().compareTo(uid) == 0) {
+//             return tmp;
+//        } else {
+            PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<QCustomer>(getCustomers());
+            while (tmpQueue != null && tmpQueue.size() > 0) {
+                QCustomer tmpCust = tmpQueue.poll();
+                if (tmpCust != null && tmpCust.getUnitId().compareTo(uid) == 0) {
+                    return tmpCust;
+                }
+            }
+//        }
+        return null;
+    }*/
+    
+    public QCustomer peekCustomerByUid(Integer uid) {
+        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers());
+        Iterator it = tmpQueue.iterator();
+        while (it.hasNext()) {
+            QCustomer cust = (QCustomer)it.next();
+            if (cust.getUnitId().compareTo(uid) == 0) {
+                it.remove();
+                return cust;
+            }
+        }
+        return null;
+    }
 
     /**
      * Получить и удалить. может вернуть null при неудаче
@@ -1074,15 +1104,29 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         return customer;
     }
     
-    public void polCustomer(Long customerId) {
-        for (QCustomer customer : getCustomers()) {
+    public QCustomer polCustomer(Long customerId) {
+        QCustomer cust = null;
+        
+        /*for (QCustomer customer : getCustomers()) {
             if (customer.getId().equals(customerId)) {
                 getCustomers().remove(customer);
+                cust = customer;
+            }
+        }*/
+        
+        Iterator it = getCustomers().iterator();
+        while (it.hasNext()) {
+            cust = (QCustomer)it.next();
+            if (customerId != null && cust.getId() != null && Objects.equals(cust.getId(), customerId)) {
+                it.remove();
+                break;
             }
         }
         
         clients.clear();
         clients.addAll(getCustomers());
+        
+        return cust;
     }
 
     /**

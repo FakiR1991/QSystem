@@ -89,6 +89,13 @@ public class QPostponedList extends DefaultListModel {
 //                                }
 //                                customer.setPriority(customer.getPriority().get());
                                 //}
+                                if (customer.getPostponedStatus().contains("на оплату")) {
+                                    if (customer.getPriority().get() < 2) {
+                                        customer.setPriority(customer.getPriority().get() + 1);
+                                    } else {
+                                        customer.setPriority(customer.getPriority().get());
+                                    }
+                                }
                                 //добавим нового пользователя
                                 final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
                                 service.addCustomer(customer);

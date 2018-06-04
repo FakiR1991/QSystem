@@ -1545,7 +1545,7 @@ public final class FClient extends javax.swing.JFrame {
     
     
     FSendToBank bankForm;
-    
+//    boolean movedToBank = false;
     
     /**
      * Действие по нажатию кнопки "Отправить на оплату"
@@ -1556,7 +1556,6 @@ public final class FClient extends javax.swing.JFrame {
     public void redirectCustomerToBank(ActionEvent evt) {
         try {
             final long start = go();
-            
             if (bankForm == null) {
                 bankForm = new FSendToBank(fClient, true);
             }
@@ -1568,13 +1567,11 @@ public final class FClient extends javax.swing.JFrame {
             }
             
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
-            NetCommander.сustomerToPostpone(netProperty,
-                                            user.getId(),
-                                            customer.getId(),
-                                            "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp, // + ". Услуга: " + customer.getService().getName(),
-                                            10,
-                                            true,
-                                            false);
+            NetCommander.сustomerToPostpone(netProperty, user.getId(), customer.getId(), "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp + ". Услуга: " + customer.getService().getName(), 10, true, false);
+           
+            workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
+            workingPeriod.setDt(workingPeriod.getDtStop());
+            NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
             
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
@@ -1611,7 +1608,12 @@ public final class FClient extends javax.swing.JFrame {
                 }
             }
             // вернется кастомер и возможно он еще не домой а по списку услуг. Список определяется при старте кастомера в обработку специяльным юзером в регистратуре
-            final QCustomer cust = NetCommander.getFinishCustomer(netProperty, user.getId(), customer.getId(), res, resComments/*, movedToBank*/);
+            final QCustomer cust = NetCommander.getFinishCustomer(netProperty,
+                                                                  user.getId(),
+                                                                  customer.getId(),
+                                                                  res,
+                                                                  resComments/*,
+                                                                  movedToBank*/);
             if (cust != null && cust.getService() != null && cust.getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE) {
                 JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + String.format("%03d", cust.getNumber()) + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -2445,8 +2447,8 @@ public final class FClient extends javax.swing.JFrame {
             NetCommander.setUserParamsById(netProperty,
                                            user.getId(),
                                            QConfig.cfg().getPointType(),
-                                           QConfig.cfg().getUnitId(),
-                                           QConfig.cfg().getAddressRs());
+                                           QConfig.cfg().getUnitId()/*,
+                                           QConfig.cfg().getAddressRs()*/);
         } catch (Exception e) {
             
         }
@@ -2555,8 +2557,8 @@ public final class FClient extends javax.swing.JFrame {
                     NetCommander.setUserParamsById(netProperty,
                                                    user.getId(),
                                                    QConfig.cfg().getPointType(),
-                                                   QConfig.cfg().getUnitId(),
-                                                   QConfig.cfg().getAddressRs());
+                                                   QConfig.cfg().getUnitId()/*,
+                                                   QConfig.cfg().getAddressRs()*/);
                 } catch (Exception e) {
                     return;
                 }
