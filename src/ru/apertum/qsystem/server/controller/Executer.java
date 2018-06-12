@@ -112,9 +112,6 @@ import ru.apertum.qsystem.server.model.schedule.QSchedule;
  */
 public final class Executer {
     
-//    @WebServiceRef(wsdlLocation = "D:\\Projects\\Java\\Workspace.qs\\Apertum-qsystem-8e3c1327905c\\src\\ru\\apertum\\qsystem\\server\\webclient2\\IDC.Services.QMSService.wsdl")
-//    QMSService service;
-
     public static Executer getInstance() {
         return ExecuterHolder.INSTANCE;
     }
@@ -486,7 +483,7 @@ public final class Executer {
                             }
 
 //                            final QCustomer cust = serv.peekCustomer(); // первый в этой очереди
-                            final QCustomer cust = serv.peekCustomerByUid(user.getUnitId());
+                            final QCustomer cust = serv.peekCustomerByUid(user);
 
                             // если очередь пуста
                             if (cust == null) {
@@ -787,6 +784,7 @@ public final class Executer {
             return new RpcGetServiceState(min, "");
         }
     };
+    
     /**
      * Получить описание пользователей для выбора
      */
@@ -799,6 +797,29 @@ public final class Executer {
             return new RpcGetUsersList(QUserList.getInstance().getItems());
         }
     };
+    
+    /**
+     * Получить описание пользователей для выбора
+     */
+    final Task getUsersByUIDTask = new Task(Uses.TASK_GET_USERS_BY_UID) {
+
+        @Override
+        public RpcGetUsersList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            //todo checkUserLive.refreshUsersFon();
+            
+            LinkedList<QUser> users = new LinkedList<>();
+            
+            for (QUser user : QUserList.getInstance().getItems()) {
+                if (user.getUnitId() != null && user.getUnitId().equals(cmdParams.unitId)) {
+                    users.add(user);
+                }
+            }
+            
+            return new RpcGetUsersList(users);
+        }
+    };
+    
     /**
      * Получить состояние сервера.
      */
@@ -811,7 +832,30 @@ public final class Executer {
 
             QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
                 final QCustomer customer = service.peekCustomer();
-                srvs.add(new RpcGetServerState.ServiceInfo(service, service.getCountCustomers(), customer != null ? customer.getFullNumber() : "-"));
+                srvs.add(new RpcGetServerState.ServiceInfo(service,
+                                                           service.getCountCustomers(),
+                                                           customer != null ? customer.getFullNumber() : "-"));
+            });
+            return new RpcGetServerState(srvs);
+        }
+    };
+    
+    /**
+     * Получить состояние сервера по unitId.
+     */
+    private final Task getServerStateByUnitId = new Task(Uses.TASK_SERVER_STATE_BY_UNIT_ID) {
+
+        @Override
+        public RpcGetServerState process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            final LinkedList<RpcGetServerState.ServiceInfo> srvs = new LinkedList<>();
+
+            QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
+                final QCustomer customer = service.peekCustomerByUid(cmdParams.unitId);
+                
+                srvs.add(new RpcGetServerState.ServiceInfo(service,
+                                                           customer != null ? String.valueOf(customer.getNumber()) : "-",
+                                                           cmdParams.unitId));
             });
             return new RpcGetServerState(srvs);
         }
@@ -853,7 +897,7 @@ public final class Executer {
             LinkedList<QCustomer> postponedList = new LinkedList<QCustomer>();
             
             for (QCustomer cu : QPostponedList.getInstance().getPostponedCustomers()) {
-                if (cu.getUnitId().compareTo(user.getUnitId()) == 0) {
+                if (cu.getUnitId().compareTo(user.getUnitId()) == 0 && user.hasService(cu.getService())) {
                     postponedList.add(cu);
                     stateH = stateH + cu.getId() + cu.getState().ordinal() * 117 + cu.getPostponedStatus().hashCode();
                 }
@@ -939,7 +983,16 @@ public final class Executer {
         @Override
         public synchronized RpcGetMovedToPaymentList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
-            return new RpcGetMovedToPaymentList(QMovedToBankList.getInstance().getMovedToBankCustomers());
+            
+            LinkedList<QCustomer> movedToBank = new LinkedList<>();
+            
+            for (QCustomer cust : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
+                if (cust.getUnitId().equals(cmdParams.unitId)) {
+                    movedToBank.add(cust);
+                }
+            }
+            
+            return new RpcGetMovedToPaymentList(movedToBank);
         }
     };
     
@@ -1131,6 +1184,10 @@ public final class Executer {
                 QLog.l().logger().error("Не найден кастомер для начала работы с ним. А должен быть! Возможно из-за параллельного приема. user=" + user.getName() + "-" + user.getId() + " " + ipAdress);
                 return new JsonRPC20Error(REQUIRED_CUSTOMER_NOT_FOUND, ipAdress + " " + user.toString() + "/" + user.getId());
             }
+            
+            //если клиента начали обслуживать, то сбрасываем количество вызовов до 1,
+            //чтобы только после 3 откладываний клиента ПОДРЯД предлагалось удалить его из очереди
+            user.getCustomer().setRecallCount(1);
             user.getCustomer().setStartTime(new Date());
             user.getCustomer().setPostponPeriod(0);
             // кастомер переходит в состояние "Начала обработки" или "Продолжение работы"
@@ -1246,7 +1303,10 @@ public final class Executer {
                 //номер талона
                 String ticketId = String.valueOf(customer.getNumber());
                 //приоритет согласно таблице приоритетов
-                BigDecimal priorityId = internalPriorityToExternal(customer);
+//                BigDecimal priorityId = internalPriorityToExternal(customer);
+                BigDecimal priorityId = customer.getExtId() != null
+                                            ? new BigDecimal(QueueIntegration.PRIORITY_NORMAL_AGAIN)
+                                            : new BigDecimal(QueueIntegration.PRIORITY_NORMAL);
                 BigDecimal redirection = cmdParams.needReturnAfterPayment ? BigDecimal.ONE : BigDecimal.ZERO;
                 //если указан id оператора к которому нужно вернуть клиента,
                 //то отправляем номер окна куда вернуть, иначе - 9999 (вернуть к любому оператору)
@@ -1460,15 +1520,15 @@ public final class Executer {
                 ((QCustomer) customer).setResult(result);
                 customer.setFinishTime(new Date());
                 
-//                if (cmdParams.movedToBank) {
-//                    //если кустомер был отправлен в банк
-//                    customer.setState(CustomerState.STATE_PAYMENT);
-//                } else {
-//                    // кастомер переходит в состояние "Завершенности", но не "мертвости"
-//                    customer.setState(CustomerState.STATE_FINISH);
-//                }
+                if (cmdParams.movedToBank) {
+                    //если кустомер был отправлен в банк
+                    customer.setState(CustomerState.STATE_PAYMENT);
+                } else {
+                    // кастомер переходит в состояние "Завершенности", но не "мертвости"
+                    customer.setState(CustomerState.STATE_FINISH);
+                }
                 // кастомер переходит в состояние "Завершенности", но не "мертвости"
-                customer.setState(CustomerState.STATE_FINISH);
+//                customer.setState(CustomerState.STATE_FINISH);
                     
                 user.setCustFinishTime(customer.getFinishTime());
                 // дело такое, кастомер может идти по списку услуг, т.е. есть набор услуг, юзер завершает работу, а система его ведет по списку услуг
@@ -2291,9 +2351,15 @@ public final class Executer {
                 s = String.format(Locales.locMes("client_with_number_removed"), num, Locales.getInstance().format_for_label.format(KILLED_CUSTOMERS.get(num)));
             }
 
-            final String n = num.replaceAll("\\D+", "");
+//            final String n = num.replaceAll("\\D+", "");
+            final String n = num.substring(1);
             final String p = num.replaceAll(n, "");
-            final List<QCustomer> custs = Spring.getInstance().getHt().find("FROM QCustomer a WHERE service_prefix ='" + p + "' and number = " + (n.isEmpty() ? "0" : n));
+            
+            final List<QCustomer> custs = Spring.getInstance()
+                                                .getHt()
+                                                .find("FROM QCustomer a WHERE service_prefix ='" + p +
+                                                      "' and number = " + (n.isEmpty() ? "0" : n) +
+                                                      " and unit_id=" + cmdParams.unitId);
             final LinkedList lc = new LinkedList();
             custs.forEach((cust) -> {
                 lc.add(Uses.FORMAT_DD_MM_YYYY_TIME.format(cust.getStandTime()) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (cust.getService().getName().length() > 96 ? cust.getService().getName().substring(0, 95) + "..." : cust.getService().getName()) + "&nbsp;&nbsp;&nbsp;&nbsp;" + cust.getUser().getName() + "&nbsp;&nbsp;&nbsp;&nbsp;" + CustomerState.values()[cust.getStateIn()]);

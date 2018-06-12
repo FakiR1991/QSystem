@@ -66,6 +66,34 @@ public class RpcGetServerState extends JsonRPC20 {
             }
             waitMax = (int) (max / 1000 / 60);
         }
+        
+        /**
+         *
+         * @param service услуга по которой данная статистика
+         * @param unitId ИД зала
+         * @param firstNumber номер первого
+         */
+        public ServiceInfo(QService service, String firstNumber, Integer unitId) {
+            this.serviceName = service.getName();
+            this.firstNumber = firstNumber;
+            this.id = service.getId();
+            
+            final long nn = new Date().getTime();
+            long max = 0;
+            int customersCount = 0;
+            
+            for (QCustomer customer : service.getClients()) {
+                if (customer.getUnitId().equals(unitId)) {
+                    customersCount++;
+                    if (nn - customer.getStandTime().getTime() > max) {
+                        max = nn - customer.getStandTime().getTime();
+                    }
+                }
+            }
+            this.countWait = customersCount;
+            this.waitMax = (int) (max / 1000 / 60);
+        }
+        
         @Expose
         @SerializedName("service_name")
         private String serviceName;

@@ -6483,7 +6483,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     public void checkClient() {
         final String num = (String) JOptionPane.showInputDialog(this, getLocaleMessage("admin.action.change_priority.num.message"), getLocaleMessage("admin.action.change_priority.num.title"), 3, null, null, "");
         if (num != null) {
-            JOptionPane.showMessageDialog(this, NetCommander.checkCustomerNumber(new ServerNetProperty(), num), getLocaleMessage("admin.action.change_priority.num.title"), JOptionPane.INFORMATION_MESSAGE);
+//            JOptionPane.showMessageDialog(this, NetCommander.checkCustomerNumber(new ServerNetProperty(), num), getLocaleMessage("admin.action.change_priority.num.title"), JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

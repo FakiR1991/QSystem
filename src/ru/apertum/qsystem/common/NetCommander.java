@@ -546,6 +546,42 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+    
+    /**
+     * Получение описания всех юзеров для Reception.
+     *
+     * @param netProperty параметры соединения с сервером
+     * @param unitId ИД зала
+     * @return XML-ответ все юзеры системы
+     */
+    public static LinkedList<QUser> getUsers(INetProperty netProperty, Integer unitId) {
+        QLog.l().logger().info("Получение описания всех юзеров для выбора себя.");
+        // загрузим ответ
+        String res = null;
+        CmdParams params = new CmdParams();
+        params.unitId = unitId;
+        
+        try {
+            res = send(netProperty, Uses.TASK_GET_USERS_BY_UID, params);
+        } catch (QException e) {// вывод исключений
+            Uses.closeSplash();
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        } finally {
+            if (res == null || res.isEmpty()) {
+                System.exit(1);
+            }
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetUsersList rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetUsersList.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
 
     /**
      * Получение описания очередей для юзера.
@@ -844,7 +880,7 @@ public class NetCommander {
      * @param comments это если закончили работать с редиректенным и его нужно вернуть
      * @return
      */
-    public static QCustomer getFinishCustomer(INetProperty netProperty, long userId, Long customerId, Long resultId, String comments/*, boolean movedToBank*/) {
+    public static QCustomer getFinishCustomer(INetProperty netProperty, long userId, Long customerId, Long resultId, String comments, boolean movedToBank) {
         QLog.l().logger().info("Закончить работу с вызванным кастомером.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -852,7 +888,7 @@ public class NetCommander {
         params.customerId = customerId;
         params.resultId = resultId;
         params.textData = comments;
-//        params.movedToBank = movedToBank;
+        params.movedToBank = movedToBank;
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_FINISH_CUSTOMER, params);
@@ -953,12 +989,16 @@ public class NetCommander {
         return rpc.getResult();
     }
     
-        public static LinkedList<ServiceInfo> getServerState(INetProperty netProperty, Integer unitId) {
+    public static LinkedList<ServiceInfo> getServerState(INetProperty netProperty, Integer unitId) {
+        
+        CmdParams params = new CmdParams();
+        params.unitId = unitId;
+        
         QLog.l().logger().info("Получение описания состояния сервера.");
         // загрузим ответ
         String res = null;
         try {
-            res = send(netProperty, Uses.TASK_SERVER_STATE, null);
+            res = send(netProperty, Uses.TASK_SERVER_STATE_BY_UNIT_ID, params);
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }
@@ -1495,6 +1535,21 @@ public class NetCommander {
             throw new QException(Locales.locMes("command_error"), ex);
         }
     }
+    
+    public static void getProperties(INetProperty netProperty, long userId, int pointType, int unitId/*, int addressRs*/) throws QException {
+        QLog.l().logger().info("Установить указанному юзеру переданные параметры");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.pointType = pointType;
+        params.unitId = unitId;
+//        params.adressRs = addressRs;
+        try {
+            send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
+        } catch (QException ex) {// вывод исключений
+            throw new QException(Locales.locMes("command_error"), ex);
+        }
+    }
 
     /**
      * Пробить номер клиента. Стоит в очереди или отложен или вообще не найден.
@@ -1503,11 +1558,13 @@ public class NetCommander {
      * @param customerNumber
      * @return Текстовый ответ о результате
      */
-    public static TicketHistory checkCustomerNumber(INetProperty netProperty, String customerNumber) {
+    public static TicketHistory checkCustomerNumber(INetProperty netProperty, String customerNumber, Integer unitId) {
         QLog.l().logger().info("Команда проверки номера кастомера.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.clientAuthId = customerNumber;
+        params.unitId = unitId;
+        
         final String res;
         try {
             res = send(netProperty, Uses.TASK_CHECK_CUSTOMER_NUMBER, params);
@@ -1559,12 +1616,15 @@ public class NetCommander {
      * @param netProperty
      * @return список ушедших на оплату
      */
-    public static LinkedList<QCustomer> getMovedToPaymentList(INetProperty netProperty) {
+    public static LinkedList<QCustomer> getMovedToPaymentList(INetProperty netProperty, Integer unitId) {
         QLog.l().logger().info("Команда на обновление списка ушедших на оплату кастомеров.");
         // загрузим ответ
         final String res;
+        CmdParams params = new CmdParams();
+        params.unitId = unitId;
+        
         try {
-            res = send(netProperty, Uses.TASK_GET_MOVED_TO_PAYMENT_LIST, null);
+            res = send(netProperty, Uses.TASK_GET_MOVED_TO_PAYMENT_LIST, params);
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }

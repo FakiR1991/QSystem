@@ -1,1 +1,1 @@
-{"servers":[{"driver":"com.mysql.jdbc.Driver","url":"jdbc:mysql://127.0.0.1/qsystem?autoReconnect\u003dtrue\u0026amp;characterEncoding\u003dUTF-8","user":"spy","password":"executenonquery","main":true,"current":true,"name":"+"}]}
+{"servers":[{"driver":"com.mysql.jdbc.Driver","url":"jdbc:mysql://127.0.0.1/qsystem?autoReconnect\u003dtrue\u0026amp;characterEncoding\u003dUTF-8","user":"qsystem","password":"executenonquery","main":true,"current":true,"name":"+"}]}

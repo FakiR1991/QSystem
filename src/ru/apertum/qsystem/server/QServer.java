@@ -853,66 +853,56 @@ public class QServer extends Thread {
                     }
                 }
                 
+                //новый механизм работы с банком
+                for (QCustomer customer : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
+                    if (customer.getPostponedStatus().toLowerCase().contains("отправлен на оплату") || customer.getState() == CustomerState.STATE_PAYMENT) {
+                        List<TempTicket> temp = tickets.stream().filter(t -> t.code.equals(customer.getNumber())).collect(Collectors.toList());
+                        QLog.l().logger().debug(customer.getNumber());
+                        if (temp.size() > 0) {
+                            if (temp.get(0).state == 1) {
+                                QLog.l().logger().debug("Попытаемся кастомера " + temp.get(0).code + " переместить в очередь из отложенных");
+                                //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
+                                if (customer.getPriority().get() < Uses.PRIORITY_HI) {
+                                    customer.setPriority(customer.getPriority().get() + 1);
+                                }
+                                
+                                //вроде как только что встал в очередь, ну и время проставим,
+                                //а то ожидание будет огромное только что встал типо;
+                                //просто время нахождения в отложенных не считается как ожидание очереди,
+                                //иначе в statistic ожидание огромное
+                                customer.setStandTime(new Date());
+                                customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
+                                
+                                //добавим нового пользователя в очередь
+                                final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
+                                service.addCustomer(customer);
+                                
+                                //удалим из списка ушедших на оплату
+                                removeCustomerFromList(customer);
+                                
+                                QLog.l().logger().debug("Сменили время кастомеру " + temp.get(0).code + ". При следующем опросе отложенных он будет вызван");
+                                
+                                String call = ("{call bs.qsys.set_ticket_state(?, ?)}");
+                                try (CallableStatement stmt = myConnection.prepareCall(call)) {
+                                    stmt.setInt(1, temp.get(0).id);
+                                    //2 - для удаления из таблицы
+                                    stmt.setInt(2, 2);
+                                    stmt.execute();
+                                } catch (Exception exeption) {
+                                    throw new ServerException("Ошибка проверки оплаты по счету в биллинге " + exeption);
+                                } finally {
+                                    if (myConnection != null) {
+                                        myConnection.close();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 
-                /**
-                 * НИЖЕ КОД ДЛЯ РЕЛИЗА С ВЗАИМОДЕЙСТВЕМ С АПБ
-                 * КОГДА РЕЛИЗНУ РАБОТУ С АПБ, ТО РАСКОММЕНТИРОВАТЬ ЭТОТ КОД И ЗАКОММЕНТИРОВАТЬ КОД, КОТОРЫЙ НИЖЕ ЭТОГО КУСКА КОДА
-                 */
-//                for (QCustomer customer : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
-//                    if (customer.getPostponedStatus().equals("Отправлен на оплату")) {
-//                        List<TempTicket> temp = tickets.stream().filter(t -> t.code.equals(customer.getNumber())).collect(Collectors.toList());
-//                        QLog.l().logger().debug(customer.getNumber());
-//                        if (temp.size() > 0) {
-//                            if (temp.get(0).state == 1) {
-//                                QLog.l().logger().debug("Попытаемся кастомера " + temp.get(0).code + " переместить в очередь из отложенных");
-//                                //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
-//                                if (customer.getPriority().get() < Uses.PRIORITY_HI) {
-//                                    customer.setPriority(customer.getPriority().get() + 1);
-//                                }
-//                                
-//                                //вроде как только что встал в очередь, ну и время проставим,
-//                                //а то ожидание будет огромное только что встал типо;
-//                                //просто время нахождения в отложенных не считается как ожидание очереди,
-//                                //иначе в statistic ожидание огромное
-//                                customer.setStandTime(new Date());
-//                                customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
-//                                
-//                                //добавим нового пользователя в очередь
-//                                final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
-//                                service.addCustomer(customer);
-//                                
-//                                //удалим из списка ушедших на оплату
-//                                removeCustomerFromList(customer);
-//                                
-//                                QLog.l().logger().debug("Сменили время кастомеру " + temp.get(0).code + ". При следующем опросе отложенных он будет вызван");
-//                                
-//                                String call = ("{call bs.qsys.set_ticket_state(?, ?)}");
-//                                try (CallableStatement stmt = myConnection.prepareCall(call)) {
-//                                    stmt.setInt(1, temp.get(0).id);
-//                                    //2 - для удаления из таблицы
-//                                    stmt.setInt(2, 2);
-//                                    stmt.execute();
-//                                } catch (Exception exeption) {
-//                                    throw new ServerException("Ошибка проверки оплаты по счету в биллинге " + exeption);
-//                                } finally {
-//                                    if (myConnection != null) {
-//                                        myConnection.close();
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-                
-
-
-                
-                /**
-                 * НИЖЕ КОД ДЛЯ РЕЛИЗА БЕЗ ВЗАИМОДЕЙСТВИЯ С АПБ
-                 */
+                //старый механизм работы с банком (для залов где нету эл. очереди АПБ)
                 for (QCustomer customer : QPostponedList.getInstance().getPostponedCustomers()) {
-                    if (customer.getPostponedStatus().equals("Отправлен на оплату")) {
-//                    if (customer.getState() == CustomerState.STATE_PAYMENT) {
+                    if (customer.getPostponedStatus().toLowerCase().contains("отправлен на оплату")) {
                         List<TempTicket> temp = tickets.stream().filter(t -> t.code.equals(customer.getNumber())).collect(Collectors.toList());
                         QLog.l().logger().debug(customer.getNumber());
                         if (temp.size() > 0) {
@@ -939,7 +929,6 @@ public class QServer extends Thread {
                         }
                     }
                 }
-                
                 
             } catch (Exception ex) {
                 throw new ServerException("Ошибка проверки оплаты по счету в биллинге " + ex);

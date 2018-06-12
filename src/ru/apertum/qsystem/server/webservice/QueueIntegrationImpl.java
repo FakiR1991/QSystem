@@ -71,75 +71,81 @@ public class QueueIntegrationImpl implements QueueIntegration {
         QLog.l().logger().info("Принимаем клиента от АПБ");
         QLog.l().logger().info(logInfo);
         
-        //если такой ticketId уже есть в очереди, тогда не создаём нового кустомера;
-        //такое может случиться если АПБ дёрнул мой сервис, я создал по его параметрам клиента,
-        //но по таймауту, например, АПБ получил ошибку и позже дёрнул меня с теми же самыми параметрами
-        QCustomer customer = checkTicketInQueue(ticketId, requestId);
-        if (customer != null) {
-            //в таком случае просто возвращаем 
-            return customer.getId().toString();
-        }
-        
-        //выполняем проверки и получаем пользователя из списка ушедших на оплату
-        customer = getCustomerByRequestId(requestId);
-        
-        boolean initFromApb = false;
-        
-        //если кустомера не нашли в списке ушедших на оплату, значит нужно
-        //создать нового и поставить в очередь на дефолтную услугу
-        if (customer == null) {
-            QLog.l().logger().warn("Не найден кастомер в списке ушедших на оплату: requestId=" + requestId +
-                                   ". Значит клиент инициирован Агропромбанком. Нужно создать нового клиента и поставить в очередь.");
-            
-            customer = initCustomerFromBank(unitId, requestId, ticketId, priorityId, pointIdFrom);
-            initFromApb = true;
-        }
-        
-        //не получилось создать нового кустомера и поставить его в услугу
-        //в теории такого не должно быть
-        if (customer == null) {
-            throw new ServerException("Не удалось поставить клиента в очередь на дефолтную услугу.");
-        }
-        
-        //если нам вернули кастомера с redirection=1, то пишем комментарий, что его нужно вернуть снова в банк
-        if (redirection == 1) {
-            customer.setPointIdTo(pointIdFrom);
-            customer.setTempComments("Автоматический текст: оператор банка запросил вернуть клиента обратно после обслуживания.");
-        }
-        
-        //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
-        if (customer.getPriority().get() < Uses.PRIORITY_HI) {
-            customer.setPriority(customer.getPriority().get() + 1);
-        }
-        
-        //добавим нового пользователя в очередь
-        final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
-        service.addCustomer(customer);
-        
-        //удалим из списка ушедших на оплату
-        removeCustomerFromList(customer);
-        
-        //если кустомер вернулся после оплаты
-        //состояние - "жду после оплаты"
-        if (!initFromApb) {
-            //вроде как только что встал в очередь, ну и время проставим, а то ожидание будет огромное
-            //только что встал типо; просто время нахождения в отложенных не считается как ожидание очереди, иначе в statistic ожидание огромное
-            customer.setStandTime(new Date());
-            customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
-        }
-        //если кустомер был инициирован АПБ и создан только что
-        else {
-            customer.setState(CustomerState.STATE_WAIT);
-        }
-        
-        //меняем статус талона в БД
-        changeTicketStatusInDatabase(customer);
+        QCustomer customer = null;
         
         try {
-            // сохраняем состояния очередей.
-            QServer.savePool();
+           //если такой ticketId уже есть в очереди, тогда не создаём нового кустомера;
+            //такое может случиться если АПБ дёрнул мой сервис, я создал по его параметрам клиента,
+            //но по таймауту, например, АПБ получил ошибку и позже дёрнул меня с теми же самыми параметрами
+            customer = checkTicketInQueue(ticketId, requestId);
+            if (customer != null) {
+                //в таком случае просто возвращаем 
+                return customer.getId().toString();
+            }
+
+            //выполняем проверки и получаем пользователя из списка ушедших на оплату
+            customer = getCustomerByRequestId(requestId);
+
+            boolean initFromApb = false;
+
+            //если кустомера не нашли в списке ушедших на оплату, значит нужно
+            //создать нового и поставить в очередь на дефолтную услугу
+            if (customer == null) {
+                QLog.l().logger().warn("Не найден кастомер в списке ушедших на оплату: requestId=" + requestId +
+                                       ". Значит клиент инициирован Агропромбанком. Нужно создать нового клиента и поставить в очередь.");
+
+                customer = initCustomerFromBank(unitId, requestId, ticketId, priorityId, pointIdFrom);
+                initFromApb = true;
+            }
+
+            //не получилось создать нового кустомера и поставить его в услугу
+            //в теории такого не должно быть
+            if (customer == null) {
+                throw new ServerException("Не удалось поставить клиента в очередь на дефолтную услугу.");
+            }
+
+            //если нам вернули кастомера с redirection=1, то пишем комментарий, что его нужно вернуть снова в банк
+            if (redirection == 1) {
+                customer.setPointIdTo(pointIdFrom);
+                customer.setTempComments("Оператор банка запросил вернуть клиента обратно после обслуживания.");
+            }
+
+            //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
+            if (customer.getPriority().get() < Uses.PRIORITY_HI) {
+                customer.setPriority(customer.getPriority().get() + 1);
+            }
+
+            //добавим нового пользователя в очередь
+            final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
+            service.addCustomer(customer);
+
+            //удалим из списка ушедших на оплату
+            removeCustomerFromList(customer);
+
+            //если кустомер вернулся после оплаты
+            //состояние - "жду после оплаты"
+            if (!initFromApb) {
+                //вроде как только что встал в очередь, ну и время проставим, а то ожидание будет огромное
+                //только что встал типо; просто время нахождения в отложенных не считается как ожидание очереди, иначе в statistic ожидание огромное
+                customer.setStandTime(new Date());
+                customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
+            }
+            //если кустомер был инициирован АПБ и создан только что
+            else {
+                customer.setState(CustomerState.STATE_WAIT);
+            }
+
+            //меняем статус талона в БД
+            changeTicketStatusInDatabase(customer);
+
+            try {
+                // сохраняем состояния очередей.
+                QServer.savePool();
+            } catch (Exception ex) {
+                QLog.l().logger().error("Ошибка сохранения состояния очередей", ex);
+            }
         } catch (Exception ex) {
-            QLog.l().logger().error("Ошибка сохранения состояния очередей", ex);
+            QLog.l().logger().trace("Ошибка приёма клиента из АПБ:\n" + ex.getMessage(), ex);
         }
         
         return customer.getId().toString();
@@ -228,7 +234,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
                 //если такой номер талона уже есть в обслуживании,
                 //но идентификатор кустомера в обслуживании
                 //не совпадает с тем, что был передан от АПБ
-                if (user.getCustomer().getExtId()!= null && !user.getCustomer().getExtId().equals(customerId)) {
+                if (user.getCustomer().getExtId() != null && !user.getCustomer().getExtId().equals(customerId)) {
                     throw new ServerException("В очереди ИДК уже есть талон с номером " + ticketId +
                                               ", но переданный requestId не соответствует тому, что в обслуживании.");
                 } else {

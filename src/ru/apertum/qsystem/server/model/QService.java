@@ -1071,6 +1071,21 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         return null;
     }*/
     
+    public QCustomer peekCustomerByUid(QUser user) {
+        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers());
+        Iterator it = tmpQueue.iterator();
+        while (it.hasNext()) {
+            QCustomer cust = (QCustomer)it.next();
+            if (cust.getUnitId().compareTo(user.getUnitId()) == 0) {
+                if (cust.getIsMine() == null || cust.getIsMine().equals(user.getId())) {
+                    it.remove();
+                    return cust;
+                }
+            }
+        }
+        return null;
+    }
+    
     public QCustomer peekCustomerByUid(Integer uid) {
         PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers());
         Iterator it = tmpQueue.iterator();

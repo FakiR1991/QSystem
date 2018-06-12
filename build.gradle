@@ -265,7 +265,7 @@ task runClient (dependsOn: 'classes', type: JavaExec) {
         args '-point'
         args '16'
         args '-uid'
-        args '5'
+        args '6'
         args '-ptype'
         args '1'
         /*args '-ars'
@@ -298,7 +298,7 @@ task debugClient (dependsOn: 'classes', type: JavaExec) {
         args '-point'
         args '16'
         args '-uid'
-        args '5'
+        args '6'
         args '-ptype'
         args '1'
         /*args '-ars'
@@ -384,7 +384,7 @@ task runReception (dependsOn: 'classes', type: JavaExec) {
         args '-sport'
         args '3128'
         args '-uid'
-        args '5'
+        args '6'
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}

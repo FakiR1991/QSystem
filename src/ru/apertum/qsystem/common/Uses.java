@@ -83,7 +83,9 @@ import ru.apertum.qsystem.server.ServerProps;
 public final class Uses {
 
     //идентификаторы залов совместных с АПБ
-    public static final int UNIT_KARL_MARX = 5; //г. Тирасполь, ул. Карла Маркса
+    public static final int UNIT_TIRASPOL_KARL_MARX = 5; //г. Тирасполь, ул. Карла Маркса
+    public static final int UNIT_BENDERY_LAZO = 6; //г. Бендеры, ул. Лазо
+    public static final int UNIT_RYBNICA = 7; //г. Рыбница
     
     // ключи системных параметров
     public static final String KEY_ROLL = "ticket_roll";
@@ -263,6 +265,7 @@ public final class Uses {
     public static final String TASK_GET_SERVICE_PREINFO = "Получить информацию по услуге";
     public static final String TASK_GET_INFO_PRINT = "Получить информацию для печати";
     public static final String TASK_GET_USERS = "Получить перечень пользователей";
+    public static final String TASK_GET_USERS_BY_UID = "Получить перечень пользователей для Reception";
     public static final String TASK_GET_SELF = "Получить описание пользователя";
     public static final String TASK_GET_SELF_SERVICES = "Получить состояние очередей";
     public static final String TASK_GET_POSTPONED_POOL = "Получить состояние пула отложенных";
@@ -284,6 +287,7 @@ public final class Uses {
     public static final String TASK_RESTART_MAIN_TABLO = "Рестарт главного твбло";
     public static final String TASK_REFRESH_POSTPONED_POOL = "NEW_POSTPONED_NOW";
     public static final String TASK_SERVER_STATE = "Получить состояние сервера";
+    public static final String TASK_SERVER_STATE_BY_UNIT_ID = "Получить состояние сервера по unitId";
     public static final String TASK_SET_SERVICE_FIRE = "Добавить услугу на горячую";
     public static final String TASK_DELETE_SERVICE_FIRE = "Удалить услугу на горячую";    // Наименования отчетов, сдесь писать исключительно маленькими латинскими буквами без пробелов
     public static final String TASK_GET_BOARD_CONFIG = "Получить конфигурацию табло";

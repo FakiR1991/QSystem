@@ -151,6 +151,7 @@ public class FReception extends javax.swing.JFrame {
         initComponents();
         initManuallyAddedComponents();
         loadRelativeData();
+        startRefreshServerStateTimer();
 
         // инициализим trayIcon, т.к. setSituation() требует работу с tray
         final JFrame fr = this;
@@ -392,7 +393,7 @@ public class FReception extends javax.swing.JFrame {
     }
     
     private void loadMovedToPaymentList() {
-        jListMovedToPayment.setModel(QMovedToBankList.getInstance().loadMovedToBankList(NetCommander.getMovedToPaymentList(netProperty)));
+        jListMovedToPayment.setModel(QMovedToBankList.getInstance().loadMovedToBankList(NetCommander.getMovedToPaymentList(netProperty, QConfig.cfg().getUnitId())));
     }
 
     private String title() {
@@ -2176,6 +2177,13 @@ public class FReception extends javax.swing.JFrame {
         }
     }
     private QStandards standards;
+    
+    private void startRefreshServerStateTimer() {
+        Timer timerOut = new Timer(60 * 1000, (ActionEvent e) -> {
+            load();
+        });
+        timerOut.start();
+    }
 
     public boolean load() {
         checkBoxPrintAdvTicket.setSelected(config.getBoolean("reception.print_adv_ticket"));
@@ -2191,7 +2199,7 @@ public class FReception extends javax.swing.JFrame {
 
         final LinkedList<QUser> users;
         try {
-            users = NetCommander.getUsers(netProperty);
+            users = NetCommander.getUsers(netProperty, QConfig.cfg().getUnitId());
             listUsers.setModel(new DefaultComboBoxModel(users.toArray()));
         } catch (Exception ex) {
             Uses.closeSplash();
@@ -2244,9 +2252,11 @@ public class FReception extends javax.swing.JFrame {
 
         final LinkedList<ServiceInfo> srvs;
         try {
-            srvs = NetCommander.getServerState(netProperty);
+            srvs = NetCommander.getServerState(netProperty, QConfig.cfg().getUnitId());
             int amt = 0;
+            
             amt = srvs.stream().map((serviceInfo) -> serviceInfo.getCountWait()).reduce(amt, Integer::sum);
+            
             labelTotalCustomers.setText("<html><span style='color:" + (amt > standards.getLineTotalMax() ? "red" : "green") + "'>" + getLocaleMessage("total.line") + " " + amt);
             tableServicesMon.setModel(new ServicesMonModel(srvs));
 
@@ -2286,6 +2296,7 @@ public class FReception extends javax.swing.JFrame {
 
         return true;
     }
+    
     private final Color reddy = new Color(255, 230, 230);
 
     @Action
@@ -2482,7 +2493,7 @@ public class FReception extends javax.swing.JFrame {
             final FInfoByTicketNumber f = new FInfoByTicketNumber(this, true);
             f.setTitle(num.toUpperCase());
             Uses.setLocation(f);
-            RpcGetTicketHistory.TicketHistory t = NetCommander.checkCustomerNumber(netProperty, num);
+            RpcGetTicketHistory.TicketHistory t = NetCommander.checkCustomerNumber(netProperty, num, QConfig.cfg().getUnitId());
             f.setInfo(t.getInfo());
             StringBuilder sb = new StringBuilder("<html>");
             t.getCusts().stream().forEach((c) -> {
