@@ -74,11 +74,12 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
     private void init() {
         // Фича. По нажатию Escape закрываем форму
         // свернем по esc
-        getRootPane().registerKeyboardAction((ActionEvent e) -> {
-            setVisible(false);
-        },
-                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-                JComponent.WHEN_IN_FOCUSED_WINDOW);
+        getRootPane().registerKeyboardAction(
+            (ActionEvent e) -> {
+                setVisible(false);
+            },
+            KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+            JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
     /**
@@ -168,7 +169,7 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
         tfTabloText.setText(service.getTabloText());
         checkBoxResultRequired.setSelected(service.getResult_required());
         checkBoxBackoffice.setSelected(service.getEnable() != 1);
-        spinnerPunktReg.setValue(service.getPoint());
+        spinnerPunktReg.setText(service.getPoint());
 
         spinButX.setValue(service.getButX());
         spinButY.setValue(service.getButY());
@@ -285,7 +286,7 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
         service.setInputedAsExt(cbRequaredAsColumnExt.isSelected());
         service.setResult_required(checkBoxResultRequired.isSelected());
         service.setEnable(checkBoxBackoffice.isSelected() ? 2 : 1);
-        service.setPoint((Integer) spinnerPunktReg.getModel().getValue());
+        service.setPoint(spinnerPunktReg.getText());
         service.setPreInfoHtml(textAreaInfoHtml.getText());
         service.setPreInfoPrintText(textAreaTextPrint.getText());
         service.setTicketText(textFieldTicketText.getText());
@@ -487,7 +488,7 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
         rbNoGo = new javax.swing.JRadioButton();
         checkBoxBackoffice = new javax.swing.JCheckBox();
         jLabel9 = new javax.swing.JLabel();
-        spinnerPunktReg = new javax.swing.JSpinner();
+        spinnerPunktReg = new javax.swing.JTextField();
         tfID = new javax.swing.JTextField();
         jLabel27 = new javax.swing.JLabel();
         labelLink = new javax.swing.JLabel();
@@ -1234,7 +1235,7 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
         jLabel9.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FServiceChangeDialod.class).getString("jLabel9.text")); // NOI18N
         jLabel9.setName("jLabel9"); // NOI18N
 
-        spinnerPunktReg.setModel(new javax.swing.SpinnerNumberModel(0, 0, 99, 1));
+        //spinnerPunktReg.setModel(new javax.swing.SpinnerNumberModel(0, 0, 99, 1));
         spinnerPunktReg.setName("spinnerPunktReg"); // NOI18N
 
         tfID.setEditable(false);
@@ -1541,10 +1542,10 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
     private javax.swing.JSpinner spinnerLimit;
     private javax.swing.JSpinner spinnerLimitForOnePerson;
     private javax.swing.JSpinner spinnerLimitPeriod;
-    private javax.swing.JSpinner spinnerPunktReg;
     private javax.swing.JTextArea textAreaButtonCaption;
     private javax.swing.JTextArea textAreaInfoHtml;
     private javax.swing.JTextArea textAreaTextPrint;
+		private javax.swing.JTextField spinnerPunktReg;
     private javax.swing.JTextField textFieldInputCaption;
     private javax.swing.JTextField textFieldPrefix;
     private javax.swing.JTextField textFieldServiceDescript;

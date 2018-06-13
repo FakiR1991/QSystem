@@ -21,7 +21,6 @@ import com.google.gson.annotations.SerializedName;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
@@ -52,7 +51,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.Transient;
-import javax.swing.Timer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
@@ -192,17 +190,17 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     @Column(name = "point")
     @Expose
     @SerializedName("point")
-    private Integer point = 0;
+    private String point = "0";
 
     /**
      * Пунктов регистрации может быть много. Наборы кнопок на разных киосках могут быть разные. Указание для какого пункта регистрации услуга, 0-для всех, х-для
      * киоска х.
      */
-    public Integer getPoint() {
+    public String getPoint() {
         return point;
     }
 
-    public void setPoint(Integer point) {
+    public void setPoint(String point) {
         this.point = point;
     }
     /**
@@ -1120,6 +1118,10 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     }
     
     public QCustomer polCustomer(Long customerId) {
+        if (getCustomers().size() <= 0) {
+            return null;
+        }
+        
         QCustomer cust = null;
         
         /*for (QCustomer customer : getCustomers()) {
@@ -1215,9 +1217,9 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         return false;
     }
 
-    public QCustomer gnawOutCustomerByNumber(String number) {
+    public QCustomer gnawOutCustomerByNumber(String number, Integer unitId) {
         for (QCustomer customer : getCustomers()) {
-            if (number.equalsIgnoreCase(customer.getPrefix() + (customer.getNumber() < 1 ? "" : String.format("%03d",customer.getNumber())))) {
+            if (customer.getUnitId().equals(unitId) && number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
                 removeCustomer(customer); // убрать из очереди
                 return customer;
             }

@@ -821,7 +821,26 @@ public class QServer extends Thread {
     private static void startCleanUpTicketsTimer() {
         //каждые три часа чистим список использованных билетов
         Timer cleanUpTicketsTimer = new Timer(3 * 60 * 60 * 1000, (ActionEvent e) -> {
+            
             QService.usedTickets.clear();
+            
+            for (QService service : QServiceTree.getInstance().getNodes()) {
+                for (QCustomer customer : service.getClients()) {
+                    if (!QService.usedTickets.containsKey(customer.getUnitId())) {
+                        QService.usedTickets.put(customer.getUnitId(), new LinkedList<>());
+                    }
+                    QService.usedTickets.get(customer.getUnitId()).add(customer.getNumber());
+                }
+            }
+            
+            for (QUser user : QUserList.getInstance().getItems()) {
+                if (user.getCustomer() != null) {
+                    if (!QService.usedTickets.containsKey(user.getCustomer().getUnitId())) {
+                        QService.usedTickets.put(user.getCustomer().getUnitId(), new LinkedList<>());
+                    }
+                    QService.usedTickets.get(user.getCustomer().getUnitId()).add(user.getCustomer().getNumber());
+                }
+            }
         });
         cleanUpTicketsTimer.start();
     }

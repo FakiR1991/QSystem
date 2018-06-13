@@ -1155,7 +1155,7 @@ public final class FClient extends javax.swing.JFrame {
                 userStatistic.changeState(Uses.TECH_STAT, workingPeriod, netProperty);
 
                 // Вызываем кастомера
-                final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId(), num);
+                final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId(), num, QConfig.cfg().getUnitId());
                 if (cust != null && cust.getPostponPeriod() > 0) {
                     JOptionPane.showMessageDialog(this,
                             getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
@@ -2284,6 +2284,10 @@ public final class FClient extends javax.swing.JFrame {
         final QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
         
         try {
+            //обновим данные у клиента
+            user.setUnitId(QConfig.cfg().getUnitId());
+            user.setPointType(QConfig.cfg().getPointType());
+            
             //обновляем параметры юзера на сервере
             NetCommander.setUserParamsById(netProperty,
                                            user.getId(),

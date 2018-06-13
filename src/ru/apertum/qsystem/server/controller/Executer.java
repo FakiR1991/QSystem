@@ -449,7 +449,7 @@ public final class Executer {
                     final String num = cmdParams.textData.replaceAll("[^\\p{L}+\\d]", "");
                     QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress);
                     for (QService service : QServiceTree.getInstance().getNodes()) {
-                        if ((customer = service.gnawOutCustomerByNumber(num)) != null) {
+                        if ((customer = service.gnawOutCustomerByNumber(num, cmdParams.unitId)) != null) {
                             QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress);
                             break;
                         }

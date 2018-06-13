@@ -673,14 +673,16 @@ public class NetCommander {
      * @param netProperty параметры соединения с сервером
      * @param userId
      * @param num
+     * @param unitId 
      * @return ответ-кастомер следующий по очереди
      */
-    public static QCustomer inviteNextCustomer(INetProperty netProperty, long userId, String num) {
+    public static QCustomer inviteNextCustomer(INetProperty netProperty, long userId, String num, Integer unitId) {
         QLog.l().logger().info("Получение следующего юзера из очередей, обрабатываемых юзером.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
         params.textData = num;
+        params.unitId = unitId;
         final String res;
         try {
             res = send(netProperty, Uses.TASK_INVITE_NEXT_CUSTOMER, params);

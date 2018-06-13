@@ -146,6 +146,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
             }
         } catch (Exception ex) {
             QLog.l().logger().trace("Ошибка приёма клиента из АПБ:\n" + ex.getMessage(), ex);
+            throw new ServerException("Ошибка приёма клиента из АПБ:\n" + ex.getMessage());
         }
         
         return customer.getId().toString();

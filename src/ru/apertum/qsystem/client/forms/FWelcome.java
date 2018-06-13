@@ -1051,7 +1051,13 @@ public class FWelcome extends javax.swing.JFrame {
         // посмотрим сколько реальных кнопок нужно отобразить
         // тут есть невидимые услуги и услуги не с того киоска
         int childCount = 0;
-        childCount = current.getChildren().stream().filter((service) -> (!(isAdvanceRegim() && service.getAdvanceLimit() == 0) && service.getStatus() != -1 && (WelcomeParams.getInstance().point == 0 || (service.getPoint() == 0 || service.getPoint() == WelcomeParams.getInstance().point)))).map((_item) -> 1).reduce(childCount, Integer::sum);
+        childCount = current.getChildren().stream().filter(
+                (service) -> (
+                                !(isAdvanceRegim() && service.getAdvanceLimit() == 0) &&
+                                service.getStatus() != -1 &&
+                                (WelcomeParams.getInstance().point == 0 || (service.getPoint().equals("0") || Arrays.asList(service.getPoint().split("\\,")).contains(String.valueOf(WelcomeParams.getInstance().point))))
+                             )
+        ).map((_item) -> 1).reduce(childCount, Integer::sum);
 
         if (childCount <= WelcomeParams.getInstance().oneColumnButtonCount) {
             cols = 1;
@@ -1108,7 +1114,7 @@ public class FWelcome extends javax.swing.JFrame {
             final QButton button = new QButton(service, this, panelMain, WelcomeParams.getInstance().buttonType);
             //service.
             //button.
-            if (!(isAdvanceRegim() && service.getAdvanceLimit() == 0) && button.isIsVisible() && (WelcomeParams.getInstance().point == 0 || (service.getPoint() == 0 || service.getPoint() == WelcomeParams.getInstance().point))) {
+            if (!(isAdvanceRegim() && service.getAdvanceLimit() == 0) && button.isIsVisible() && (WelcomeParams.getInstance().point == 0 || (service.getPoint().equals("0") || Arrays.asList(service.getPoint().split("\\,")).contains(String.valueOf(WelcomeParams.getInstance().point))))) {
                 if (f) {
                     panel.add(button);
                    
@@ -1922,7 +1928,7 @@ public class FWelcome extends javax.swing.JFrame {
         // посмотрим сколько реальных кнопок нужно отобразить
         // тут есть невидимые услуги и услуги не с того киоска
         int childCount = 0;
-        childCount = current.getChildren().stream().filter((service) -> (service.getStatus() != -1 && (WelcomeParams.getInstance().point == 0 || (service.getPoint() == 0 || service.getPoint() == WelcomeParams.getInstance().point)))).map((_item) -> 1).reduce(childCount, Integer::sum);
+        childCount = current.getChildren().stream().filter((service) -> (service.getStatus() != -1 && (WelcomeParams.getInstance().point == 0 || (service.getPoint().equals("0") || Arrays.asList(service.getPoint().split("\\,")).contains(String.valueOf(WelcomeParams.getInstance().point)))))).map((_item) -> 1).reduce(childCount, Integer::sum);
 
         if (childCount < 4) {
             cols = 1;

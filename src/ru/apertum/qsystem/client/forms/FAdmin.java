@@ -138,7 +138,6 @@ import ru.apertum.qsystem.common.cmd.RpcGetServerState.ServiceInfo;
 import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.common.exceptions.ClientWarning;
 import ru.apertum.qsystem.common.model.ATalkingClock;
-import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IDataExchange;
 import ru.apertum.qsystem.extra.IPing;
 import ru.apertum.qsystem.hibernate.AnnotationSessionFactoryBean;
