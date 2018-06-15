@@ -1274,7 +1274,6 @@ public final class FClient extends javax.swing.JFrame {
                 
                 /*if(denyTimer.isRunning())
                    denyTimer.stop();*/
-                boolean isMine = customer.getIsMine() == null ? false : true;
                 customer.setStartTime(new Date());
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
                 
@@ -1283,7 +1282,8 @@ public final class FClient extends javax.swing.JFrame {
                                                 customer.getId(),
                                                 "Отложен по неявке. Вызван: " + (customer.getRecallCount()) + temp, // + ". Услуга: " + customer.getService().getName(),
                                                 10,
-                                                isMine,
+                                                false,
+                                                false,
                                                 false);
             }
             // получаем новую обстановку
@@ -1330,7 +1330,7 @@ public final class FClient extends javax.swing.JFrame {
         }
     }
     
-    static int isNewBankSending = 0;
+    static boolean isNewBankSendingEnabled = false;
     
     FSendToBank2 bankForm2;
     boolean movedToBank = false;
@@ -1347,14 +1347,27 @@ public final class FClient extends javax.swing.JFrame {
             
             boolean isMine;
             boolean needReturnAfterPayment;
+            boolean newPaymentType = isNewBankSendingEnabled;
             
-            if (bankForm2 == null) {
-                bankForm2 = new FSendToBank2(fClient, true);
-            }
+            bankForm2 = new FSendToBank2(fClient, true, isNewBankSendingEnabled);
+            
             Uses.setLocation(bankForm2);
             bankForm2.setVisible(true);
             if (!bankForm2.isOkClicked()) {
                 return;
+            }
+            
+            //если у оператора есть возможность отправлять клиентов в очередь АПБ
+            if (isNewBankSendingEnabled) {
+                int paymentType = bankForm2.getPaymentType();
+                
+                //если выбран тип оплаты через кассу АПБ,
+                //то задействуем механизм новой отправки на оплату
+                if (paymentType == 0) {
+                    newPaymentType = true;
+                } else {
+                    newPaymentType = false;
+                }
             }
 
             isMine = bankForm2.isMine();
@@ -1362,12 +1375,14 @@ public final class FClient extends javax.swing.JFrame {
             
             QLog.l().logger().info("userId=" + user.getId().toString() + 
                                    ", customerId=" + customer.getId().toString() +
-                                   ", isNewBankSending=" + String.valueOf(isNewBankSending) +
+                                   ", isNewBankSending=" + (isNewBankSendingEnabled ? "TRUE" : "FALSE") +
                                    ", unitId=" + user.getUnitId());
             
-            //если кастомер из зала, где работает совместная очередь,
+            //если кастомер из зала, где работает совместная очередь с АПБ,
+            //и при этом в properties включена отправка в банк с помощью веб-сервиса,
+            //и в форме отправки был выбрал тип оплаты "Касса АПБ",
             //то используем новый метод отправки в банк, иначе - старый
-            if (isNewBankSending == 1 && customer.getUnitId().compareTo(Uses.UNIT_TIRASPOL_KARL_MARX) == 0) {
+            if (isNewBankSendingEnabled && newPaymentType && customer.getUnitId().compareTo(Uses.UNIT_TIRASPOL_KARL_MARX) == 0) {
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
                 try {
                     NetCommander.sendCustomerToBank(netProperty,
@@ -1407,7 +1422,8 @@ public final class FClient extends javax.swing.JFrame {
                                                 "Отправлен на оплату.  Вызван: " + (customer.getRecallCount()) + temp,// + ". Услуга: " + customer.getService().getName(),
                                                 10,
                                                 isMine,
-                                                false);
+                                                false,
+                                                true);
 
                 workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                 workingPeriod.setDt(workingPeriod.getDtStop());
@@ -1489,6 +1505,7 @@ public final class FClient extends javax.swing.JFrame {
             if (res == null) {
                 return;
             }
+                    
             // Переводим кастомера в другую услугу
             // это должно выкинуть кастомера в другую очередь с приоритетом "переведенный"
             //Диалог выбора очереди для редиректа
@@ -2215,9 +2232,9 @@ public final class FClient extends javax.swing.JFrame {
         //параметр из БД (таблица properties)
         //1 - отправлять в банк используя веб-сервис
         //0 - отправлять в банк используя старый механизм (перемещать в отложенных)
-        isNewBankSending = QProperties.get().getProperty("section1", "new_bank_sending").getValue() == null
-                                ? 0
-                                : Integer.valueOf(QProperties.get().getProperty("section1", "new_bank_sending").getValue());
+        isNewBankSendingEnabled = QProperties.get().getProperty("section1", "new_bank_sending").getValue() == null
+                                ? false
+                                : Integer.valueOf(QProperties.get().getProperty("section1", "new_bank_sending").getValue()) == 1;
         
         QLog.initial(args, 1);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
@@ -2450,7 +2467,8 @@ public final class FClient extends javax.swing.JFrame {
                                             moveToPostponed.getResult() +  ". Вызван: " + (customer.getRecallCount()) + temp,// + ". Услуга: " + customer.getService().getName(),
                                             moveToPostponed.getPeriod(),
                                             false,
-                                            true);
+                                            true,
+                                            false);
             
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));

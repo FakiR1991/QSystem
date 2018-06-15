@@ -782,8 +782,16 @@ public class NetCommander {
      * @param postponedPeriod количество времени на которое откладывается кастомер (0 - бессрочно)
      * @param isMine вернуть после оплаты к конкретному юзеру
      * @param isPostponedAfterService был ли клиент отложен после того как его начали обслуживать
+     * @param isPostponedForPayment был ли клиент отложен для оплаты
      */
-    public static void сustomerToPostpone(INetProperty netProperty, long userId, Long customerId, String status, int postponedPeriod, boolean isMine, boolean isPostponedAfterService) {
+    public static void сustomerToPostpone(INetProperty netProperty,
+                                          long userId,
+                                          Long customerId,
+                                          String status,
+                                          int postponedPeriod,
+                                          boolean isMine,
+                                          boolean isPostponedAfterService,
+                                          boolean isPostponedForPayment) {
         QLog.l().logger().info("Перемещение вызванного юзером кастомера в пул отложенных.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -793,6 +801,7 @@ public class NetCommander {
         params.postponedPeriod = postponedPeriod;
         params.isMine = isMine;
         params.isPostponedAfterService = isPostponedAfterService;
+        params.isPostponedForPayment = isPostponedForPayment;
         try {
             send(netProperty, Uses.TASK_CUSTOMER_TO_POSTPON, params);
         } catch (QException e) {// вывод исключений
@@ -1648,12 +1657,15 @@ public class NetCommander {
      * @param netProperty
      * @return список талонов
      */
-    public static LinkedList<QCustomer> getTickets(INetProperty netProperty) {
+    public static LinkedList<QCustomer> getTickets(INetProperty netProperty, Integer unitId) {
         QLog.l().logger().info("Команда на получение списка талонов.");
         // загрузим ответ
         final String res;
+        CmdParams params = new CmdParams();
+        params.unitId = unitId;
+        
         try {
-            res = send(netProperty, Uses.TASK_GET_TICKETS_LIST, null);
+            res = send(netProperty, Uses.TASK_GET_TICKETS_LIST, params);
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }

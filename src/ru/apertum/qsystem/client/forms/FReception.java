@@ -383,7 +383,7 @@ public class FReception extends javax.swing.JFrame {
     
     private void loadTickets() {
         DefaultListModel<QCustomer> lm = new DefaultListModel<>();
-        LinkedList<QCustomer> tickets = NetCommander.getTickets(netProperty);
+        LinkedList<QCustomer> tickets = NetCommander.getTickets(netProperty, QConfig.cfg().getUnitId());
         
         for (QCustomer customer : tickets) {
             lm.addElement(customer);

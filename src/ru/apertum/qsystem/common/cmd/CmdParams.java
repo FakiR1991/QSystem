@@ -142,6 +142,9 @@ public class CmdParams {
     @Expose
     @SerializedName("is_postponed_after_service")
     public Boolean isPostponedAfterService;
+    @Expose
+    @SerializedName("is_postponed_for_payment")
+    public Boolean isPostponedForPayment;
     
     
     /**

@@ -921,7 +921,7 @@ public class QServer extends Thread {
                 
                 //старый механизм работы с банком (для залов где нету эл. очереди АПБ)
                 for (QCustomer customer : QPostponedList.getInstance().getPostponedCustomers()) {
-                    if (customer.getPostponedStatus().toLowerCase().contains("отправлен на оплату")) {
+                    if (customer.getPostponedStatus().toLowerCase().contains("отправлен на оплату") || customer.getState() == CustomerState.STATE_PAYMENT) {
                         List<TempTicket> temp = tickets.stream().filter(t -> t.code.equals(customer.getNumber())).collect(Collectors.toList());
                         QLog.l().logger().debug(customer.getNumber());
                         if (temp.size() > 0) {

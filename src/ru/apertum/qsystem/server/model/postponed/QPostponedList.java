@@ -104,8 +104,15 @@ public class QPostponedList extends DefaultListModel {
                                 // вроде как только что встал в очередь, ну и время проставим, а то ожидание будет огромное
                                 // только что встал типо. Поросто время нахождения в отложенных не считаетка как ожидание очереди. Инвче в statistic ожидание огромное
                                 customer.setStandTime(new Date());
-                                // Состояние у него "Стою, жду".
-                                customer.setState(CustomerState.STATE_WAIT_AFTER_POSTPONED);
+                                
+                                if (customer.getState().equals(CustomerState.STATE_PAYMENT)) {
+                                    // Состояние у него "Стою после оплаты, жду".
+                                    customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
+                                } else {
+                                    // Состояние у него "Стою, жду".
+                                    customer.setState(CustomerState.STATE_WAIT_AFTER_POSTPONED);
+                                }
+                                
                                 // разослать оповещение
                                 Uses.sendUDPBroadcast(customer.getService().getId().toString(), ServerProps.getInstance().getProps().getClientPort());
                             }

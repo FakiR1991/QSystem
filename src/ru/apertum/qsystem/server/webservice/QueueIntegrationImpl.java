@@ -222,8 +222,8 @@ public class QueueIntegrationImpl implements QueueIntegration {
                                                   ", но переданный requestId не соответствует тому, что в обслуживании.");
                     } else {
                         QLog.l().logger().info("В очереди к услуге " + service.getName() +
-                                               " уже есть талон с номером " + ticketId +
-                                               " и customerExtId=" + customer.getExtId().toString());
+                                               " уже есть талон с номером " + ticketId);/* +
+                                               " и customerExtId=" + customer.getExtId() == null ? "NULL" : customer.getExtId().toString());*/
                         return customer;
                     }
                 }
@@ -240,8 +240,8 @@ public class QueueIntegrationImpl implements QueueIntegration {
                                               ", но переданный requestId не соответствует тому, что в обслуживании.");
                 } else {
                     QLog.l().logger().info("В очереди к услуге " + user.getCustomer().getService().getName() +
-                                           " уже есть талон с номером " + ticketId +
-                                           " и customerId=" + user.getCustomer().getId().toString());
+                                           " уже есть талон с номером " + ticketId);/* +
+                                           " и customerExtId=" + user.getCustomer().getExtId() == null ? "NULL" : user.getCustomer().getExtId().toString());*/
                     return user.getCustomer();
                 }
             }

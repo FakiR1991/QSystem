@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -483,7 +484,7 @@ public final class Executer {
                             }
 
 //                            final QCustomer cust = serv.peekCustomer(); // первый в этой очереди
-                            final QCustomer cust = serv.peekCustomerByUid(user);
+                            final QCustomer cust = serv.peekCustomerByUid(user.getUnitId(), user.getId());
 
                             // если очередь пуста
                             if (cust == null) {
@@ -492,7 +493,8 @@ public final class Executer {
                             
                             // учтем приоритетность кастомеров и приоритетность очередей для юзера в которые они стоят
                             final Integer prior = plan.getCoefficient();
-                            if (prior > servPriority || (prior == servPriority && customer != null && customer.compareTo(cust) == 1)) {
+//                            if (prior > servPriority || (prior == servPriority && customer != null && customer.compareTo(cust) == 1)) {
+                            if (prior > servPriority || (prior == servPriority && customer != null && compareCustomers(customer, cust) == 1)) {
                                 servPriority = prior;
                                 customer = cust;
                             }
@@ -575,6 +577,30 @@ public final class Executer {
             return new RpcInviteCustomer(customer);
         }
     };
+    
+    private int compareCustomers(QCustomer customer, QCustomer cust) {
+        int resultCmp = -1 * customer.getPriority().compareTo(cust.getPriority()); // (-1) - т.к.  больший приоритет быстрее обслужится
+
+        if (resultCmp == 0) {
+            int priorityStateCustomer = QService.getPriorityByState(customer.getState());
+            int priorityStateCust = QService.getPriorityByState(cust.getState());
+
+            //если у cust приоритет по его состоянию выше, чем у customer
+            if (Integer.compare(priorityStateCustomer, priorityStateCust) < 0) {
+                resultCmp = 1;
+            } else if (customer.getStandTime().before(cust.getStandTime())) {
+                resultCmp = -1;
+            } else if (customer.getStandTime().after(cust.getStandTime())) {
+                resultCmp = 1;
+            }
+        }
+        if (resultCmp == 0) {
+            QLog.l().logger().warn("Клиенты не могут быть равны.");
+            resultCmp = -1;
+        }
+        return resultCmp;
+    }
+    
     /**
      * Пригласить кастомера из пула отложенных
      */
@@ -997,7 +1023,7 @@ public final class Executer {
     };
     
     /**
-     * Получить список ушедших на оплату
+     * Получить список всех талонов
      */
     final Task getTicketsList = new Task(Uses.TASK_GET_TICKETS_LIST) {
 
@@ -1009,11 +1035,15 @@ public final class Executer {
             
             for (QService service: QServiceTree.getInstance().getNodes()) {
                 if (service.getClients().size() > 0) {
-                    ticketsList.addAll(service.getClients());
+                    service.getClients().stream().filter(cust -> Objects.equals(cust.getUnitId(), cmdParams.unitId)).forEach(cust -> {
+                        ticketsList.add(cust);
+                    });
                 }
             }
             
-            ticketsList.addAll(QPostponedList.getInstance().getPostponedCustomers());
+            QPostponedList.getInstance().getPostponedCustomers().stream().filter(cust -> Objects.equals(cust.getUnitId(), cmdParams.unitId)).forEach(cust -> {
+                ticketsList.add(cust);
+            });
             
             return new RpcGetMovedToPaymentList(ticketsList);
         }
@@ -1231,17 +1261,20 @@ public final class Executer {
             if (customer.getStartTime() == null) {
                 customer.setStartTime(new Date());
             }
-            // в этом случае завершаем с пациентом
-            // "все что хирург забыл в вас - в пул отложенных"
-            // но сначала обозначим результат работы юзера с кастомером, если такой результат найдется в списке результатов
-            // кастомер переходит в состояние "Завершенности", но не "мертвости"
-            if (cmdParams.isPostponedAfterService) {
-                customer.setState(CustomerState.STATE_POSTPONED_AFTER_SERVICE);
-            } else {
-                customer.setState(CustomerState.STATE_POSTPONED);
-            }
             
-//            customer.setState(CustomerState.STATE_POSTPONED);
+            if (cmdParams.isPostponedForPayment) {
+                customer.setState(CustomerState.STATE_PAYMENT);
+            } else {
+                // в этом случае завершаем с пациентом
+                // "все что хирург забыл в вас - в пул отложенных"
+                // но сначала обозначим результат работы юзера с кастомером, если такой результат найдется в списке результатов
+                // кастомер переходит в состояние "Завершенности", но не "мертвости"
+                if (cmdParams.isPostponedAfterService) {
+                    customer.setState(CustomerState.STATE_POSTPONED_AFTER_SERVICE);
+                } else {
+                    customer.setState(CustomerState.STATE_POSTPONED);
+                }
+            }
             
             try {
                 user.setCustFinishTime(customer.getFinishTime());
@@ -1602,6 +1635,13 @@ public final class Executer {
                 }
             }
             final QCustomer customer = user.getCustomer();
+            
+            //обнуляем приватность кастомера, если она была
+            if (customer.getIsMine() != null) {
+                QLog.l().logger().info("Сняли приватность кастомера (id=" + customer.getId() + ") при перенаправлении на другую услугу.");
+                customer.setIsMine(null);
+            }
+            
             // комменты по редиректу
             customer.setTempComments(cmdParams.textData);
             // Переставка в другую очередь

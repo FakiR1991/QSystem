@@ -1069,32 +1069,77 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         return null;
     }*/
     
-    public QCustomer peekCustomerByUid(QUser user) {
-        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers());
-        Iterator it = tmpQueue.iterator();
-        while (it.hasNext()) {
-            QCustomer cust = (QCustomer)it.next();
-            if (cust.getUnitId().compareTo(user.getUnitId()) == 0) {
-                if (cust.getIsMine() == null || cust.getIsMine().equals(user.getId())) {
-                    it.remove();
-                    return cust;
+//    public QCustomer peekCustomerByUid(QUser user) {
+//        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers());
+//        Iterator it = tmpQueue.iterator();
+//        while (it.hasNext()) {
+//            QCustomer cust = (QCustomer)it.next();
+//            if (cust.getUnitId().compareTo(user.getUnitId()) == 0) {
+//                if (cust.getIsMine() == null || cust.getIsMine().equals(user.getId())) {
+//                    it.remove();
+//                    return cust;
+//                }
+//            }
+//        }
+//        return null;
+//    }
+    
+    public QCustomer peekCustomerByUid(Integer uid) {
+        return peekCustomerByUid(uid, null);
+    }
+    
+    public QCustomer peekCustomerByUid(Integer uid, Long userId) {
+        QCustomer customer = null;
+        
+        for (QCustomer cust : getCustomers()) {
+            if ( Objects.equals(cust.getUnitId(), uid) && (cust.getIsMine() == null || Objects.equals(cust.getIsMine(), userId)) ) {
+                if (customer == null) {
+                    customer = cust;
+                    continue;
+                }
+                int resultCmp = -1 * customer.getPriority().compareTo(cust.getPriority());
+
+                //если равный приоритет кастомеров
+                if (resultCmp == 0) {
+                    
+                    int priorityStateCustomer = getPriorityByState(customer.getState());
+                    int priorityStateCust = getPriorityByState(cust.getState());
+                    
+                    //если у cust приоритет по его состоянию выше, чем у customer
+                    if (Integer.compare(priorityStateCustomer, priorityStateCust) < 0) {
+                        customer = cust;
+                    }
+                    //если приоритет по состоянию одинаковый
+                    else if (customer.getStandTime().after(cust.getStandTime())) {
+                        customer = cust;
+                    }
+                }
+                //если приоритет customer больше, чем cust
+                else if (resultCmp > 0) {
+                    customer = cust;
                 }
             }
         }
-        return null;
+        
+        return customer;
     }
     
-    public QCustomer peekCustomerByUid(Integer uid) {
-        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers());
-        Iterator it = tmpQueue.iterator();
-        while (it.hasNext()) {
-            QCustomer cust = (QCustomer)it.next();
-            if (cust.getUnitId().compareTo(uid) == 0) {
-                it.remove();
-                return cust;
-            }
+    /**
+     * Сравниваем кастомеров по их статусам в очереди.
+     * Если кастомер был отложен, затем снова попал в очередь, то обслужится раньше, чем кастомер
+     * с таким же приоритетом, но со статусом STATE_WAIT, например.
+     * А приоритет статуса STATE_WAIT_AFTER_PAYMENT ещё выше, чем у STATE_WAIT_AFTER_POSTPONED.
+     * @param state 
+     */
+    public static int getPriorityByState(CustomerState state) {
+        switch(state) {
+            case STATE_WAIT_AFTER_PAYMENT:
+                return 3;
+            case STATE_WAIT_AFTER_POSTPONED:
+                return 2;
+            default:
+                return 0;
         }
-        return null;
     }
 
     /**

@@ -16,6 +16,12 @@ public class FSendToBank2 extends javax.swing.JDialog {
     private boolean isOkClicked = false;
     private boolean needReturnAfterPayment = false;
     private boolean isMine = false;
+    private boolean isNewBankSendingEnabled = false;
+    private final java.awt.Dimension dimension;
+    
+    public int getPaymentType() {
+        return cbPaymentType.getSelectedIndex();
+    }
     
     public boolean isOkClicked() {
         return isOkClicked;
@@ -31,10 +37,22 @@ public class FSendToBank2 extends javax.swing.JDialog {
     
     /**
      * Creates new form FSendToBank2
+     * @param parent
+     * @param modal
+     * @param isNewBankSendingEnabled
      */
-    public FSendToBank2(java.awt.Frame parent, boolean modal) {
+    public FSendToBank2(java.awt.Frame parent, boolean modal, boolean isNewBankSendingEnabled) {
         super(parent, modal);
+        
+        this.isNewBankSendingEnabled = isNewBankSendingEnabled;
         setTitle("Отправить на оплату");
+        
+        if (this.isNewBankSendingEnabled) {
+            dimension = new java.awt.Dimension(347, 185);
+        } else {
+            dimension = new java.awt.Dimension(347, 137);
+        }
+        
         initComponents();
     }
 
@@ -50,12 +68,14 @@ public class FSendToBank2 extends javax.swing.JDialog {
         btnOk = new javax.swing.JButton();
         checkBoxReturnAfterPayment = new javax.swing.JCheckBox();
         checkBoxIsMine = new javax.swing.JCheckBox();
+        cbPaymentType = new javax.swing.JComboBox<>();
+        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setModal(true);
-        setPreferredSize(new java.awt.Dimension(335, 144));
+        setPreferredSize(dimension);
         setResizable(false);
-        setSize(new java.awt.Dimension(315, 115));
+        setSize(dimension);
 
         btnOk.setText("OK");
         btnOk.addActionListener(new java.awt.event.ActionListener() {
@@ -75,30 +95,44 @@ public class FSendToBank2 extends javax.swing.JDialog {
         checkBoxIsMine.setSelected(true);
         checkBoxIsMine.setText("Это только мой клиент");
 
+        cbPaymentType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Оплата в кассе АПБ", "Оплата другим способом" }));
+
+        jLabel1.setText("Способ оплаты:");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(16, 16, 16)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(checkBoxIsMine)
-                    .addComponent(checkBoxReturnAfterPayment))
-                .addGap(54, 54, 54)
-                .addComponent(btnOk, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(cbPaymentType, javax.swing.GroupLayout.PREFERRED_SIZE, 198, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(checkBoxIsMine)
+                            .addComponent(checkBoxReturnAfterPayment))
+                        .addGap(66, 66, 66)
+                        .addComponent(btnOk, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(25, 25, 25)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGap(16, 16, 16)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(checkBoxReturnAfterPayment)
-                        .addGap(24, 24, 24)
+                        .addGap(33, 33, 33)
                         .addComponent(checkBoxIsMine))
                     .addComponent(btnOk, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(cbPaymentType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(19, Short.MAX_VALUE))
         );
 
         pack();
@@ -124,7 +158,9 @@ public class FSendToBank2 extends javax.swing.JDialog {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnOk;
+    private javax.swing.JComboBox<String> cbPaymentType;
     private javax.swing.JCheckBox checkBoxIsMine;
     private javax.swing.JCheckBox checkBoxReturnAfterPayment;
+    private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
 }
