@@ -91,8 +91,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     public static final Long ROOT_SERVICES_ABO = 1503466462316L;
     //корень услуг для сервисного центра
     public static final Long ROOT_SERVICES_SC = 1503466512673L;
-    //услуга "Консультация. Перенаправление от банка"
-    public static final Long SERVICE_CONSULTATION_CLIENT_FROM_BANK = 1524202059591L;
+    //услуга "Консультация CDMA"
+    public static final Long SERVICE_CONSULTATION_CDMA = 1503473953581L;
 
     /**
      * множество кастомеров, вставших в очередь к этой услуге

@@ -431,7 +431,7 @@ public final class FClient extends javax.swing.JFrame {
     /**
      * Описание того, кто залогинелся.
      */
-    private final QUser user;
+    private QUser user;
 
     public QUser getUser() {
         return user;
@@ -522,7 +522,7 @@ public final class FClient extends javax.swing.JFrame {
     
     private void checkExit() {
         if (user.isPause()) {
-            JOptionPane.showMessageDialog(null, "Для выхода из программы необходимо убрать Перерыв!");
+            JOptionPane.showMessageDialog(this, "Для выхода из программы необходимо убрать Перерыв!");
             return;
         }
         if (this.customer != null) {
@@ -537,6 +537,7 @@ public final class FClient extends javax.swing.JFrame {
         
         try {
             userStatistic.completeCurrentState(workingPeriod, netProperty);
+            NetCommander.clearShadow(netProperty, user.getId());
         } catch (Exception e) {
             QLog.l().logger().trace("При завершении работы ПО workingPeriod пользователя не был сохранён из-за ошибки!\n" + e.getMessage(), e);
         } finally {
@@ -2298,19 +2299,28 @@ public final class FClient extends javax.swing.JFrame {
             }
         }
         // Определим кто работает на данном месте.
-        final QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
+        QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
         
         try {
             //обновим данные у клиента
-            user.setUnitId(QConfig.cfg().getUnitId());
-            user.setPointType(QConfig.cfg().getPointType());
+//            user.setUnitId(QConfig.cfg().getUnitId());
+//            user.setPointType(QConfig.cfg().getPointType());
+//            user.setAdressRS(QConfig.cfg().getAddressRs());
             
-            //обновляем параметры юзера на сервере
-            NetCommander.setUserParamsById(netProperty,
-                                           user.getId(),
-                                           QConfig.cfg().getPointType(),
-                                           QConfig.cfg().getUnitId()/*,
-                                           QConfig.cfg().getAddressRs()*/);
+            //обновляем параметры юзера на сервере и обновляем их в БД
+            user = NetCommander.setUserParamsById(netProperty,
+                                                  user.getId(),
+                                                  QConfig.cfg().getPointType(),
+                                                  QConfig.cfg().getUnitId(),
+                                                  QConfig.cfg().getAddressRs());
+            
+            if (user.getPlanServices() == null || user.getPlanServices().size() <= 0) {
+                QLog.l().logger().debug("Пользователю не назначились услуги по IP!");
+            } else {
+                user.getPlanServices().stream().forEach(qPlanService -> {
+                    QLog.l().logger().debug("Пользователю назначена услуга: " + qPlanService.getService().getName());
+                });
+            }
         } catch (Exception e) {
             
         }
@@ -2406,11 +2416,11 @@ public final class FClient extends javax.swing.JFrame {
             //то нужно заново отправить доп. информацию о юзере на сервере
             if (isServerWarning) {
                 try {
-                    NetCommander.setUserParamsById(netProperty,
-                                                   user.getId(),
-                                                   QConfig.cfg().getPointType(),
-                                                   QConfig.cfg().getUnitId()/*,
-                                                   QConfig.cfg().getAddressRs()*/);
+                    user = NetCommander.setUserParamsById(netProperty,
+                                                          user.getId(),
+                                                          QConfig.cfg().getPointType(),
+                                                          QConfig.cfg().getUnitId(),
+                                                          QConfig.cfg().getAddressRs());
                 } catch (Exception e) {
                     return;
                 }

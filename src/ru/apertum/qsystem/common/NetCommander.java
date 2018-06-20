@@ -73,6 +73,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetUsersList;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory.TicketHistory;
+import ru.apertum.qsystem.common.cmd.RpcGetUser;
 import ru.apertum.qsystem.common.cmd.RpcInviteCustomer;
 import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.exceptions.ClientException;
@@ -746,6 +747,18 @@ public class NetCommander {
         params.customerId = customerId;
         try {
             send(netProperty, Uses.TASK_KILL_NEXT_CUSTOMER, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        }
+    }
+    
+    public static void clearShadow(INetProperty netProperty, long userId) {
+        QLog.l().logger().info("Удаление вызванного юзером кастомера.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        try {
+            send(netProperty, Uses.TASK_CLEAR_SHADOW, params);
         } catch (QException e) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
@@ -1532,34 +1545,30 @@ public class NetCommander {
      * @param unitId - идентификатор зала (г. Тирасполь, г. Бендеры и т.д.)
      * @param addressRs - идентификатор для вывода на монитор (параметр определяет на какой монитор будет выведена информация)
      */
-    public static void setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId/*, int addressRs*/) throws QException {
+    public static QUser setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId, int addressRs) throws QException {
         QLog.l().logger().info("Установить указанному юзеру переданные параметры");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
         params.pointType = pointType;
         params.unitId = unitId;
-//        params.adressRs = addressRs;
+        params.adressRs = addressRs;
+        final String res;
         try {
-            send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
-        } catch (QException ex) {// вывод исключений
-            throw new QException(Locales.locMes("command_error"), ex);
+            res = send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
         }
-    }
-    
-    public static void getProperties(INetProperty netProperty, long userId, int pointType, int unitId/*, int addressRs*/) throws QException {
-        QLog.l().logger().info("Установить указанному юзеру переданные параметры");
-        // загрузим ответ
-        final CmdParams params = new CmdParams();
-        params.userId = userId;
-        params.pointType = pointType;
-        params.unitId = unitId;
-//        params.adressRs = addressRs;
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetUser rpc;
         try {
-            send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
-        } catch (QException ex) {// вывод исключений
-            throw new QException(Locales.locMes("command_error"), ex);
+            rpc = gson.fromJson(res, RpcGetUser.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
         }
+        return rpc.getResult();
     }
 
     /**

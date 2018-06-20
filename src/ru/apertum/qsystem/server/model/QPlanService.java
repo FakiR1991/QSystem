@@ -24,8 +24,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -40,16 +38,17 @@ import ru.apertum.qsystem.server.ServerProps;
  * @author Evgeniy Egorov
  */
 @Entity
-@Table(name = "services_users")
+@Table(name = "services_to_ip")
 public class QPlanService implements Serializable {
 
     public QPlanService() {
     }
 
-    public QPlanService(QService service, QUser user, Integer coefficient) {
+    public QPlanService(QService service, String ip, Integer coefficient) {
         this.coefficient = coefficient;
         this.service = service;
-        this.user = user;
+        this.ip = ip;
+//        this.user = user;
     }
     //@Id
     @Expose
@@ -118,22 +117,38 @@ public class QPlanService implements Serializable {
     /**
      * Соответствие пользователя.
      */
-    private QUser user;
-
-    //@OneToOne(targetEntity = QUser.class)
-    @ManyToOne()
-    @JoinColumn(name = "user_id", nullable = false, insertable = false, updatable = false)
-    public QUser getUser() {
-        return user;
+//    private QUser user;
+//
+//    //@OneToOne(targetEntity = QUser.class)
+//    @ManyToOne()
+//    @JoinColumn(name = "ip", referencedColumnName = "ip", nullable = false, insertable = false, updatable = false)
+//    public QUser getUser() {
+//        return user;
+//    }
+//    
+//    public void setUser(QUser user) {
+//        this.user = user;
+//    }
+    
+    /**
+     * IP рабочего места юзера
+     */
+    @Expose
+    @SerializedName("ip")
+    private String ip;
+    
+    @Column(name = "ip", insertable = false, updatable = false)
+    public String getIp() {
+        return ip;
     }
 
-    public void setUser(QUser user) {
-        this.user = user;
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 
     @Override
     public String toString() {
-        return (getFlexible_coef() ? "* " : "") + "[" + Uses.get_COEFF_WORD().get(getCoefficient()) + "]" + service.getPrefix() + " " + service.getName();
+        return (getFlexible_coef() ? "* " : "") + "[" + Uses.get_COEFF_WORD().get(getCoefficient()) + "] " + service.getPrefix() + " " + service.getName();
     }
     //******************************************************************************************************************
     //*******            Статистика             *******************************************

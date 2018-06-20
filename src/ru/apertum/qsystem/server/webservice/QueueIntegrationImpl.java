@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.jws.WebService;
 import ru.apertum.qsystem.common.CustomerState;
@@ -74,10 +75,10 @@ public class QueueIntegrationImpl implements QueueIntegration {
         QCustomer customer = null;
         
         try {
-           //если такой ticketId уже есть в очереди, тогда не создаём нового кустомера;
+            //если такой ticketId уже есть в очереди, тогда не создаём нового кустомера;
             //такое может случиться если АПБ дёрнул мой сервис, я создал по его параметрам клиента,
             //но по таймауту, например, АПБ получил ошибку и позже дёрнул меня с теми же самыми параметрами
-            customer = checkTicketInQueue(ticketId, requestId);
+            customer = checkTicketInQueue(ticketId, requestId, unitId);
             if (customer != null) {
                 //в таком случае просто возвращаем 
                 return customer.getId().toString();
@@ -206,14 +207,14 @@ public class QueueIntegrationImpl implements QueueIntegration {
         }
     }
     
-    private QCustomer checkTicketInQueue(String ticketId, String requestId) {
+    private QCustomer checkTicketInQueue(String ticketId, String requestId, Integer unitId) {
         
         Integer number = Integer.valueOf(ticketId);
         Long customerId = Long.valueOf(requestId);
         
         for (QService service : QServiceTree.getInstance().getNodes()) {
             for (QCustomer customer : service.getClients()) {
-                if (number.equals(customer.getNumber())) {
+                if (Objects.equals(customer.getUnitId(), unitId) && number.equals(customer.getNumber())) {
                     //если такой номер талона уже есть в обслуживании,
                     //но идентификатор кустомера в обслуживании
                     //не совпадает с тем, что был передан от АПБ
@@ -231,7 +232,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
         }
         
         for (QUser user : QUserList.getInstance().getItems()) {
-            if (user.getCustomer() != null && number.equals(user.getCustomer().getNumber())) {
+            if (user.getCustomer() != null && Objects.equals(user.getCustomer().getUnitId(), unitId) && number.equals(user.getCustomer().getNumber())) {
                 //если такой номер талона уже есть в обслуживании,
                 //но идентификатор кустомера в обслуживании
                 //не совпадает с тем, что был передан от АПБ
@@ -256,7 +257,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
                                            int externalPriority,
                                            int pointIdFrom) {
         
-        final QService service = QServiceTree.getInstance().getById(QService.SERVICE_CONSULTATION_CLIENT_FROM_BANK);
+        final QService service = QServiceTree.getInstance().getById(QService.SERVICE_CONSULTATION_CDMA);
         final QCustomer customer;
         int priority = externalPriorityToInternal(externalPriority);
         // синхронизируем работу с клиентом
@@ -288,7 +289,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
         } finally {
             CLIENT_TASK_LOCK.unlock();
         }
-        QLog.l().logger().trace("С приоритетом " + priority + " К услуге \"" + QService.SERVICE_CONSULTATION_CLIENT_FROM_BANK +
+        QLog.l().logger().trace("С приоритетом " + priority + " К услуге \"" + QService.SERVICE_CONSULTATION_CDMA +
                                 "\" -> " + service.getPrefix() + '\'' + service.getName() + '\'');
         
         return customer;

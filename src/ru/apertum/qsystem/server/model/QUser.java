@@ -242,7 +242,8 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
         this.pointType = pointType;
     }
 
-    @Transient
+//    @Transient
+    @Column(name = "point_type")
     public Integer getPointType() {
         return pointType;
     }
@@ -257,7 +258,8 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
         this.unitId = unitId;
     }
 
-    @Transient
+//    @Transient
+    @Column(name = "unit_id")
     public Integer getUnitId() {
         return unitId;
     }
@@ -349,6 +351,18 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
         program_work_stat = st;
     }
     
+    @Expose
+    @SerializedName("ip")
+    private String ip;
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    @Column(name = "ip")
+    public String getIp() {
+        return ip;
+    }
     
     //******************************************************************************************************************
     //******************************************************************************************************************
@@ -368,8 +382,7 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
 
     //@OneToMany(fetch = FetchType.EAGER)//setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "user_id", insertable = false, nullable = false, updatable = false)
-    //MOSCOW
+    @JoinColumn(name = "ip", insertable = false, nullable = true, updatable = false, referencedColumnName="ip")
     @Fetch(FetchMode.SELECT) // Это отсечение дублирования при джойне таблици, т.к. в QPlanService есть @OneToOne к QService, и в нем есть @OneToMany к QServiceLang - дублится по количеству переводов
     public List<QPlanService> getPlanServices() {
         return planServices;
@@ -426,7 +439,7 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
      */
     public void addPlanService(QService service) {
         // в список услуг
-        planServiceList.addElement(new QPlanService(service, this, 1));
+        planServiceList.addElement(new QPlanService(service, this.ip, 1));
         servicesCnt = planServices.size();
     }
 
@@ -438,7 +451,7 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
      */
     public void addPlanService(QService service, int coefficient) {
         // в список услуг
-        planServiceList.addElement(new QPlanService(service, this, coefficient));
+        planServiceList.addElement(new QPlanService(service, this.ip, coefficient));
         servicesCnt = planServices.size();
     }
 

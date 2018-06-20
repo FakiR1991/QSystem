@@ -120,11 +120,15 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreeSelectionModel;
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
 import org.apache.commons.lang3.ArrayUtils;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Property;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
 import org.springframework.transaction.TransactionStatus;
@@ -148,6 +152,8 @@ import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.controller.IIndicatorBoard;
 import ru.apertum.qsystem.server.model.ATreeModel;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
+import ru.apertum.qsystem.server.model.QComputer;
+import ru.apertum.qsystem.server.model.QComputerList;
 import ru.apertum.qsystem.server.model.QPlanService;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.schedule.QSchedule;
@@ -303,6 +309,333 @@ public class FAdmin extends javax.swing.JFrame {
         setLocation((Math.round(kit.getScreenSize().width - getWidth()) / 2), (Math.round(kit.getScreenSize().height - getHeight()) / 2));
     }
     
+    private javax.swing.JButton jButtonAddIP;
+    private javax.swing.JButton jButtonDeleteIP;
+    private javax.swing.JButton jButtonLinkToIP;
+    private javax.swing.JButton jButtonUnlink;
+    private javax.swing.JLabel jLabelIP;
+    private javax.swing.JLabel jLabelServices;
+    private javax.swing.JLabel jLabelIpServices;
+    private javax.swing.JList jListIP;
+    private javax.swing.JPanel jPanelServicesToIP;
+    private javax.swing.JScrollPane jScrollPaneForIpList;
+    private javax.swing.JScrollPane jScrollPaneForServices;
+    private javax.swing.JTree jTreeServices;
+    private javax.swing.JList jListIpServices;
+    private javax.swing.JScrollPane jScrollPaneForIpServices;
+    private javax.swing.JPopupMenu popupListIP;
+    private javax.swing.JPopupMenu popupListIpServices;
+    private javax.swing.JPopupMenu popupTreeServices;
+    private javax.swing.JMenuItem jMenuItemAddIP;
+    private javax.swing.JMenuItem jMenuItemDeleteIP;
+    private javax.swing.JMenuItem jMenuItemUnlink;
+    private javax.swing.JMenuItem jMenuItemLink;
+    
+    private void initServicesToIP() {
+        jPanelServicesToIP = new javax.swing.JPanel();
+        jLabelIP = new javax.swing.JLabel();
+        jScrollPaneForIpList = new javax.swing.JScrollPane();
+        jListIP = new javax.swing.JList<>();
+        jLabelServices = new javax.swing.JLabel();
+        jScrollPaneForServices = new javax.swing.JScrollPane();
+        jTreeServices = new javax.swing.JTree();
+        jButtonAddIP = new javax.swing.JButton();
+        jButtonLinkToIP = new javax.swing.JButton();
+        jLabelIpServices = new javax.swing.JLabel();
+        jScrollPaneForIpServices = new javax.swing.JScrollPane();
+        jListIpServices = new javax.swing.JList<>();
+        jButtonUnlink = new javax.swing.JButton();
+        jButtonDeleteIP = new javax.swing.JButton();
+        popupListIP = new javax.swing.JPopupMenu();
+        popupListIpServices = new javax.swing.JPopupMenu();
+        popupTreeServices = new javax.swing.JPopupMenu();
+        jMenuItemAddIP = new javax.swing.JMenuItem();
+        jMenuItemDeleteIP = new javax.swing.JMenuItem();
+        jMenuItemUnlink = new javax.swing.JMenuItem();
+        jMenuItemLink = new javax.swing.JMenuItem();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jLabelIP.setText("Список IP:");
+
+        jListIP.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jListIP.addListSelectionListener((ListSelectionEvent e) -> {
+            ipSelectionChange();
+        });
+        jListIP.setComponentPopupMenu(popupListIP);
+        jListIP.addMouseListener( new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    JList list = (JList)e.getSource();
+                    int row = list.locationToIndex(e.getPoint());
+                    list.setSelectedIndex(row);
+                }
+            }
+        });
+        jScrollPaneForIpList.setViewportView(jListIP);
+
+        jLabelServices.setText("Услуги:");
+
+        final DefaultTreeSelectionModel selectionModel = new DefaultTreeSelectionModel();
+        selectionModel.setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        jTreeServices.setSelectionModel(selectionModel);
+        jTreeServices.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    int selRow = jTreeServices.getRowForLocation(e.getX(), e.getY());
+                    TreePath selPath = jTreeServices.getPathForLocation(e.getX(), e.getY());
+                    jTreeServices.setSelectionPath(selPath); 
+                    if (selRow > -1) {
+                        jTreeServices.setSelectionRow(selRow);
+                    }
+                }
+            }
+        });
+        jTreeServices.setComponentPopupMenu(popupTreeServices);
+        jTreeServices.setModel(QServiceTree.getInstance());
+        
+        jScrollPaneForServices.setViewportView(jTreeServices);
+
+        jButtonAddIP.setText("Добавить IP");
+        jButtonAddIP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddIPActionPerformed(evt);
+            }
+        });
+        
+        jButtonDeleteIP.setText("Удалить IP");
+        jButtonDeleteIP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteIPActionPerformed(evt);
+            }
+        });
+
+        jButtonLinkToIP.setText("Привязать к выделенному IP");
+        jButtonLinkToIP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLinkToIPActionPerformed(evt);
+            }
+        });
+
+        jLabelIpServices.setText("Услуги выбранного IP:");
+
+        jListIpServices.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jListIpServices.setComponentPopupMenu(popupListIpServices);
+        jListIpServices.addMouseListener( new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    JList list = (JList)e.getSource();
+                    int row = list.locationToIndex(e.getPoint());
+                    list.setSelectedIndex(row);
+                }
+            }
+        });
+        jScrollPaneForIpServices.setViewportView(jListIpServices);
+
+        jButtonUnlink.setText("Отвязать выбранную услуги");
+        jButtonUnlink.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonUnlinkActionPerformed(evt);
+            }
+        });
+        
+        jMenuItemAddIP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddIPActionPerformed(evt);
+            }
+        });
+        jMenuItemAddIP.setName("jMenuItemAddIP");
+        jMenuItemAddIP.setText("Добавить IP");
+        popupListIP.add(jMenuItemAddIP);
+
+        jMenuItemDeleteIP.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteIPActionPerformed(evt);
+            }
+        });
+        jMenuItemDeleteIP.setName("jMenuItemDeleteIP");
+        jMenuItemDeleteIP.setText("Удалить IP");
+        popupListIP.add(jMenuItemDeleteIP);
+        
+        jMenuItemUnlink.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonUnlinkActionPerformed(evt);
+            }
+        });
+        jMenuItemUnlink.setName("jMenuItemUnlink");
+        jMenuItemUnlink.setText("Отвязать выбранную услуги");
+        popupListIpServices.add(jMenuItemUnlink);
+        
+        jMenuItemLink.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonLinkToIPActionPerformed(evt);
+            }
+        });
+        jMenuItemLink.setName("jMenuItemLink");
+        jMenuItemLink.setText("Привязать к выделенному IP");
+        popupTreeServices.add(jMenuItemLink);
+        
+        javax.swing.GroupLayout jPanelServicesToIPLayout = new javax.swing.GroupLayout(jPanelServicesToIP);
+        jPanelServicesToIP.setLayout(jPanelServicesToIPLayout);
+        jPanelServicesToIPLayout.setHorizontalGroup(
+            jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelServicesToIPLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanelServicesToIPLayout.createSequentialGroup()
+                        .addComponent(jButtonDeleteIP)
+                        .addGap(121, 121, 121)
+                        .addComponent(jButtonAddIP))
+                    .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jScrollPaneForIpList, javax.swing.GroupLayout.PREFERRED_SIZE, 305, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabelIP)))
+                .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanelServicesToIPLayout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelIpServices)
+                            .addComponent(jScrollPaneForIpServices, javax.swing.GroupLayout.PREFERRED_SIZE, 337, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, Short.MAX_VALUE))
+                    .addGroup(jPanelServicesToIPLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jButtonUnlink)
+                        .addGap(100, 100, 100)))
+                .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneForServices, javax.swing.GroupLayout.PREFERRED_SIZE, 381, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabelServices)
+                    .addGroup(jPanelServicesToIPLayout.createSequentialGroup()
+                        .addGap(93, 93, 93)
+                        .addComponent(jButtonLinkToIP)))
+                .addContainerGap())
+        );
+        jPanelServicesToIPLayout.setVerticalGroup(
+            jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelServicesToIPLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelIP)
+                    .addComponent(jLabelServices)
+                    .addComponent(jLabelIpServices))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneForIpList)
+                    .addComponent(jScrollPaneForServices, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
+                    .addComponent(jScrollPaneForIpServices))
+                .addGap(18, 18, 18)
+                .addGroup(jPanelServicesToIPLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddIP)
+                    .addComponent(jButtonLinkToIP)
+                    .addComponent(jButtonUnlink)
+                    .addComponent(jButtonDeleteIP))
+                .addContainerGap())
+        );
+
+        tabbedPaneMain.addTab("IP и услуги", jPanelServicesToIP);
+    }
+    
+    private FAddNewIP newIpWindow;
+    
+    private void jButtonAddIPActionPerformed(java.awt.event.ActionEvent evt) {                                             
+        if (newIpWindow == null) {
+            newIpWindow = new FAddNewIP(this, true);
+        }
+        Uses.setLocation(newIpWindow);
+        newIpWindow.setVisible(true);
+        if (newIpWindow.isOkClicked()) {
+            QComputer newComputer = newIpWindow.getComputer();
+            
+            QComputerList.getInstance().addElement(newComputer);
+            jListIP.setSelectedValue(newComputer, true);
+        }
+    }   
+    
+    private void ipSelectionChange() {
+        if (jListIP.getLastVisibleIndex() == -1) {
+            jListIpServices.setListData(new Object[0]);
+            return;
+        }
+        final QComputer computer = (QComputer)jListIP.getSelectedValue();
+        if (computer == null) {
+            return;
+        }
+        jListIpServices.setModel(computer.getPlanServiceList());
+        if (jListIpServices.getLastVisibleIndex() != -1) {
+            jListIpServices.setSelectedIndex(0);
+        }
+    }
+    
+    /**
+     * Привязываем выбранные услуги к выделенному IP
+     * @param evt 
+     */
+    private void jButtonLinkToIPActionPerformed(java.awt.event.ActionEvent evt) {
+        final List<QComputer> computersList = jListIP.getSelectedValuesList();
+        
+        for (QComputer computer : computersList) {
+            final QService service = (QService)jTreeServices.getLastSelectedPathComponent();
+            if (service != null && service.isLeaf() && jListIP.getSelectedIndex() != -1 && !(computer.hasService(service))) {
+                computer.addPlanService(service);
+                jListIpServices.setModel(computer.getPlanServiceList());
+                jListIpServices.setSelectedIndex(0);
+                QLog.l().logger().debug("Компьютеру \"" + computer.getName() + "\" назначили услугу \"" + service.getName() + "\".");
+            }
+            if (service != null && !service.isLeaf() && jListIP.getSelectedIndex() != -1 && !(computer.hasService(service))) {
+                QServiceTree.sailToStorm(service, (TreeNode nodeService) -> {
+                    if (nodeService.isLeaf() && !computer.hasService((QService)nodeService)) {
+                        computer.addPlanService((QService)nodeService);
+                        QLog.l().logger().debug("Компьютеру \"" + ((QComputer) jListIP.getSelectedValue()).getName() +
+                                                "\" назначили услугу \"" + ((QService)nodeService).getName() + "\".");
+                    }
+                });
+                jListIpServices.setModel(computer.getPlanServiceList());
+                jListIpServices.setSelectedIndex(0);
+            }
+        }
+    }
+    
+    /**
+     * Удалить выделенные IP
+     * @param evt 
+     */
+    private void jButtonDeleteIPActionPerformed(java.awt.event.ActionEvent evt) {
+        if (jListIP.getSelectedValuesList().size() <= 0) {
+            JOptionPane.showMessageDialog(this, "Выделите IP которые хотите удалить.", "Внимание", JOptionPane.WARNING_MESSAGE);
+        } else {
+            if (JOptionPane.showConfirmDialog(this,
+                                              "Вы действительно хотите удалить выбранный IP?",
+                                              "Удаление IP",
+                                              JOptionPane.YES_NO_OPTION) == 1) {
+                return;
+            }
+            jListIP.getSelectedValuesList().stream().forEach(qComputer -> {
+                QComputerList.getInstance().removeElement((QComputer)qComputer);
+                jListIP.setSelectedIndex(0);
+            });
+        }
+    }
+    
+    /**
+     * Отвязать услугу от IP
+     * @param evt 
+     */
+    private void jButtonUnlinkActionPerformed(java.awt.event.ActionEvent evt) {
+        //если есть выделенный IP и есть выделенные услуги
+        if (jListIP.getSelectedIndex() != -1 && jListIpServices.getSelectedIndex() != -1) {
+            jListIP.getSelectedValuesList().stream().forEach(qComputer -> {
+                ((QComputer)qComputer).deletePlanService( ((QPlanService)jListIpServices.getSelectedValue()).getService() );
+            });
+            jListIpServices.setModel( ((QComputer)jListIP.getSelectedValue()).getPlanServiceList() );
+            jListIpServices.setSelectedIndex(0);
+        }
+    }
+    
+    private void loadListIP() {
+        jListIP.setModel(QComputerList.getInstance());
+        if (jListIP.getModel().getSize() > 0) {
+            jListIP.setSelectedIndex(jListIP.getFirstVisibleIndex());
+        }
+    }
+    
     /**
      * Creates new form FAdmin
      */
@@ -311,6 +644,8 @@ public class FAdmin extends javax.swing.JFrame {
         initComponents();
         
         init();
+        
+        loadListIP();
 
         tabbedPaneMain.remove(tabHide);
 
@@ -1364,7 +1699,7 @@ public class FAdmin extends javax.swing.JFrame {
             final QUser newUser = new QUser();
             LinkedList<QPlanService> plan = new LinkedList<>();
             user.getPlanServices().stream().forEach((pl) -> {
-                plan.add(new QPlanService(pl.getService(), pl.getUser(), pl.getCoefficient()));
+                plan.add(new QPlanService(pl.getService(), pl.getIp(), pl.getCoefficient()));
             });
             newUser.setPlanServices(plan);
             newUser.setName(userName);
@@ -1693,6 +2028,8 @@ public class FAdmin extends javax.swing.JFrame {
                     QServiceTree.getInstance().save();
                     // Сохраняем пользователей
                     QUserList.getInstance().save();
+                    //сохраняем список компьютеров
+                    QComputerList.getInstance().save();
                     // Сохраняем инфоузлы
                     QInfoTree.getInstance().save();
                     // Сохраняем отзывы
@@ -2147,18 +2484,22 @@ public class FAdmin extends javax.swing.JFrame {
         javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance().getContext().getActionMap(FAdmin.class, this);
         jMenuItem1.setAction(actionMap.get("addUser")); // NOI18N
         jMenuItem1.setName("jMenuItem1"); // NOI18N
+				jMenuItem1.setEnabled(false);
         popupUser.add(jMenuItem1);
 
         jMenuItem45.setAction(actionMap.get("addNewUserByCopy")); // NOI18N
         jMenuItem45.setName("jMenuItem45"); // NOI18N
+				jMenuItem45.setEnabled(false);
         popupUser.add(jMenuItem45);
 
         jMenuItem20.setAction(actionMap.get("renameUser")); // NOI18N
         jMenuItem20.setName("jMenuItem20"); // NOI18N
+				jMenuItem20.setEnabled(false);
         popupUser.add(jMenuItem20);
 
         jMenuItemEditUser.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FAdmin.class).getString("jMenuItemEditUser.text")); // NOI18N
         jMenuItemEditUser.setName("jMenuItemEditUser"); // NOI18N
+				jMenuItemEditUser.setEnabled(false);
         jMenuItemEditUser.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItemEditUserActionPerformed(evt);
@@ -2237,6 +2578,7 @@ public class FAdmin extends javax.swing.JFrame {
 
         jMenuItem12.setAction(actionMap.get("addServiceToUser")); // NOI18N
         jMenuItem12.setName("jMenuItem12"); // NOI18N
+				jMenuItem12.setEnabled(false);
         popupServices.add(jMenuItem12);
 
         jSeparator5.setName("jSeparator5"); // NOI18N
@@ -2267,7 +2609,7 @@ public class FAdmin extends javax.swing.JFrame {
         popupServices.add(miInitRoll);
 
         popupServiceUser.setName("popupServiceUser"); // NOI18N
-
+				
         jMenuItem14.setAction(actionMap.get("changeServicePriority")); // NOI18N
         jMenuItem14.setName("jMenuItem14"); // NOI18N
         popupServiceUser.add(jMenuItem14);
@@ -2289,8 +2631,9 @@ public class FAdmin extends javax.swing.JFrame {
 
         jMenuItem15.setAction(actionMap.get("deleteServiseFromUser")); // NOI18N
         jMenuItem15.setName("jMenuItem15"); // NOI18N
+				jMenuItem15.setEnabled(false);
         popupServiceUser.add(jMenuItem15);
-
+				
         popupInfo.setName("popupInfo"); // NOI18N
 
         jMenuItem26.setAction(actionMap.get("addInfoItem")); // NOI18N
@@ -2797,6 +3140,7 @@ public class FAdmin extends javax.swing.JFrame {
 
         jButton5.setAction(actionMap.get("addServiceToUser")); // NOI18N
         jButton5.setName("jButton5"); // NOI18N
+				jButton5.setEnabled(false);
 
         jButton3.setAction(actionMap.get("deleteService")); // NOI18N
         jButton3.setName("jButton3"); // NOI18N
@@ -2847,7 +3191,7 @@ public class FAdmin extends javax.swing.JFrame {
         jScrollPane4.setName("jScrollPane4"); // NOI18N
 
         listUserService.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        listUserService.setComponentPopupMenu(popupServiceUser);
+        //listUserService.setComponentPopupMenu(popupServiceUser);
         listUserService.setName("listUserService"); // NOI18N
         listUserService.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -2858,6 +3202,7 @@ public class FAdmin extends javax.swing.JFrame {
 
         jButton6.setAction(actionMap.get("deleteServiseFromUser")); // NOI18N
         jButton6.setName("jButton6"); // NOI18N
+				jButton6.setEnabled(false);
 
         javax.swing.GroupLayout jPanel26Layout = new javax.swing.GroupLayout(jPanel26);
         jPanel26.setLayout(jPanel26Layout);
@@ -3045,6 +3390,7 @@ public class FAdmin extends javax.swing.JFrame {
 
         jButton1.setAction(actionMap.get("addUser")); // NOI18N
         jButton1.setName("jButton1"); // NOI18N
+				jButton1.setEnabled(false);
 
         jButton2.setAction(actionMap.get("deleteUser")); // NOI18N
         jButton2.setName("jButton2"); // NOI18N
@@ -3143,6 +3489,8 @@ public class FAdmin extends javax.swing.JFrame {
 
         tabbedPaneMain.addTab(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FAdmin.class).getString("jPanel4.TabConstraints.tabTitle"), jPanel4); // NOI18N
 
+				initServicesToIP();
+				
         jPanel19.setAutoscrolls(true);
         jPanel19.setName("jPanel19"); // NOI18N
 
@@ -5169,7 +5517,7 @@ private void listUserServiceMouseClicked(java.awt.event.MouseEvent evt) {//GEN-F
 
     // назначение приоритета услуге.
     if (evt.getClickCount() == 2) {
-        changeServicePriority();
+        //changeServicePriority();
     }
 
 }//GEN-LAST:event_listUserServiceMouseClicked
@@ -5698,7 +6046,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private void jMenuItemEditUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemEditUserActionPerformed
         final QUser user = (QUser) listUsers.getSelectedValue();
         if (user != null) {
-            FUserChangeDialog.changeUser(form, true, user);
+//            FUserChangeDialog.changeUser(form, true, user);
         }
     }//GEN-LAST:event_jMenuItemEditUserActionPerformed
 
@@ -6063,8 +6411,8 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
         if (plan == null) {
             return;
         }
-        final String res = NetCommander.setServiseFire(new ServerNetProperty(), plan.getService().getId(), plan.getUser().getId(), plan.getCoefficient());
-        JOptionPane.showMessageDialog(this, res, getLocaleMessage("admin.add_service_to_user.title"), JOptionPane.INFORMATION_MESSAGE);
+//        final String res = NetCommander.setServiseFire(new ServerNetProperty(), plan.getService().getId(), plan.getUser().getId(), plan.getCoefficient());
+//        JOptionPane.showMessageDialog(this, res, getLocaleMessage("admin.add_service_to_user.title"), JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Action
@@ -6073,8 +6421,8 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
         if (plan == null) {
             return;
         }
-        final String res = NetCommander.deleteServiseFire(new ServerNetProperty(), plan.getService().getId(), plan.getUser().getId());
-        JOptionPane.showMessageDialog(this, res, getLocaleMessage("admin.remove_service_to_user.title"), JOptionPane.INFORMATION_MESSAGE);
+//        final String res = NetCommander.deleteServiseFire(new ServerNetProperty(), plan.getService().getId(), plan.getUser().getId());
+//        JOptionPane.showMessageDialog(this, res, getLocaleMessage("admin.remove_service_to_user.title"), JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Action

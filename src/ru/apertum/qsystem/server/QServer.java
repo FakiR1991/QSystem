@@ -110,6 +110,45 @@ public class QServer extends Thread {
         }
     });
     
+    private final static int HOUR_IN_MILLIS = 60 * 60 * 1000;
+    
+    /**
+     * Таймер по которому будем выгонять временных отложенных
+     */
+    private static Timer cleanUpMovedToBankTimer = new Timer(60*1000, (ActionEvent e) -> {
+        //каждый час проверяем надо ли почистить список людей отправленных на оплату
+        Executer.MOVED_TO_BANK_TASK_LOCK.lock();
+        try {
+            final ArrayList<QCustomer> forDel = new ArrayList<>();
+            for (QCustomer customer : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
+                //если прошло больше трёх часов с тех пор как его отправили оплачивать, то удаляем
+                if ( (System.currentTimeMillis() - customer.getStandTime().getTime()) > 3 * HOUR_IN_MILLIS ) {
+
+                    QLog.l().logger().debug("Удаляем по таймеру из списка ушедших на оплату кастомера №" + customer.getPrefix() + customer.getNumber());
+
+                    //добавляем кастомера в список на удаление
+                    forDel.add(customer);
+                    //добавляем запись в таблицу clients
+                    //состояние не сохранится в БД, потому что user у текущего кастомера равен null
+                    //т.к. мы завершили работу с ним [сделали setUser(null)] и проставили перед этим stateIn = 10
+//                    customer.setState(CustomerState.STATE_DEAD_AFTER_PAYMENT);
+
+                }
+            }
+            forDel.stream().forEach((qCustomer) -> {
+                QMovedToBankList.getInstance().removeElement(qCustomer);
+            });
+
+            QServer.savePool();
+
+        } catch (Exception ex) {
+//                    throw new ServerException("Ошибка при удалении кастомера из списка ушедших на оплату по таймеру " + ex.getMessage());
+            QLog.l().logger().trace("Ошибка при удалении кастомера из списка ушедших на оплату по таймеру", ex);
+        } finally {
+            Executer.MOVED_TO_BANK_TASK_LOCK.unlock();
+        }
+    });
+    
     /**
      * @param args - первым параметром передается полное имя настроечного XML-файла
      * @throws Exception
@@ -117,6 +156,7 @@ public class QServer extends Thread {
     public static void main(String[] args) throws Exception {
         
         workloadTimer.start();
+        cleanUpMovedToBankTimer.start();
         
         publishWebService();
         
@@ -824,6 +864,7 @@ public class QServer extends Thread {
             
             QService.usedTickets.clear();
             
+            //проходимся по очереди
             for (QService service : QServiceTree.getInstance().getNodes()) {
                 for (QCustomer customer : service.getClients()) {
                     if (!QService.usedTickets.containsKey(customer.getUnitId())) {
@@ -833,6 +874,7 @@ public class QServer extends Thread {
                 }
             }
             
+            //проходимся по тем, кто уже в обслуживании
             for (QUser user : QUserList.getInstance().getItems()) {
                 if (user.getCustomer() != null) {
                     if (!QService.usedTickets.containsKey(user.getCustomer().getUnitId())) {
@@ -841,12 +883,29 @@ public class QServer extends Thread {
                     QService.usedTickets.get(user.getCustomer().getUnitId()).add(user.getCustomer().getNumber());
                 }
             }
+            
+            //проходимся по отложенным
+            for (QCustomer customer : QPostponedList.getInstance().getPostponedCustomers()) {
+                if (!QService.usedTickets.containsKey(customer.getUnitId())) {
+                    QService.usedTickets.put(customer.getUnitId(), new LinkedList<>());
+                }
+                QService.usedTickets.get(customer.getUnitId()).add(customer.getNumber());
+            }
+            
+            //проходимся по ушедшим на оплату
+            for (QCustomer customer : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
+                if (!QService.usedTickets.containsKey(customer.getUnitId())) {
+                    QService.usedTickets.put(customer.getUnitId(), new LinkedList<>());
+                }
+                QService.usedTickets.get(customer.getUnitId()).add(customer.getNumber());
+            }
         });
         cleanUpTicketsTimer.start();
     }
     
     private static void startPostponedTimer() {
         Timer timerOut = new Timer(240 * 1000, (ActionEvent e) -> {
+            
             String connectionString = "jdbc:oracle:thin:@(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1-vip.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node2-vip.int.idknet.com)(PORT = 1521)) (FAILOVER = yes) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = SHARED) (SERVICE_NAME = amar_s1) (FAILOVER_MODE = (TYPE = SELECT) (METHOD = BASIC) (RETRIES = 180) (DELAY = 5))))";
             String strUserID = "qsystem";
             String strPassword = "nyZd6je6R";

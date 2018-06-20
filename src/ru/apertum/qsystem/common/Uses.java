@@ -276,6 +276,7 @@ public final class Uses {
     public static final String TASK_GET_SELF_SERVICES_CHECK = "Получить состояние очередей с проверкой";
     public static final String TASK_INVITE_NEXT_CUSTOMER = "Получить следующего клиента";
     public static final String TASK_KILL_NEXT_CUSTOMER = "Удалить следующего клиента";
+    public static final String TASK_CLEAR_SHADOW = "Очистить shadow юзера";
     public static final String TASK_KILL_CUSTOMER_FRECEPTION = "FReception - удалить клиента из очереди";
     public static final String TASK_CUSTOMER_TO_POSTPON = "Клиента в пул отложенных";
     public static final String TASK_CUSTOMER_TO_BANK = "Клиента на оплату в банк";

@@ -232,7 +232,7 @@ public class Spring {
         
     }
     
-       public void executeUpdateQuery(String q) {
+    public void executeUpdateQuery(String q) {
         final Session ses = getTxManager().getSessionFactory().getCurrentSession();  
         Query query = ses.createQuery(q);
         int result = query.executeUpdate();

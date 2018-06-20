@@ -18,6 +18,7 @@ package ru.apertum.qsystem.server.controller;
 
 import com.agroprombank.services.QMSServiceSoapProxy;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import org.springframework.transaction.TransactionStatus;
 import ru.apertum.qsystem.common.SoundPlayer;
 
@@ -77,6 +78,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetProperties;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
+import ru.apertum.qsystem.common.cmd.RpcGetUser;
 import ru.apertum.qsystem.extra.ISelectNextService;
 import ru.apertum.qsystem.extra.ITask;
 import ru.apertum.qsystem.server.MainBoard;
@@ -86,6 +88,7 @@ import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
+import ru.apertum.qsystem.server.model.QNotificationsInfo;
 import ru.apertum.qsystem.server.model.QPlanService;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
@@ -920,7 +923,7 @@ public final class Executer {
                     + ServerProps.getInstance().getProps().getLimitRecall()
                     + (user.getShadow() == null ? -147 : user.getShadow().getOldNom());
             
-            LinkedList<QCustomer> postponedList = new LinkedList<QCustomer>();
+            LinkedList<QCustomer> postponedList = new LinkedList<>();
             
             for (QCustomer cu : QPostponedList.getInstance().getPostponedCustomers()) {
                 if (cu.getUnitId().compareTo(user.getUnitId()) == 0 && user.hasService(cu.getService())) {
@@ -1116,6 +1119,22 @@ public final class Executer {
             } catch (Exception ex) {
                 QLog.l().logger().error(ex);
             }
+            return new JsonRPC20OK();
+        }
+    };
+    
+    /**
+     * Очистим тень юзера при выходе из программы.
+     */
+    final Task clearShadowTask = new Task(Uses.TASK_CLEAR_SHADOW) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            final QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            
+            user.setShadow(null);
+            
             return new JsonRPC20OK();
         }
     };
@@ -2344,13 +2363,58 @@ public final class Executer {
             QUser user = QUserList.getInstance().getById(cmdParams.userId);
             user.setPointType(cmdParams.pointType);
             user.setUnitId(cmdParams.unitId);
-//            if (cmdParams.adressRs != null && cmdParams.adressRs.compareTo(0) != 0) {
-//                user.setAdressRS(cmdParams.adressRs);
-//            }
+            if (cmdParams.adressRs != null && cmdParams.adressRs.compareTo(0) != 0) {
+                user.setAdressRS(cmdParams.adressRs);
+            }
+            user.setIp(ipAdress);
             
-            return new JsonRPC20OK();
+            //сохраняем в базе дынных переданные параметры
+            updateUserInDB(user,
+                           ipAdress,
+                           cmdParams.adressRs,
+                           cmdParams.pointType,
+                           cmdParams.unitId);
+            
+            //так как изменили параметры юзера, то подгружаем заново
+            //список юзеров с привязанными услугами по новом ip
+            QUserList.getInstance().loadForce();
+            
+            return new RpcGetUser(QUserList.getInstance().getById(cmdParams.userId));
         }
     };
+    
+    private void updateUserInDB(QUser user,
+                                String ip,
+                                Integer addressRs,
+                                Integer pointType,
+                                Integer unitId) {
+        if (QConfig.cfg().isTestServer()) {
+            ip = "10.5.0.79";
+        }
+        
+        final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+        def.setName("SomeTxName");
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+        //если у кого то уже записан этот ip, то заменяем значение поля на рандомную строку
+        String query  = "update QUser set ip='" + String.valueOf(new Date().getTime()) + "' where ip='" + ip + "'";
+        //присваиваем этот ip юзеру, который залогинился с него
+        String query2 = "update QUser set ip='" + ip + "' where id=" + user.getId();
+        String query3 = "update QUser set adressRS=" + addressRs + 
+                                       ", point_type=" + pointType +
+                                       ", unit_id=" + unitId + " " +
+                        "where id=" + user.getId();
+        try {
+            Spring.getInstance().executeUpdateQuery(query);
+            Spring.getInstance().executeUpdateQuery(query2);
+            Spring.getInstance().executeUpdateQuery(query3);
+        }
+        catch (Exception ex) {
+            throw new ServerException("\n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+        }
+        Spring.getInstance().getTxManager().commit(status);
+    }
+    
     /**
      * Проверить номер кастомера
      */

@@ -198,7 +198,7 @@ public class FLogin extends javax.swing.JDialog {
                     flag = user.getReportAccess();
                     break;
                 case LEVEL_USER:
-                    flag = user.getServicesCnt() != 0;
+                    flag = true;
                     break;
             }
 
