@@ -1124,6 +1124,42 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         return customer;
     }
     
+    public QCustomer peekCustomerByUidForReception(Integer uid) {
+        QCustomer customer = null;
+        
+        for (QCustomer cust : getCustomers()) {
+            if ( Objects.equals(cust.getUnitId(), uid) ) {
+                if (customer == null) {
+                    customer = cust;
+                    continue;
+                }
+                int resultCmp = -1 * customer.getPriority().compareTo(cust.getPriority());
+
+                //если равный приоритет кастомеров
+                if (resultCmp == 0) {
+                    
+                    int priorityStateCustomer = getPriorityByState(customer.getState());
+                    int priorityStateCust = getPriorityByState(cust.getState());
+                    
+                    //если у cust приоритет по его состоянию выше, чем у customer
+                    if (Integer.compare(priorityStateCustomer, priorityStateCust) < 0) {
+                        customer = cust;
+                    }
+                    //если приоритет по состоянию одинаковый
+                    else if (customer.getStandTime().after(cust.getStandTime())) {
+                        customer = cust;
+                    }
+                }
+                //если приоритет customer больше, чем cust
+                else if (resultCmp > 0) {
+                    customer = cust;
+                }
+            }
+        }
+        
+        return customer;
+    }
+    
     /**
      * Сравниваем кастомеров по их статусам в очереди.
      * Если кастомер был отложен, затем снова попал в очередь, то обслужится раньше, чем кастомер

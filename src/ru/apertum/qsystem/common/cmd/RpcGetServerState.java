@@ -70,8 +70,8 @@ public class RpcGetServerState extends JsonRPC20 {
         /**
          *
          * @param service услуга по которой данная статистика
-         * @param unitId ИД зала
          * @param firstNumber номер первого
+         * @param unitId ИД зала
          */
         public ServiceInfo(QService service, String firstNumber, Integer unitId) {
             this.serviceName = service.getName();

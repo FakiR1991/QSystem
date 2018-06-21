@@ -2302,25 +2302,12 @@ public final class FClient extends javax.swing.JFrame {
         QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
         
         try {
-            //обновим данные у клиента
-//            user.setUnitId(QConfig.cfg().getUnitId());
-//            user.setPointType(QConfig.cfg().getPointType());
-//            user.setAdressRS(QConfig.cfg().getAddressRs());
-            
             //обновляем параметры юзера на сервере и обновляем их в БД
             user = NetCommander.setUserParamsById(netProperty,
                                                   user.getId(),
                                                   QConfig.cfg().getPointType(),
                                                   QConfig.cfg().getUnitId(),
                                                   QConfig.cfg().getAddressRs());
-            
-            if (user.getPlanServices() == null || user.getPlanServices().size() <= 0) {
-                QLog.l().logger().debug("Пользователю не назначились услуги по IP!");
-            } else {
-                user.getPlanServices().stream().forEach(qPlanService -> {
-                    QLog.l().logger().debug("Пользователю назначена услуга: " + qPlanService.getService().getName());
-                });
-            }
         } catch (Exception e) {
             
         }

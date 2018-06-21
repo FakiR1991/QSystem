@@ -880,7 +880,7 @@ public final class Executer {
             final LinkedList<RpcGetServerState.ServiceInfo> srvs = new LinkedList<>();
 
             QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
-                final QCustomer customer = service.peekCustomerByUid(cmdParams.unitId);
+                final QCustomer customer = service.peekCustomerByUidForReception(cmdParams.unitId);
                 
                 srvs.add(new RpcGetServerState.ServiceInfo(service,
                                                            customer != null ? String.valueOf(customer.getNumber()) : "-",
