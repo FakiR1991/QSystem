@@ -306,7 +306,7 @@ task debugClient (dependsOn: 'classes', type: JavaExec) {
         args '-ptype'
         args '1'
         args '-ars'
-        args '32'
+        args '99'
         args '-d'
         args '++terminal'
         args '-np'

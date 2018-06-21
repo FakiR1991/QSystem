@@ -547,6 +547,14 @@ public class FAdmin extends javax.swing.JFrame {
             QComputerList.getInstance().addElement(newComputer);
             jListIP.setSelectedValue(newComputer, true);
         }
+        
+//        ЕСЛИ ЧТО ВЕРНУТЬ НАЗАД ВЕРСИЮ, КОТОРАЯ В ВЕТКЕ MASTER
+//        ПРОВЕРИТЬ ЧТОБЫ ОНА ПОДДЕРЖИВАЛА ПАРАМЕТР ars И ОБНОВИТЬ СЕРВАК, ЧТОБЫ ПАРАМЕТРЫ ИЗ БАТНИКОВ КЛИЕНТОВ НЕ НУЖНО БЫЛО УДАЛЯТЬ
+//            ВЕРСИЮ КЛИЕНТА ТОЖЕ ВЕРНУТЬ НАЗАД НА 18.1.5
+//        
+//        
+//        
+//        проверить что будет, если открыл окно добавление компа, но нажал не Добавить, а просто закрыл окно
     }   
     
     private void ipSelectionChange() {

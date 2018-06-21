@@ -72,6 +72,8 @@ public class QUserList extends ATListModel<QUser> {
          } 
          */
         // плансервисам нул воткнуть при уладении в юзера
-        Spring.getInstance().getHt().saveOrUpdateAll(getItems());
+        //я поменял привязку услуг к юзерам, теперь привязка услуг к ip
+        //при сохранении конфигурации здесь возникает ошибка, если раскомментировать
+//        Spring.getInstance().getHt().saveOrUpdateAll(getItems());
     }
 }
