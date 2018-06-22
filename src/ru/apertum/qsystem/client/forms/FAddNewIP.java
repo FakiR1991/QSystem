@@ -38,6 +38,7 @@ public class FAddNewIP extends javax.swing.JDialog {
     public FAddNewIP(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         
+        this.setTitle("Добавление нового IP");
         initComponents();
     }
 
@@ -173,6 +174,7 @@ public class FAddNewIP extends javax.swing.JDialog {
 
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         computer = null;
+        isOkClicked = false;
         jComboBoxUnit.setModel(new DefaultComboBoxModel(QUnitList.getInstance().getItems().toArray()));
     }//GEN-LAST:event_formWindowOpened
 

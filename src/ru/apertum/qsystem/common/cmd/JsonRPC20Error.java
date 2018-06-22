@@ -34,6 +34,7 @@ public class JsonRPC20Error extends AJsonRPC20 {
         public static final Integer POSTPONED_NOT_FOUND = 3;
         public static final Integer ADVANCED_NOT_FOUND = 4;
         public static final Integer REQUIRED_CUSTOMER_NOT_FOUND = 5;
+        public static final Integer CUSTOMER_FOUND_IN_MOVED_TO_PAYMENT_LIST = 6;
 
         public static final class ErrorCode {
 
@@ -46,9 +47,10 @@ public class JsonRPC20Error extends AJsonRPC20 {
             static {
                 MESSAGE.put(UNKNOWN_ERROR, "Unknown error.");
                 MESSAGE.put(RESPONCE_NOT_SAVE, "Не сохранили отзыв в базе.");
-                MESSAGE.put(POSTPONED_NOT_FOUND, "Отложенный пользователь не найден по его ID.");
+                MESSAGE.put(POSTPONED_NOT_FOUND, "Отложенный клиент не найден по его ID.");
                 MESSAGE.put(ADVANCED_NOT_FOUND, "Не верный номер предварительной записи.");
                 MESSAGE.put(REQUIRED_CUSTOMER_NOT_FOUND, "Customer not found but required.");
+                MESSAGE.put(CUSTOMER_FOUND_IN_MOVED_TO_PAYMENT_LIST, "Выбранный клиент появится в очереди автоматически после оплаты в кассе.");
             }
         }
 

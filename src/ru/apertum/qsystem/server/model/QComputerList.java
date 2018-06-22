@@ -18,6 +18,7 @@ package ru.apertum.qsystem.server.model;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Objects;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -57,6 +58,10 @@ public class QComputerList extends ATListModel<QComputer> {
     
     private static class QComputerListHolder {
         private static final QComputerList INSTANCE = new QComputerList();
+    }
+    
+    public boolean hasByIp(String ip) {
+        return getItems().stream().anyMatch((item) -> ( Objects.equals(ip, item.getIp()) ));
     }
     
     @Override

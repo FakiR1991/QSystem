@@ -629,7 +629,12 @@ public final class Executer {
                 customer = QPostponedList.getInstance().getById(cmdParams.customerId);
 
                 if (customer == null) {
-                    return new JsonRPC20Error(JsonRPC20Error.ErrorRPC.POSTPONED_NOT_FOUND, cmdParams.customerId);
+                    //если кастомер найден в списке ушедших на оплату в кассу банка
+                    if (QMovedToBankList.getInstance().getById(cmdParams.customerId) != null) {
+                        return new JsonRPC20Error(JsonRPC20Error.ErrorRPC.CUSTOMER_FOUND_IN_MOVED_TO_PAYMENT_LIST, cmdParams.customerId);
+                    } else {
+                        return new JsonRPC20Error(JsonRPC20Error.ErrorRPC.POSTPONED_NOT_FOUND, cmdParams.customerId);
+                    }
                 } else {
                     QPostponedList.getInstance().removeElement(customer);
                 }
@@ -931,6 +936,13 @@ public final class Executer {
                     stateH = stateH + cu.getId() + cu.getState().ordinal() * 117 + cu.getPostponedStatus().hashCode();
                 }
             }
+            for (QCustomer cu : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
+                if (cu.getUnitId().compareTo(user.getUnitId()) == 0 && user.hasService(cu.getService())) {
+                    postponedList.add(cu);
+                    stateH = stateH + cu.getId() + cu.getState().ordinal() * 117 + cu.getPostponedStatus().hashCode();
+                }
+            }
+            
             final Long hash = hashState.get(cmdParams.userId);
             if (hash == null) {
                 hashState.put(cmdParams.userId, stateH);
@@ -1299,7 +1311,13 @@ public final class Executer {
                 user.setCustFinishTime(customer.getFinishTime());
                 user.setCustomer(null);//бобик сдох но медалька осталось, отправляем в пулл
                 customer.setUser(null);
-                QPostponedList.getInstance().addElement(customer);
+                
+                //если кастомер отложен не на оплату,
+                //либо отложен на оплату и при этом его нужно вернуть,
+                //то добавляем его в список отложенных
+                if (!cmdParams.isPostponedForPayment || (cmdParams.isPostponedForPayment && cmdParams.needReturnAfterPayment) ) {
+                    QPostponedList.getInstance().addElement(customer);
+                }
                 // сохраняем состояния очередей.
                 QServer.savePool();
                 //разослать оповещение о том, что посетитель отложен
@@ -2401,8 +2419,8 @@ public final class Executer {
         //присваиваем этот ip юзеру, который залогинился с него
         String query2 = "update QUser set ip='" + ip + "' where id=" + user.getId();
         String query3 = "update QUser set adressRS=" + addressRs + 
-                                       ", point_type=" + pointType +
-                                       ", unit_id=" + unitId + " " +
+                                       ", pointType=" + pointType +
+                                       ", unitId=" + unitId + " " +
                         "where id=" + user.getId();
         try {
             Spring.getInstance().executeUpdateQuery(query);
@@ -2463,10 +2481,16 @@ public final class Executer {
                                                 .getHt()
                                                 .find("FROM QCustomer a WHERE service_prefix ='" + p +
                                                       "' and number = " + (n.isEmpty() ? "0" : n) +
-                                                      " and unit_id=" + cmdParams.unitId);
+                                                      " and unit_id=" + cmdParams.unitId +
+                                                      " order by stand_time asc");
             final LinkedList lc = new LinkedList();
             custs.forEach((cust) -> {
-                lc.add(Uses.FORMAT_DD_MM_YYYY_TIME.format(cust.getStandTime()) + "&nbsp;&nbsp;&nbsp;&nbsp;" + (cust.getService().getName().length() > 96 ? cust.getService().getName().substring(0, 95) + "..." : cust.getService().getName()) + "&nbsp;&nbsp;&nbsp;&nbsp;" + cust.getUser().getName() + "&nbsp;&nbsp;&nbsp;&nbsp;" + CustomerState.values()[cust.getStateIn()]);
+                lc.add( "Встал в очередь.: " + Uses.FORMAT_DD_MM_YYYY_TIME.format(cust.getStandTime()) + "<br>" +
+                        "Нач. обсл.: " + "         ".replace(" ", "&nbsp;") + Uses.FORMAT_DD_MM_YYYY_TIME.format(cust.getStartTime()) + "<br>" +
+                        "Заверш. обсл.: " + "    ".replace(" ", "&nbsp;") + Uses.FORMAT_DD_MM_YYYY_TIME.format(cust.getFinishTime()) + "<br>" +
+                        "Оператор: " + "           ".replace(" ", "&nbsp;") + cust.getUser().getName() + "<br>" +
+                        "Услуга: " + "              ".replace(" ", "&nbsp;") + (cust.getService().getName().length() > 96 ? cust.getService().getName().substring(0, 95) + "..." : cust.getService().getName()) + "<br>" +
+                        "Статус: " + "               ".replace(" ", "&nbsp;") + CustomerState.values()[cust.getStateIn()] + "<br>" );
             });
             return new RpcGetTicketHistory(new RpcGetTicketHistory.TicketHistory("".equals(s) ? String.format(Locales.locMes("client_not_found_by_num_at_all"), num) : s, lc));
         }

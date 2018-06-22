@@ -172,7 +172,9 @@ public class NetCommander {
                 throw new QException(Locales.locMes("error_on_server_no_get_response"));
             }
             if (rpc.getError() != null) {
-                throw new QException(Locales.locMes("tack_failed") + " " + rpc.getError().getCode() + ":" + rpc.getError().getMessage());
+                throw new QException( Locales.locMes("tack_failed") +
+                                      "\nКод ошибки: " + rpc.getError().getCode() +
+                                      "\nСообщение об ошибке: " + rpc.getError().getMessage() );
             }
         } catch (JsonSyntaxException ex) {
             throw new QException(Locales.locMes("bad_response") + "\n" + ex.toString());
@@ -796,6 +798,7 @@ public class NetCommander {
      * @param isMine вернуть после оплаты к конкретному юзеру
      * @param isPostponedAfterService был ли клиент отложен после того как его начали обслуживать
      * @param isPostponedForPayment был ли клиент отложен для оплаты
+     * @param needReturnAfterPayment должен ли клиент вернуться после обслуживания
      */
     public static void сustomerToPostpone(INetProperty netProperty,
                                           long userId,
@@ -804,7 +807,8 @@ public class NetCommander {
                                           int postponedPeriod,
                                           boolean isMine,
                                           boolean isPostponedAfterService,
-                                          boolean isPostponedForPayment) {
+                                          boolean isPostponedForPayment,
+                                          boolean needReturnAfterPayment) {
         QLog.l().logger().info("Перемещение вызванного юзером кастомера в пул отложенных.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -815,6 +819,7 @@ public class NetCommander {
         params.isMine = isMine;
         params.isPostponedAfterService = isPostponedAfterService;
         params.isPostponedForPayment = isPostponedForPayment;
+        params.needReturnAfterPayment = needReturnAfterPayment;
         try {
             send(netProperty, Uses.TASK_CUSTOMER_TO_POSTPON, params);
         } catch (QException e) {// вывод исключений

@@ -30,16 +30,16 @@ public class ClientException extends ServerException {
 
     public ClientException(String textException) {
         super(textException);
-        JOptionPane.showMessageDialog(null, textException, Locales.locMes("client_exception"), JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, textException, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
     public ClientException(String textException, Exception ex) {
         super(textException, ex);
-        JOptionPane.showMessageDialog(null, textException + ex, Locales.locMes("client_exception"), JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, textException + ex, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
     public ClientException(Exception ex) {
         super(ex);
-        JOptionPane.showMessageDialog(null, ex, Locales.locMes("client_exception"), JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(null, ex, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 }

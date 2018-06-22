@@ -544,17 +544,16 @@ public class FAdmin extends javax.swing.JFrame {
         if (newIpWindow.isOkClicked()) {
             QComputer newComputer = newIpWindow.getComputer();
             
-            QComputerList.getInstance().addElement(newComputer);
-            jListIP.setSelectedValue(newComputer, true);
+            if ( !QComputerList.getInstance().hasByIp(newComputer.getIp()) ) {
+                QComputerList.getInstance().addElement(newComputer);
+                jListIP.setSelectedValue(newComputer, true);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                                              "Компьютер с IP=" + newComputer.getIp() + " уже есть в списке!",
+                                              "Внимание",
+                                              JOptionPane.WARNING_MESSAGE);
+            }
         }
-        
-//        ЕСЛИ ЧТО ВЕРНУТЬ НАЗАД ВЕРСИЮ, КОТОРАЯ В ВЕТКЕ MASTER
-//        ПРОВЕРИТЬ ЧТОБЫ ОНА ПОДДЕРЖИВАЛА ПАРАМЕТР ars И ОБНОВИТЬ СЕРВАК, ЧТОБЫ ПАРАМЕТРЫ ИЗ БАТНИКОВ КЛИЕНТОВ НЕ НУЖНО БЫЛО УДАЛЯТЬ
-//            ВЕРСИЮ КЛИЕНТА ТОЖЕ ВЕРНУТЬ НАЗАД НА 18.1.5
-//        
-//        
-//        
-//        проверить что будет, если открыл окно добавление компа, но нажал не Добавить, а просто закрыл окно
     }   
     
     private void ipSelectionChange() {

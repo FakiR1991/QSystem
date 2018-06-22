@@ -2515,11 +2515,15 @@ public class FReception extends javax.swing.JFrame {
                 }
                 if(c.contains("STATE_REDIRECT"))
                 {
-                   c = c.replace("STATE_REDIRECT", "Перенаправлен");  
+                   c = c.replace("STATE_REDIRECT", "Перенаправлен");
                 }
                 if(c.contains("STATE_WORK"))
                 {
-                   c = c.replace("STATE_WORK", "Получает обслуживание"); 
+                   c = c.replace("STATE_WORK", "Получает обслуживание");
+                }
+                if(c.contains("STATE_PAYMENT"))
+                {
+                   c = c.replace("STATE_PAYMENT", "Отправлен на оплату");
                 }
                 if(c.contains("STATE_POSTPONED"))
                 {
@@ -2527,7 +2531,7 @@ public class FReception extends javax.swing.JFrame {
                 }
                 if(c.contains("STATE_POSTPONED_AFTER_SERVICE"))
                 {
-                   c = c.replace("STATE_POSTPONED_AFTER_SERVICE", "Отложен");
+                   c = c.replace("STATE_POSTPONED_AFTER_SERVICE", "Отложен после обслуживания");
                 }
                 sb.append(c).append("<br>");
             });

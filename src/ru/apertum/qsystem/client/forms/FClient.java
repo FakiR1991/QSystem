@@ -1285,6 +1285,7 @@ public final class FClient extends javax.swing.JFrame {
                                                 10,
                                                 false,
                                                 false,
+                                                false,
                                                 false);
             }
             // получаем новую обстановку
@@ -1417,6 +1418,7 @@ public final class FClient extends javax.swing.JFrame {
                 buttonFinish.doClick();
             } else {
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
+                
                 NetCommander.сustomerToPostpone(netProperty,
                                                 user.getId(),
                                                 customer.getId(),
@@ -1424,7 +1426,8 @@ public final class FClient extends javax.swing.JFrame {
                                                 10,
                                                 isMine,
                                                 false,
-                                                true);
+                                                true,
+                                                needReturnAfterPayment);
 
                 workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                 workingPeriod.setDt(workingPeriod.getDtStop());
@@ -2301,15 +2304,24 @@ public final class FClient extends javax.swing.JFrame {
         // Определим кто работает на данном месте.
         QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
         
-        try {
-            //обновляем параметры юзера на сервере и обновляем их в БД
-            user = NetCommander.setUserParamsById(netProperty,
-                                                  user.getId(),
-                                                  QConfig.cfg().getPointType(),
-                                                  QConfig.cfg().getUnitId(),
-                                                  QConfig.cfg().getAddressRs());
-        } catch (Exception e) {
-            
+        while (true) {
+            try {
+                //обновляем параметры юзера на сервере и обновляем их в БД
+                user = NetCommander.setUserParamsById(netProperty,
+                                                      user.getId(),
+                                                      QConfig.cfg().getPointType(),
+                                                      QConfig.cfg().getUnitId(),
+                                                      QConfig.cfg().getAddressRs());
+                break;
+            } catch (Exception e) {
+                if (JOptionPane.showConfirmDialog(fClient,
+                                                  "Не удалось сохранить параметры пользователя на сервере. Повторить попытку?",
+                                                  "Внимание!",
+                                                  JOptionPane.YES_NO_OPTION,
+                                                  JOptionPane.INFORMATION_MESSAGE) != 0) {
+                    System.exit(0);
+                }
+            }
         }
         
         Uses.showSplash();
@@ -2399,21 +2411,15 @@ public final class FClient extends javax.swing.JFrame {
     public void refreshSituation(Boolean forced) {
         //Получаем состояние очередей для юзера
         try {
-            //если было зафиксировано, что сервер прекращал работу (перезапуск сервера, например),
-            //то нужно заново отправить доп. информацию о юзере на сервере
+            //если было зафиксировано, что сервер прекращал работу (перезапуск сервера, например)
             if (isServerWarning) {
                 try {
-                    user = NetCommander.setUserParamsById(netProperty,
-                                                          user.getId(),
-                                                          QConfig.cfg().getPointType(),
-                                                          QConfig.cfg().getUnitId(),
-                                                          QConfig.cfg().getAddressRs());
+                    setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
                 } catch (Exception e) {
                     return;
                 }
                 
                 isServerWarning = false;
-                setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
             } else {
                 setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
             }
@@ -2465,6 +2471,7 @@ public final class FClient extends javax.swing.JFrame {
                                             moveToPostponed.getPeriod(),
                                             false,
                                             true,
+                                            false,
                                             false);
             
             // Показываем обстановку
