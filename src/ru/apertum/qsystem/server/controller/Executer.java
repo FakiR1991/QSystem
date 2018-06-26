@@ -2372,7 +2372,7 @@ public final class Executer {
     /**
      * Назначение параметров юзеру
      */
-    final Task setUserPointType = new Task(Uses.TASK_SET_USER_PARAMS) {
+    final Task setUserParams = new Task(Uses.TASK_SET_USER_PARAMS) {
 
         @Override
         public AJsonRPC20 process(final CmdParams cmdParams, String ipAdress, byte[] IP) {
@@ -2393,11 +2393,13 @@ public final class Executer {
                            cmdParams.pointType,
                            cmdParams.unitId);
             
-            //так как изменили параметры юзера, то подгружаем заново
-            //список юзеров с привязанными услугами по новом ip
-            QUserList.getInstance().loadForce();
+            //так как поменяли параметры в БД, то нужно новый список planServices подгрузить и присвоить юзеру
+            QUser resUser = QUserList.getInstance().loadById(user.getId());
             
-            return new RpcGetUser(QUserList.getInstance().getById(cmdParams.userId));
+            //присваиваем юзеру новый набор услуг
+            user.setPlanServices(resUser.getPlanServices());
+            
+            return new JsonRPC20OK();
         }
     };
     

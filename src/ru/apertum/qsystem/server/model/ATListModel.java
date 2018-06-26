@@ -40,11 +40,6 @@ public abstract class ATListModel<T extends IidGetter> extends AbstractListModel
 
     protected abstract LinkedList<T> load();
     
-    public void loadForce() {
-        items = load();
-        QLog.l().logger().info("Создали список.");
-    }
-
     private void createList() {
         items = load();
         QLog.l().logger().info("Создали список.");

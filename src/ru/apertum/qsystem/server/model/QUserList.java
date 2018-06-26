@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
 import ru.apertum.qsystem.server.Spring;
 
@@ -43,8 +44,23 @@ public class QUserList extends ATListModel<QUser> {
         users.stream().forEach((qUser) -> {
             qUser.setServicesCnt(qUser.getPlanServiceList().getSize());
         });
+        
         Collections.sort(users);
         return users;
+    }
+    
+    public QUser loadById(Long userId) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(QUser.class);
+        criteria.add(Property.forName("deleted").isNull());
+        criteria.add(Property.forName("id").eq(userId)).setResultTransformer((Criteria.DISTINCT_ROOT_ENTITY));
+        final LinkedList<QUser> users = new LinkedList<>(
+            Spring.getInstance().getHt().findByCriteria(criteria)
+        );
+        users.stream().forEach((qUser) -> {
+            qUser.setServicesCnt(qUser.getPlanServiceList().getSize());
+        });
+        Collections.sort(users);
+        return users.get(0);
     }
 
     private static class QUserListHolder {

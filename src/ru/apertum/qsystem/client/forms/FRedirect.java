@@ -167,6 +167,7 @@ public class FRedirect extends JDialog {
         if (servicesForm == null) {
             servicesForm = new FRedirect(netProperty, owner);
         }
+        ok = false;
         servicesForm.setLocation(Math.round(owner.getLocation().x + owner.getWidth() / 2 - servicesForm.getWidth() / 2),
                 Math.round(owner.getLocation().y + owner.getHeight() / 2 - servicesForm.getHeight() / 2));
         servicesForm.textAreaTempComments.setText((tempComments == null || tempComments.isEmpty() ? "" : "\n\n__________________________________\n") + tempComments);

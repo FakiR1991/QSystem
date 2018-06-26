@@ -1550,7 +1550,7 @@ public class NetCommander {
      * @param unitId - идентификатор зала (г. Тирасполь, г. Бендеры и т.д.)
      * @param addressRs - идентификатор для вывода на монитор (параметр определяет на какой монитор будет выведена информация)
      */
-    public static QUser setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId, int addressRs) throws QException {
+    public static void setUserParamsById(INetProperty netProperty, long userId, int pointType, int unitId, int addressRs) throws QException {
         QLog.l().logger().info("Установить указанному юзеру переданные параметры");
         // загрузим ответ
         final CmdParams params = new CmdParams();
@@ -1558,22 +1558,11 @@ public class NetCommander {
         params.pointType = pointType;
         params.unitId = unitId;
         params.adressRs = addressRs;
-        final String res;
         try {
-            res = send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
+            send(netProperty, Uses.TASK_SET_USER_PARAMS, params);
         } catch (QException e) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
-        final Gson gson = GsonPool.getInstance().borrowGson();
-        final RpcGetUser rpc;
-        try {
-            rpc = gson.fromJson(res, RpcGetUser.class);
-        } catch (JsonSyntaxException ex) {
-            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
-        } finally {
-            GsonPool.getInstance().returnGson(gson);
-        }
-        return rpc.getResult();
     }
 
     /**

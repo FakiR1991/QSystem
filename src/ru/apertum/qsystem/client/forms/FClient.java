@@ -40,6 +40,7 @@ import java.io.RandomAccessFile;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -99,6 +100,7 @@ import ru.apertum.qsystem.common.model.IClientNetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IStartClient;
 import ru.apertum.qsystem.fx.OrangeClientboard;
+import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 import ru.apertum.qsystem.server.model.UsersStatistic;
@@ -1514,15 +1516,25 @@ public final class FClient extends javax.swing.JFrame {
             // это должно выкинуть кастомера в другую очередь с приоритетом "переведенный"
             //Диалог выбора очереди для редиректа
             final FRedirect dlg = FRedirect.getService(netProperty, this, customer.getTempComments(), false);
+            
+            //Если не выбрали, то выходим
             if (dlg == null) {
-                //Если не выбрали, то выходим
+                return;
+            }
+            
+            QService service = dlg.getSelectedService();
+            
+            //если выбранная услуга доступна для всех терминалов,
+            //либо в списке доступных имеется нужное значение point
+            if ( !Objects.equals(service.getPoint(), "0") && !checkAvailabilityService(service) ) {
+                JOptionPane.showMessageDialog(this, "Выбранная услуга не доступна для обслуживания в вашем отделении!", "Внимание!", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             NetCommander.redirectCustomer(netProperty,
                                           user.getId(),
                                           customer.getId(),
-                                          dlg.getSelectedService().getId(),
+                                          service.getId(),
                                           dlg.getRequestBack(),
                                           user.getName() + ": " + dlg.getTempComments(),
                                           res);
@@ -1536,6 +1548,39 @@ public final class FClient extends javax.swing.JFrame {
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }
+    }
+    
+    /**
+     * Проверка доступности выбранной услуги для перенаправления в терминале.
+     * Адский костыль, так как изначально поинты терминалам назначили криво (они не соответствуют unitId).
+     * @param service
+     * @return Если true, то услуга доступна для выбора в терминале зала, в котором находится пользователь, иначе false - не доступна
+     */
+    private boolean checkAvailabilityService(QService service) {
+        String terminalPoint;
+        
+        switch (user.getUnitId()) {
+            case Uses.UNIT_TIRASPOL_KARL_MARX:
+                //терминалы в Тирасполе имеют point=1
+                terminalPoint = "1";
+                break;
+            
+            case Uses.UNIT_BENDERY_LAZO:
+                //терминалы в Бендерах имеют point=5
+                terminalPoint = "5";
+                break;
+                
+            case Uses.UNIT_RYBNICA:
+                //терминалы в Рыбнице имеют point=7
+                terminalPoint = "7";
+            break;
+            
+            default:
+                terminalPoint = "-1";
+                break;
+        }
+        
+        return Arrays.asList(service.getPoint().split("\\,")).contains(terminalPoint);
     }
 
     //*******************************    Конец обработчиков кнопок    ***************************************************
@@ -2302,16 +2347,24 @@ public final class FClient extends javax.swing.JFrame {
             }
         }
         // Определим кто работает на данном месте.
-        QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
+        final QUser user = FLogin.logining(netProperty, null, true, 3, FLogin.LEVEL_USER);
         
         while (true) {
             try {
+                Integer pointType = QConfig.cfg().getPointType();
+                Integer unitId = QConfig.cfg().getUnitId();
+                Integer addressRs = QConfig.cfg().getAddressRs();
+                
+                user.setPointType(pointType);
+                user.setUnitId(unitId);
+                user.setAdressRS(addressRs);
+                
                 //обновляем параметры юзера на сервере и обновляем их в БД
-                user = NetCommander.setUserParamsById(netProperty,
-                                                      user.getId(),
-                                                      QConfig.cfg().getPointType(),
-                                                      QConfig.cfg().getUnitId(),
-                                                      QConfig.cfg().getAddressRs());
+                NetCommander.setUserParamsById(netProperty,
+                                               user.getId(),
+                                               pointType,
+                                               unitId,
+                                               addressRs);
                 break;
             } catch (Exception e) {
                 if (JOptionPane.showConfirmDialog(fClient,
