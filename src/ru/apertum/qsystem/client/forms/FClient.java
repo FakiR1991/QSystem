@@ -1526,7 +1526,7 @@ public final class FClient extends javax.swing.JFrame {
             
             //если выбранная услуга доступна для всех терминалов,
             //либо в списке доступных имеется нужное значение point
-            if ( !Objects.equals(service.getPoint(), "0") && !checkAvailabilityService(service) ) {
+            if ( !checkAvailabilityService(service) || (service.getStatus() == 0 || service.getStatus() == -1) ) {
                 JOptionPane.showMessageDialog(this, "Выбранная услуга не доступна для обслуживания в вашем отделении!", "Внимание!", JOptionPane.WARNING_MESSAGE);
                 return;
             }
@@ -1551,7 +1551,7 @@ public final class FClient extends javax.swing.JFrame {
     }
     
     /**
-     * Проверка доступности выбранной услуги для перенаправления в терминале.
+     * Проверка доступности выбранной услуги в терминале. Если не доступна в терминале, то и перенаправить на неё нельзя.
      * Адский костыль, так как изначально поинты терминалам назначили криво (они не соответствуют unitId).
      * @param service
      * @return Если true, то услуга доступна для выбора в терминале зала, в котором находится пользователь, иначе false - не доступна
@@ -1580,7 +1580,7 @@ public final class FClient extends javax.swing.JFrame {
                 break;
         }
         
-        return Arrays.asList(service.getPoint().split("\\,")).contains(terminalPoint);
+        return Arrays.asList(service.getPoint().split("\\,")).contains(terminalPoint) || Objects.equals(service.getPoint(), "0");
     }
 
     //*******************************    Конец обработчиков кнопок    ***************************************************
