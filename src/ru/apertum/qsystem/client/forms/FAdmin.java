@@ -2000,7 +2000,7 @@ public class FAdmin extends javax.swing.JFrame {
             QLog.l().logger().debug("Удален инфоузел \"" + item.getName() + "\" из группы \"" + item.getParent().getName() + "\"");
         }
     }
-
+    
     /*
      * @see http://static.springsource.org/spring/docs/3.0.x/reference/transaction.html#transaction-programmatic
      */

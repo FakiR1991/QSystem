@@ -31,6 +31,7 @@ import ru.apertum.qsystem.server.model.results.QResult;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.ServiceLoader;
 import javax.persistence.Column;
@@ -730,5 +731,17 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     @Transient
     public Integer getWaitingMinutes() {
         return new Long((System.currentTimeMillis() - getStandTime().getTime()) / 1000 / 60 + 1).intValue();
+    }
+    
+    public static class Comparators {
+        public static final Comparator<QCustomer> number = (QCustomer c1, QCustomer c2) -> {
+            if (c1.getNumber() == c2.getNumber()) {
+                return 0;
+            } else if (c1.getNumber()> c2.getNumber()) {
+                return 1;
+            } else {
+                return -1;
+            }
+        };
     }
 }

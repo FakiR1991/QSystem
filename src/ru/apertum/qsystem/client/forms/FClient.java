@@ -2522,10 +2522,11 @@ public final class FClient extends javax.swing.JFrame {
                                             customer.getId(),
                                             moveToPostponed.getResult() +  ". Вызван: " + (customer.getRecallCount()) + temp,// + ". Услуга: " + customer.getService().getName(),
                                             moveToPostponed.getPeriod(),
-                                            false,
-                                            true,
-                                            false,
-                                            false);
+                                            false, //isMine
+                                            true,  //isPostponedAfterService
+                                            false, //isPostponedForPayment
+                                            false  //needReturnAfterPayment
+            );
             
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));

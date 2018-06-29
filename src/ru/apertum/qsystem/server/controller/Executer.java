@@ -18,7 +18,6 @@ package ru.apertum.qsystem.server.controller;
 
 import com.agroprombank.services.QMSServiceSoapProxy;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import org.springframework.transaction.TransactionStatus;
 import ru.apertum.qsystem.common.SoundPlayer;
 
@@ -36,6 +35,8 @@ import java.util.ServiceLoader;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.dom4j.DocumentHelper;
+import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.transaction.TransactionDefinition;
@@ -78,7 +79,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetProperties;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
-import ru.apertum.qsystem.common.cmd.RpcGetUser;
+import ru.apertum.qsystem.common.model.QCustomer.Comparators;
 import ru.apertum.qsystem.extra.ISelectNextService;
 import ru.apertum.qsystem.extra.ITask;
 import ru.apertum.qsystem.server.MainBoard;
@@ -88,7 +89,6 @@ import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
-import ru.apertum.qsystem.server.model.QNotificationsInfo;
 import ru.apertum.qsystem.server.model.QPlanService;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
@@ -591,6 +591,8 @@ public final class Executer {
             //если у cust приоритет по его состоянию выше, чем у customer
             if (Integer.compare(priorityStateCustomer, priorityStateCust) < 0) {
                 resultCmp = 1;
+            } else if (Integer.compare(priorityStateCustomer, priorityStateCust) > 0) {
+                resultCmp = -1;
             } else if (customer.getStandTime().before(cust.getStandTime())) {
                 resultCmp = -1;
             } else if (customer.getStandTime().after(cust.getStandTime())) {
@@ -1060,6 +1062,8 @@ public final class Executer {
                 ticketsList.add(cust);
             });
             
+            ticketsList.sort(Comparators.number);
+            
             return new RpcGetMovedToPaymentList(ticketsList);
         }
     };
@@ -1160,35 +1164,10 @@ public final class Executer {
         public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             
-            final QUser user = QUserList.getInstance().getById(cmdParams.userId);
-            //переключение на кастомера при параллельном приеме, должен приехать customerID
-            if (cmdParams.customerId != null) {
-                final QCustomer parallelCust = user.getParallelCustomers().get(cmdParams.customerId);
-                if (parallelCust == null) {
-                    QLog.l().logger().warn("PARALLEL: User have no Customer for switching by customer ID=\"" + cmdParams.customerId + "\"" + " " + ipAdress);
-                } else {
-                    user.setCustomer(parallelCust);
-                    QLog.l().logger().debug("Юзер \"" + user + "\" переключился на кастомера \"" + parallelCust.getFullNumber() + "\"" + " " + ipAdress);
-                }
-            }
-            
+            //ищем кастомера в очереди
             QCustomer customer = getCustomerById(cmdParams.customerId);
             
-            if (customer == null) {
-                for (QCustomer cust : QPostponedList.getInstance().getPostponedCustomers()) {
-                    if (cust.getId().equals(cmdParams.customerId)) {
-                        customer = cust;
-                    }
-                }
-            }
-            
-            if (customer == null) {
-                throw new ServerException("В очереди не найден клиент по id=" + cmdParams.customerId);
-            }
-            
-            user.setCustomer(customer);
-            
-            QLog.l().logger().warn("УДАЛЕНИЕ: Удалили из FReception " + customer.getPrefix() + "-" + customer.getNumber() + " " + ipAdress);
+            QLog.l().logger().warn("УДАЛЕНИЕ: Удалили из FReception " + customer.getPrefix() + "-" + customer.getNumber() + ", ip: " + ipAdress);
 
             QService service = QServiceTree.getInstance().getById(customer.getService().getId());
             
@@ -1204,12 +1183,13 @@ public final class Executer {
                 service.polCustomer(cmdParams.customerId);
             }
             
+            //удаляем кастомера из таблицы clients,
+            //а триггер почистит нужные таблицы
+            deleteCustomerFromDB(customer.getId());
+            
             // кастомер переходит в состояние "умерщвленности"
             KILLED_CUSTOMERS.put(customer.getFullNumber().toUpperCase(), new Date());
-            customer.setState(CustomerState.STATE_DEAD, true);
             try {
-                user.setCustFinishTime(customer.getFinishTime());
-                user.setCustomer(null);//бобик сдох и медальки не осталось
                 // сохраняем состояния очередей.
                 QServer.savePool();
             } catch (Exception ex) {
@@ -1227,6 +1207,31 @@ public final class Executer {
                 }
             }
             return null;
+        }
+        
+        private void deleteCustomerFromDB(Long customerId) {
+            final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+            def.setName("SomeTxName");
+            def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+            TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+
+            //сначала удалим назначенные услуги, а затем сам ip
+            String qDeleteClient = "delete from clients where id=:id";
+            try {
+                final Session ses = Spring.getInstance().getTxManager().getSessionFactory().getCurrentSession();
+
+                //удаляем из clients нужного кастомера
+                Query query = ses.createSQLQuery(qDeleteClient);
+                query.setParameter("id", customerId);
+                query.executeUpdate();
+
+                ses.flush();
+            }
+            catch (Exception ex) {
+                throw new ServerException("\nОшибка удаления: " + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+            }
+
+            Spring.getInstance().getTxManager().commit(status);
         }
     };
     

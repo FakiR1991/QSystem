@@ -226,9 +226,7 @@ public class FReception extends javax.swing.JFrame {
                 return;
             }
             NetCommander.killCustomer(netProperty,
-                                      USER_RECEPTION_ID,
-                                      customer.getId(),
-                                      customer.getPrefix() + String.format("%03d", customer.getNumber()));
+                                      customer.getId());
             loadTickets();
         } catch (Exception th) {
             throw new ClientException(new Exception(th));

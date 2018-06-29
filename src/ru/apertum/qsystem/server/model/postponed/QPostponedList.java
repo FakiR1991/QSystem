@@ -82,14 +82,9 @@ public class QPostponedList extends DefaultListModel {
                                 forDel.add(customer);
                                 // в очередь, сукины дети
                                 // время постановки проставляется автоматом при создании кастомера.
-//                                if (customer.getPostponedStatus().contains("на оплату")) {
-//                                    if (customer.getPriority().get() < 2) {
-//                                        customer.setPriority(customer.getPriority().get() + 1);
-//                                    }
-//                                }
-//                                customer.setPriority(customer.getPriority().get());
-                                //}
-                                if (customer.getPostponedStatus().contains("на оплату")) {
+                                if ( customer.getState().equals(CustomerState.STATE_PAYMENT) ||
+                                     customer.getState().equals(CustomerState.STATE_POSTPONED) ||
+                                     customer.getState().equals(CustomerState.STATE_POSTPONED_AFTER_SERVICE) ) {
                                     if (customer.getPriority().get() < 2) {
                                         customer.setPriority(customer.getPriority().get() + 1);
                                     } else {

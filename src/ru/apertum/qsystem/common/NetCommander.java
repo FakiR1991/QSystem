@@ -770,16 +770,13 @@ public class NetCommander {
      * FReception - удаление кастомера из очереди.
      *
      * @param netProperty параметры соединения с сервером
-     * @param userId
-     * @param customerId переключиться на этого при параллельном приеме, NULL если переключаться не надо
+     * @param customerId тот, кого удаляем
      */
-    public static void killCustomer(INetProperty netProperty, long userId, Long customerId, String fullNumer) {
+    public static void killCustomer(INetProperty netProperty, Long customerId) {
         QLog.l().logger().info("FReception - удаление кастомера из очереди.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
-        params.userId = userId;
         params.customerId = customerId;
-        params.comments = fullNumer;
         try {
             send(netProperty, Uses.TASK_KILL_CUSTOMER_FRECEPTION, params);
         } catch (QException e) {// вывод исключений
@@ -1658,6 +1655,7 @@ public class NetCommander {
      * Получить список талонов
      *
      * @param netProperty
+     * @param unitId ИД зала
      * @return список талонов
      */
     public static LinkedList<QCustomer> getTickets(INetProperty netProperty, Integer unitId) {

@@ -362,14 +362,6 @@ public class FLogin extends javax.swing.JDialog {
         }
     }
 
-    private class GetUserFromList implements IGetUser {
-
-        @Override
-        public QUser getUser() {
-            return fastUser != null ? fastUser : (QUser) comboBoxUser.getSelectedItem();
-        }
-    }
-
     private boolean checkLogin() {
         final QUser user = userGetter.getUser();
         switch (getLevel()) {

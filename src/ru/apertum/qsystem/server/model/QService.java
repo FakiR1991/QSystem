@@ -1172,6 +1172,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
             case STATE_WAIT_AFTER_PAYMENT:
                 return 3;
             case STATE_WAIT_AFTER_POSTPONED:
+            case STATE_REDIRECT:
                 return 2;
             default:
                 return 0;
