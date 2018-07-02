@@ -199,7 +199,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
          * @param priority приоритет услуги
          * @param flexy возможность менять приоритет услуги юзеру
          */
-        public SelfService(QService service, int countWait, int priority, boolean flexy) {
+        public SelfService(QService service, int countWait, int priority, boolean flexy, Integer unitId) {
             this.serviceName = service.getName();
             this.countWait = countWait;
             this.duration = service.getDuration();
@@ -208,7 +208,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.roll = service.getStatus() == 5;
             this.id = service.getId();
             this.line = new LinkedList<>();
-            for (QCustomer cu : service.getClients()) {// не переделывать на лямбду.
+            for (QCustomer cu : service.getClients(unitId)) {// не переделывать на лямбду.
                 final String fn = String.format("%03d", cu.getNumber());
                 final StPair sp = new StPair(fn, cu.getPostponedStatus(), cu.getWaitingMinutes(), cu.getIsMine(), cu.getService().getId(), cu.getUnitId());
                 line.addLast(sp);

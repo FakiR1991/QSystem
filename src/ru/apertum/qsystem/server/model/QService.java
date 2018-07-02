@@ -98,24 +98,58 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      * множество кастомеров, вставших в очередь к этой услуге
      */
     @Transient
-    private final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
+//    private final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
+    private final HashMap<Integer, PriorityQueue<QCustomer>> customers = new HashMap<>();
 
-    private PriorityQueue<QCustomer> getCustomers() {
-        return customers;
+    private PriorityQueue<QCustomer> getCustomers(Integer unitId) {
+        if (!customers.containsKey(unitId)) {
+            customers.put(unitId, new PriorityQueue<>());
+        }
+        
+        return customers.get(unitId);
     }
+    
     @Transient
     //@Expose
     //@SerializedName("clients")
-    private final LinkedBlockingDeque<QCustomer> clients = new LinkedBlockingDeque<>(customers);
+//    private final LinkedBlockingDeque<QCustomer> clients = new LinkedBlockingDeque<>(customers);
+    private final HashMap<Integer, LinkedBlockingDeque<QCustomer>> clients = new HashMap<>();
 
     /**
-     * Это все кастомеры стоящие к этой услуге в виде списка Только для бакапа на диск
-     *
+     * Это все кастомеры стоящие к этой услуге по UID в виде списка Только для бакапа на диск
+     * @param unitId ИД зала
      * @return
      */
-    public LinkedBlockingDeque<QCustomer> getClients() {
+    public LinkedBlockingDeque<QCustomer> getClients(Integer unitId) {
+        if (!clients.containsKey(unitId)) {
+            clients.put(unitId, new LinkedBlockingDeque<>());
+        }
+        
+        return clients.get(unitId);
+    }
+    
+    /**
+     * Это все кастомеры стоящие к этой услуге в виде списка Только для бакапа на диск
+     * @return
+     */
+    public HashMap<Integer, LinkedBlockingDeque<QCustomer>> getClients() {
         return clients;
     }
+    
+    /**
+     * Возвращаем список кастомеров для всех UnitId в одном списке, а не HashMap-ом.
+     * @return 
+     */
+    public LinkedBlockingDeque<QCustomer> getClientsForBackup() {
+        LinkedBlockingDeque<QCustomer> res = new LinkedBlockingDeque<>();
+        
+        clients.forEach((uid, custs) -> {
+            res.addAll(custs);
+        });
+        
+        return res;
+    }
+    
     @Id
     @Column(name = "id")
     //@GeneratedValue(strategy = GenerationType.AUTO) авто нельзя, т.к. id нужны для формирования дерева
@@ -763,18 +797,23 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      * @param data
      * @return true - превышен, в очередь становиться нельзя; false - можно в очередь встать
      */
-    public boolean isLimitPersonPerDayOver(String data) {
+    public boolean isLimitPersonPerDayOver(String data, Integer unitId) {
         final int today = new GregorianCalendar().get(GregorianCalendar.DAY_OF_YEAR);
         if (today != day) {
             day = today;
             setCountPerDay(0);
         }
-        return getPersonDayLimit() != 0 && getPersonDayLimit() <= getCountPersonsPerDay(data);
+        return getPersonDayLimit() != 0 && getPersonDayLimit() <= getCountPersonsPerDay(data, unitId);
     }
 
-    private int getCountPersonsPerDay(String data) {
+    private int getCountPersonsPerDay(String data, Integer unitId) {
         int cnt = 0;
-        cnt = customers.stream().filter((customer) -> (data.equalsIgnoreCase(customer.getInput_data()))).map((_item) -> 1).reduce(cnt, Integer::sum);
+        
+        if (!customers.containsKey(unitId)) {
+            customers.put(unitId, new PriorityQueue<>());
+        }
+        
+        cnt = customers.get(unitId).stream().filter((customer) -> (data.equalsIgnoreCase(customer.getInput_data()))).map((_item) -> 1).reduce(cnt, Integer::sum);
         if (getPersonDayLimit() <= cnt) {
             return cnt;
         }
@@ -963,14 +1002,14 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         if (customer.getPrefix() == null) {
             customer.setPrefix(getPrefix());
         }
-        if (!getCustomers().add(customer)) {
+        if (!getCustomers(customer.getUnitId()).add(customer)) {
             throw new ServerException("Невозможно добавить нового кастомера в хранилище кастомеров.");
         }
 
         // поддержка расширяемости плагинами/ определим куда влез клиент
         QCustomer before = null;
         QCustomer after = null;
-        for (Iterator<QCustomer> itr = getCustomers().iterator(); itr.hasNext();) {
+        for (Iterator<QCustomer> itr = getCustomers(customer.getUnitId()).iterator(); itr.hasNext();) {
             final QCustomer c = itr.next();
             if (!customer.getId().equals(c.getId())) {
                 if (customer.compareTo(c) == 1) {
@@ -996,8 +1035,12 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
             event.insert(customer, before, after);
         }
 
-        clients.clear();
-        clients.addAll(getCustomers());
+        if (!clients.containsKey(customer.getUnitId())) {
+            clients.put(customer.getUnitId(), new LinkedBlockingDeque<>());
+        }
+        
+        clients.get(customer.getUnitId()).clear();
+        clients.get(customer.getUnitId()).addAll(getCustomers(customer.getUnitId()));
     }
 
     /**
@@ -1007,13 +1050,16 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         // поддержка расширяемости плагинами
         for (final ICustomerChangePosition event : ServiceLoader.load(ICustomerChangePosition.class)) {
             QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
-            for (Iterator<QCustomer> itr = getCustomers().iterator(); itr.hasNext();) {
-                event.remove(itr.next());
-            }
+            //проходимся по каждому набору данных в hashmap,
+            //то есть по очередям для каждого unitId
+            customers.forEach((k, v) -> {
+                for (Iterator<QCustomer> itr = v.iterator(); itr.hasNext();) {
+                    event.remove(itr.next());
+                }
+            });
         }
-        getCustomers().clear();
+        customers.clear();
         clients.clear();
-        clients.addAll(getCustomers());
     }
 
     /**
@@ -1021,8 +1067,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      *
      * @return первого в очереди кастомера
      */
-    public QCustomer getCustomer() {
-        return getCustomers().element();
+    public QCustomer getCustomer(Integer unitId) {
+        return getCustomers(unitId).element();
     }
 
     /**
@@ -1030,8 +1076,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      *
      * @return первого в очереди кастомера
      */
-    public QCustomer removeCustomer() {
-        final QCustomer customer = getCustomers().remove();
+    public QCustomer removeCustomer(Integer unitId) {
+        final QCustomer customer = getCustomers(unitId).remove();
 
         // поддержка расширяемости плагинами
         for (final ICustomerChangePosition event : ServiceLoader.load(ICustomerChangePosition.class)) {
@@ -1039,125 +1085,49 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
             event.remove(customer);
         }
 
-        clients.clear();
-        clients.addAll(getCustomers());
+        if (!clients.containsKey(customer.getUnitId())) {
+            clients.put(customer.getUnitId(), new LinkedBlockingDeque<>());
+        }
+        
+        clients.get(customer.getUnitId()).clear();
+        clients.get(customer.getUnitId()).addAll(getCustomers(customer.getUnitId()));
         return customer;
     }
 
     /**
      * Получить но не удалять. null при неудаче
-     *
+     * @param user Пользователь для которого выбираем клиента
      * @return первого в очереди кастомера
      */
-    public QCustomer peekCustomer() {
-        return getCustomers().peek();
-    }
-    
-    /*public QCustomer peekCustomerByUid(Integer uid) {
-//        QCustomer tmp = getCustomers().peek();
-//        if (tmp != null && tmp.getUnitId().compareTo(uid) == 0) {
-//             return tmp;
-//        } else {
-            PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<QCustomer>(getCustomers());
-            while (tmpQueue != null && tmpQueue.size() > 0) {
-                QCustomer tmpCust = tmpQueue.poll();
-                if (tmpCust != null && tmpCust.getUnitId().compareTo(uid) == 0) {
-                    return tmpCust;
-                }
+    public QCustomer peekCustomer(QUser user) {
+        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers(user.getUnitId()));
+        while (tmpQueue.size() > 0) {
+            QCustomer tmpCust = tmpQueue.poll();
+            if ( tmpCust != null
+                    &&
+                 ( tmpCust.getIsMine() == null || Objects.equals(tmpCust.getIsMine(), user.getId()) )
+               )
+            {
+                return tmpCust;
             }
-//        }
+        }
         return null;
-    }*/
-    
-//    public QCustomer peekCustomerByUid(QUser user) {
-//        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers());
-//        Iterator it = tmpQueue.iterator();
-//        while (it.hasNext()) {
-//            QCustomer cust = (QCustomer)it.next();
-//            if (cust.getUnitId().compareTo(user.getUnitId()) == 0) {
-//                if (cust.getIsMine() == null || cust.getIsMine().equals(user.getId())) {
-//                    it.remove();
-//                    return cust;
-//                }
-//            }
-//        }
-//        return null;
-//    }
-    
-    public QCustomer peekCustomerByUid(Integer uid) {
-        return peekCustomerByUid(uid, null);
     }
     
-    public QCustomer peekCustomerByUid(Integer uid, Long userId) {
-        QCustomer customer = null;
-        
-        for (QCustomer cust : getCustomers()) {
-            if ( Objects.equals(cust.getUnitId(), uid) && (cust.getIsMine() == null || Objects.equals(cust.getIsMine(), userId)) ) {
-                if (customer == null) {
-                    customer = cust;
-                    continue;
-                }
-                int resultCmp = -1 * customer.getPriority().compareTo(cust.getPriority());
-
-                //если равный приоритет кастомеров
-                if (resultCmp == 0) {
-                    
-                    int priorityStateCustomer = getPriorityByState(customer.getState());
-                    int priorityStateCust = getPriorityByState(cust.getState());
-                    
-                    //если у cust приоритет по его состоянию выше, чем у customer
-                    if (Integer.compare(priorityStateCustomer, priorityStateCust) < 0) {
-                        customer = cust;
-                    }
-                    //если приоритет по состоянию одинаковый
-                    else if (customer.getStandTime().after(cust.getStandTime())) {
-                        customer = cust;
-                    }
-                }
-                //если приоритет customer больше, чем cust
-                else if (resultCmp > 0) {
-                    customer = cust;
-                }
+    /**
+     * Получить но не удалять. null при неудаче
+     * @param uid ИД зала
+     * @return первого в очереди кастомера
+     */
+    public QCustomer peekCustomerForReception(Integer uid) {
+        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers(uid));
+        while (tmpQueue.size() > 0) {
+            QCustomer tmpCust = tmpQueue.poll();
+            if ( tmpCust != null ) {
+                return tmpCust;
             }
         }
-        
-        return customer;
-    }
-    
-    public QCustomer peekCustomerByUidForReception(Integer uid) {
-        QCustomer customer = null;
-        
-        for (QCustomer cust : getCustomers()) {
-            if ( Objects.equals(cust.getUnitId(), uid) ) {
-                if (customer == null) {
-                    customer = cust;
-                    continue;
-                }
-                int resultCmp = -1 * customer.getPriority().compareTo(cust.getPriority());
-
-                //если равный приоритет кастомеров
-                if (resultCmp == 0) {
-                    
-                    int priorityStateCustomer = getPriorityByState(customer.getState());
-                    int priorityStateCust = getPriorityByState(cust.getState());
-                    
-                    //если у cust приоритет по его состоянию выше, чем у customer
-                    if (Integer.compare(priorityStateCustomer, priorityStateCust) < 0) {
-                        customer = cust;
-                    }
-                    //если приоритет по состоянию одинаковый
-                    else if (customer.getStandTime().after(cust.getStandTime())) {
-                        customer = cust;
-                    }
-                }
-                //если приоритет customer больше, чем cust
-                else if (resultCmp > 0) {
-                    customer = cust;
-                }
-            }
-        }
-        
-        return customer;
+        return null;
     }
     
     /**
@@ -1181,12 +1151,12 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
 
     /**
      * Получить и удалить. может вернуть null при неудаче
-     *
+     * @param customer Кастомер, которого требуется забрать из очереди
      * @return первого в очереди кастомера
      */
-    public QCustomer polCustomer() {
-        final QCustomer customer = getCustomers().poll();
-        if (customer != null) {
+    public boolean polCustomer(QCustomer customer) {
+        final boolean removeRes = getCustomers(customer.getUnitId()).remove(customer);
+        if (removeRes) {
             // поддержка расширяемости плагинами
             for (final ICustomerChangePosition event : ServiceLoader.load(ICustomerChangePosition.class)) {
                 QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
@@ -1194,40 +1164,15 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
             }
         }
 
-        clients.clear();
-        clients.addAll(getCustomers());
-        return customer;
+        if (!clients.containsKey(customer.getUnitId())) {
+            clients.put(customer.getUnitId(), new LinkedBlockingDeque<>());
+        }
+        
+        clients.get(customer.getUnitId()).clear();
+        clients.get(customer.getUnitId()).addAll(getCustomers(customer.getUnitId()));
+        return removeRes;
     }
     
-    public QCustomer polCustomer(Long customerId) {
-        if (getCustomers().size() <= 0) {
-            return null;
-        }
-        
-        QCustomer cust = null;
-        
-        /*for (QCustomer customer : getCustomers()) {
-            if (customer.getId().equals(customerId)) {
-                getCustomers().remove(customer);
-                cust = customer;
-            }
-        }*/
-        
-        Iterator it = getCustomers().iterator();
-        while (it.hasNext()) {
-            cust = (QCustomer)it.next();
-            if (customerId != null && cust.getId() != null && Objects.equals(cust.getId(), customerId)) {
-                it.remove();
-                break;
-            }
-        }
-        
-        clients.clear();
-        clients.addAll(getCustomers());
-        
-        return cust;
-    }
-
     /**
      * Удалить любого в очереди кастомера.
      *
@@ -1235,16 +1180,25 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      * @return может вернуть false при неудаче
      */
     public boolean removeCustomer(QCustomer customer) {
-        final Boolean res = getCustomers().remove(customer);
-        if (customer != null && res) {
+        if (customer == null) {
+            return false;
+        }
+        
+        final Boolean res = getCustomers(customer.getUnitId()).remove(customer);
+        if (res) {
             // поддержка расширяемости плагинами
             for (final ICustomerChangePosition event : ServiceLoader.load(ICustomerChangePosition.class)) {
                 QLog.l().logger().info("Вызов SPI расширения. Описание: " + event.getDescription());
                 event.remove(customer);
             }
+            
+            if (!clients.containsKey(customer.getUnitId())) {
+                clients.put(customer.getUnitId(), new LinkedBlockingDeque<>());
+            }
+
+            clients.get(customer.getUnitId()).clear();
+            clients.get(customer.getUnitId()).addAll(getCustomers(customer.getUnitId()));
         }
-        clients.clear();
-        clients.addAll(getCustomers());
         return res;
     }
 
@@ -1253,8 +1207,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      *
      * @return количество кастомеров в этой услуге
      */
-    public int getCountCustomers() {
-        return getCustomers().size();
+    public int getCountCustomers(Integer unitId) {
+        return getCustomers(unitId).size();
     }
 
     /**
@@ -1266,7 +1220,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      *
      * @return размер толпы перед попаданием к этой услуге.
      */
-    public int getQueueSize() {
+    public int getQueueSize(Integer unitId) {
         // бежим по юзерам и смотрим обрабатывают ли они услугу
         // если да, то возьмем все услуги юзера и  сложим всех кастомеров в очередях
         // самую маленькую сумму отправим в ответ по запросу.
@@ -1277,7 +1231,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
                 int sum = 0;
                 for (QPlanService planServ : user.getPlanServices()) {
                     final QService service = QServiceTree.getInstance().getById(planServ.getService().getId());
-                    sum = sum + service.getCountCustomers();
+                    sum = sum + service.getCountCustomers(unitId);
                 }
                 if (min > sum) {
                     min = sum;
@@ -1287,12 +1241,12 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         return min == Integer.MAX_VALUE ? 0 : min;
     }
 
-    public boolean changeCustomerPriorityByNumber(String number, int newPriority) {
-        for (QCustomer customer : getCustomers()) {
+    public boolean changeCustomerPriorityByNumber(String number, int newPriority, Integer unitId) {
+        for (QCustomer customer : getCustomers(unitId)) {
             if (number.equalsIgnoreCase(customer.getPrefix() + (customer.getNumber() < 1 ? "" : customer.getNumber()))) {
                 customer.setPriority(newPriority);
                 removeCustomer(customer); // убрать из очереди
-                addCustomer(customer);// перепоставили чтобы очередность переинлексиловалась
+                addCustomer(customer); // перепоставили чтобы очередность переиндексировалась
                 return true;
             }
         }
@@ -1300,8 +1254,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     }
 
     public QCustomer gnawOutCustomerByNumber(String number, Integer unitId) {
-        for (QCustomer customer : getCustomers()) {
-            if (customer.getUnitId().equals(unitId) && number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
+        for (QCustomer customer : getCustomers(unitId)) {
+            if (number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
                 removeCustomer(customer); // убрать из очереди
                 return customer;
             }

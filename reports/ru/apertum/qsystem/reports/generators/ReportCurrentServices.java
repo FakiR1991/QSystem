@@ -59,7 +59,13 @@ public class ReportCurrentServices extends AGenerator {
             service_avg_time_wait = service_worked == 0 ? 0 : service_avg_time_wait / service_worked;
             for (QUser user : QUserList.getInstance().getItems()) {
                 if (user.hasService(service)) {
-                    dataSource.add(new CurRepRecord(user.getName(), service.getName(), service_worked, service_killed, service_avg_time_work, service.getCountCustomers(), service_avg_time_wait,
+                    dataSource.add(new CurRepRecord(user.getName(),
+                                                    service.getName(),
+                                                    service_worked,
+                                                    service_killed,
+                                                    service_avg_time_work,
+                                                    service.getCountCustomers(user.getUnitId()),
+                                                    service_avg_time_wait,
                             user.getPlanService(service).getWorked(), user.getPlanService(service).getKilled(), user.getPlanService(service).getAvg_work()));
                 }
             }

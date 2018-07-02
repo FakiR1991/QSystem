@@ -36,6 +36,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -563,46 +564,48 @@ public class QServer extends Thread {
     
     private static void handleCustomersCountAndWaitingTime(QService service) {
         
-        for (QCustomer customer : service.getClients()) {
-            //если ещё нету такого unitId, то создаём
-            if (!workloadStatsHM.containsKey(customer.getUnitId())) {
-                workloadStatsHM.put(customer.getUnitId(), new WorkloadStatistics());
-            }
-            
-            WorkloadStatistics wls = workloadStatsHM.get(customer.getUnitId());
-            
-            //префикс услуги 1 это абон. зал
-            if (service.getPrefix().compareTo(QService.SERVICE_PREFIX_ABO) == 0) {
-                //прибавляем количество клиентов в очереди
-                wls.setCustomersCountAbo(wls.getCustomersCountAbo() + 1);
-                
-                if (service.getClients() == null || service.getClients().size() <= 0) {
-                    continue;
+        service.getClients().forEach((uid, customers) -> {
+//            for (QCustomer customer : customers) {
+                //если ещё нету такого unitId, то создаём
+                if (!workloadStatsHM.containsKey(uid)) {
+                    workloadStatsHM.put(uid, new WorkloadStatistics());
                 }
 
-                Comparator<QCustomer> comp = (p1, p2) -> Integer.compare(p1.getWaitingMinutes(), p2.getWaitingMinutes());
-                int maxWaitingMinutes = service.getClients().stream()
-                                                            .max(comp)
-                                                            .get()
-                                                            .getWaitingMinutes();
-                wls.setMaxWaitingMinutesAbo(Integer.max(wls.getMaxWaitingMinutesAbo(), maxWaitingMinutes));
-            }
-            //префикс услуги 2 это СЦ
-            else if (service.getPrefix().compareTo(QService.SERVICE_PREFIX_SC) == 0) {
-                wls.setCustomersCountSC(wls.getCustomersCountSC() + 1);
-                
-                if (service.getClients() == null || service.getClients().size() <= 0) {
-                    continue;
-                }
+                WorkloadStatistics wls = workloadStatsHM.get(uid);
 
-                Comparator<QCustomer> comp = (p1, p2) -> Integer.compare(p1.getWaitingMinutes(), p2.getWaitingMinutes());
-                int maxWaitingMinutes = service.getClients().stream()
-                                                            .max(comp)
-                                                            .get()
-                                                            .getWaitingMinutes();
-                wls.setMaxWaitingMinutesSC(Integer.max(wls.getMaxWaitingMinutesSC(), maxWaitingMinutes));
-            }
-        }
+                //префикс услуги 1 это абон. зал
+                if (service.getPrefix().compareTo(QService.SERVICE_PREFIX_ABO) == 0) {
+                    //прибавляем количество клиентов в очереди
+                    wls.setCustomersCountAbo(wls.getCustomersCountAbo() + customers.size());
+
+                    if (service.getClients() == null || service.getClients().size() <= 0) {
+                        return;
+                    }
+
+                    Comparator<QCustomer> comp = (p1, p2) -> Integer.compare(p1.getWaitingMinutes(), p2.getWaitingMinutes());
+                    int maxWaitingMinutes = customers.stream()
+                                                     .max(comp)
+                                                     .get()
+                                                     .getWaitingMinutes();
+                    wls.setMaxWaitingMinutesAbo(Integer.max(wls.getMaxWaitingMinutesAbo(), maxWaitingMinutes));
+                }
+                //префикс услуги 2 это СЦ
+                else if (service.getPrefix().compareTo(QService.SERVICE_PREFIX_SC) == 0) {
+                    wls.setCustomersCountSC(wls.getCustomersCountSC() + customers.size());
+
+                    if (service.getClients() == null || service.getClients().size() <= 0) {
+                        return;
+                    }
+
+                    Comparator<QCustomer> comp = (p1, p2) -> Integer.compare(p1.getWaitingMinutes(), p2.getWaitingMinutes());
+                    int maxWaitingMinutes = customers.stream()
+                                                     .max(comp)
+                                                     .get()
+                                                     .getWaitingMinutes();
+                    wls.setMaxWaitingMinutesSC(Integer.max(wls.getMaxWaitingMinutesSC(), maxWaitingMinutes));
+                }
+//            }
+        });
     }
     
     /**
@@ -864,15 +867,16 @@ public class QServer extends Thread {
             
             QService.usedTickets.clear();
             
-            //проходимся по очереди
-            for (QService service : QServiceTree.getInstance().getNodes()) {
-                for (QCustomer customer : service.getClients()) {
-                    if (!QService.usedTickets.containsKey(customer.getUnitId())) {
-                        QService.usedTickets.put(customer.getUnitId(), new LinkedList<>());
+            QServiceTree.sailToStorm(QServiceTree.getInstance().getRoot(), service -> {
+                ((QService)service).getClients().forEach((uid, customers) -> {
+                    for (QCustomer customer : customers) {
+                        if (!QService.usedTickets.containsKey(uid)) {
+                            QService.usedTickets.put(uid, new LinkedList<>());
+                        }
+                        QService.usedTickets.get(uid).add(customer.getNumber());
                     }
-                    QService.usedTickets.get(customer.getUnitId()).add(customer.getNumber());
-                }
-            }
+                });
+            });
             
             //проходимся по тем, кто уже в обслуживании
             for (QUser user : QUserList.getInstance().getItems()) {
@@ -1133,11 +1137,11 @@ public class QServer extends Thread {
     public synchronized static void savePool() {
         final long start = System.currentTimeMillis();
         QLog.l().logger().info("Save the state.");
-        final LinkedList<QCustomer> backup = new LinkedList<>();// создаем список сохраняемых кастомеров
+        final LinkedList<QCustomer> backup = new LinkedList<>();// создаем список кастомеров в очереди + тех кто в обслуживании
         final LinkedList<QCustomer> parallelBackup = new LinkedList<>();// создаем список сохраняемых Parallel кастомеров
         final LinkedList<Long> pauses = new LinkedList<>();// создаем список юзеров у которых менопауза
         QServiceTree.getInstance().getNodes().stream().forEach((service) -> {
-            backup.addAll(service.getClients());
+            backup.addAll(service.getClientsForBackup());
         });
 
         QUserList.getInstance().getItems().forEach((user) -> {

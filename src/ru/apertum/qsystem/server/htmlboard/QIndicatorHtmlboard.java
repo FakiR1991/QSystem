@@ -89,11 +89,11 @@ public class QIndicatorHtmlboard implements IIndicatorBoard {
         // Построем всех ближайших
         final LinkedList<String> nexts = new LinkedList<>(); // Это все ближайшие по порядку
         final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
-        QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
-            service.getClients().stream().forEach((qCustomer) -> {
-                customers.add(qCustomer);
-            });
-        });
+//        QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
+//            service.getClients().stream().forEach((qCustomer) -> {
+//                customers.add(qCustomer);
+//            });
+//        });
         QCustomer qCust = customers.poll();
         while (qCust != null) {
             nexts.add(qCust.getFullNumber());
@@ -198,16 +198,16 @@ public class QIndicatorHtmlboard implements IIndicatorBoard {
                 final QService ss = new QService();
                 for (QPlanService pser : usr.getPlanServices()) {
                     QService ser = QServiceTree.getInstance().getById(pser.getService().getId());
-                    ser.getClients().stream().forEach((c) -> {
-                        ss.addCustomer(c);
-                    });
+//                    ser.getClients().stream().forEach((c) -> {
+//                        ss.addCustomer(c);
+//                    });
                 }
                 // для получения правильной очередности хвоста
                 final PriorityQueue<QCustomer> custs = new PriorityQueue<>();
                 final LinkedList<QCustomer> qeue = new LinkedList<>();
-                ss.getClients().stream().forEach((qCustomer) -> {
-                    custs.offer(qCustomer);
-                });
+//                ss.getClients().stream().forEach((qCustomer) -> {
+//                    custs.offer(qCustomer);
+//                });
                 while (custs.size() > 0) {
                     qeue.add(custs.poll());
                 }

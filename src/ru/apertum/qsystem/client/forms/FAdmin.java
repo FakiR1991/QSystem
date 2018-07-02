@@ -1324,7 +1324,7 @@ public class FAdmin extends javax.swing.JFrame {
         final LinkedList<ServiceInfo> srvs;
         try {
             final ServerNetProperty snp = new ServerNetProperty();
-            srvs = NetCommander.getServerState(snp);
+            srvs = NetCommander.getServerState(snp, 5);
             listPostponed.setModel(QPostponedList.getInstance().loadPostponedList(NetCommander.getPostponedPoolInfo(snp)));
         } catch (Exception ex) {
             listPostponed.setModel(QPostponedList.getInstance().loadPostponedList(new LinkedList<>()));
@@ -6825,7 +6825,13 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
             if (name != null) {
                 for (int i = 0; i < Uses.get_PRIORITYS_WORD().size(); i++) {
                     if (name.equals(Uses.get_PRIORITYS_WORD().get(i))) {
-                        JOptionPane.showMessageDialog(this, NetCommander.setCustomerPriority(new ServerNetProperty(), i, num), getLocaleMessage("admin.action.change_priority.title"), JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(this,
+                                                      NetCommander.setCustomerPriority(new ServerNetProperty(),
+                                                                                       i,
+                                                                                       num,
+                                                                                       QConfig.cfg().getUnitId()),
+                                                      getLocaleMessage("admin.action.change_priority.title"),
+                                                      JOptionPane.INFORMATION_MESSAGE);
 
                     }
                 }

@@ -598,7 +598,7 @@ public class UBForm extends JFrame {
                 if (i % 10 != 0) {
                     return;
                 }
-                final LinkedList<ServiceInfo> servs = NetCommander.getServerState(netProperty);
+                final LinkedList<ServiceInfo> servs = NetCommander.getServerState(netProperty, 5);
                 for (ButtonDevice adr : AddrProp.getInstance().getAddrs().values().toArray(new ButtonDevice[0])) {
                     int l = 0;
                     for (QPlanService pser : adr.getUser().getPlanServices()) {
@@ -692,7 +692,7 @@ public class UBForm extends JFrame {
                 System.out.println("User: " + qUser.getName() + " => " + pser.getService().getId() + "-" + pser.getService().getName());
             });
         });
-        servs = NetCommander.getServerState(netProperty);
+        servs = NetCommander.getServerState(netProperty, 5);
         servs.stream().forEach((serviceInfo) -> {
             System.out.println("Servece: " + serviceInfo.getId() + "-" + serviceInfo.getServiceName() + "-" + serviceInfo.getCountWait());
         });

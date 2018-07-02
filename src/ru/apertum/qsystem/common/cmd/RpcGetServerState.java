@@ -46,26 +46,26 @@ public class RpcGetServerState extends JsonRPC20 {
         public ServiceInfo() {
         }
 
-        /**
-         *
-         * @param service услуга по которой данная статистика
-         * @param countWait количество ожидающих в этой услуге
-         * @param firstNumber номер первого
-         */
-        public ServiceInfo(QService service, int countWait, String firstNumber) {
-            this.serviceName = service.getName();
-            this.countWait = countWait;
-            this.firstNumber = firstNumber;
-            this.id = service.getId();
-            final long nn = new Date().getTime();
-            long max = 0;
-            for (QCustomer customer : service.getClients()) {
-                if (nn - customer.getStandTime().getTime() > max) {
-                    max = nn - customer.getStandTime().getTime();
-                }
-            }
-            waitMax = (int) (max / 1000 / 60);
-        }
+//        /**
+//         *
+//         * @param service услуга по которой данная статистика
+//         * @param countWait количество ожидающих в этой услуге
+//         * @param firstNumber номер первого
+//         */
+//        public ServiceInfo(QService service, int countWait, String firstNumber) {
+//            this.serviceName = service.getName();
+//            this.countWait = countWait;
+//            this.firstNumber = firstNumber;
+//            this.id = service.getId();
+//            final long nn = new Date().getTime();
+//            long max = 0;
+//            for (QCustomer customer : service.getClients()) {
+//                if (nn - customer.getStandTime().getTime() > max) {
+//                    max = nn - customer.getStandTime().getTime();
+//                }
+//            }
+//            waitMax = (int) (max / 1000 / 60);
+//        }
         
         /**
          *
@@ -82,12 +82,10 @@ public class RpcGetServerState extends JsonRPC20 {
             long max = 0;
             int customersCount = 0;
             
-            for (QCustomer customer : service.getClients()) {
-                if (customer.getUnitId().equals(unitId)) {
-                    customersCount++;
-                    if (nn - customer.getStandTime().getTime() > max) {
-                        max = nn - customer.getStandTime().getTime();
-                    }
+            for (QCustomer customer : service.getClients(unitId)) {
+                customersCount++;
+                if (nn - customer.getStandTime().getTime() > max) {
+                    max = nn - customer.getStandTime().getTime();
                 }
             }
             this.countWait = customersCount;

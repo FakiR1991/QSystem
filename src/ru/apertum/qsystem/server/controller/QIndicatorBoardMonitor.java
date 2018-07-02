@@ -144,19 +144,19 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
             markShowed(records);
 
             if (QConfig.cfg().isServer()) { // если это не сервер, то QServiceTree полезет в спринг
-                final LinkedList<String> nexts = new LinkedList<>();
-                final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
-                QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
-                    service.getClients().stream().forEach((qCustomer) -> {
-                        customers.add(qCustomer);
-                    });
-                });
-                QCustomer qCustomer = customers.poll();
-                while (qCustomer != null) {
-                    nexts.add(qCustomer.getFullNumber());
-                    qCustomer = customers.poll();
-                }
-                indicatorBoard.showNext(nexts);
+//                final LinkedList<String> nexts = new LinkedList<>();
+//                final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
+//                QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
+//                    service.getClients().stream().forEach((qCustomer) -> {
+//                        customers.add(qCustomer);
+//                    });
+//                });
+//                QCustomer qCustomer = customers.poll();
+//                while (qCustomer != null) {
+//                    nexts.add(qCustomer.getFullNumber());
+//                    qCustomer = customers.poll();
+//                }
+//                indicatorBoard.showNext(nexts);
             }
         }
     }
@@ -169,19 +169,19 @@ public class QIndicatorBoardMonitor extends AIndicatorBoard {
     @Override
     public void customerStandIn(QCustomer customer) {
         if (indicatorBoard != null && QConfig.cfg().isServer()) { // если это не сервер, то QServiceTree полезет в спринг
-            final LinkedList<String> nexts = new LinkedList<>();
-            final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
-            QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
-                service.getClients().stream().forEach((qCustomer) -> {
-                    customers.add(qCustomer);
-                });
-            });
-            QCustomer qCustomer = customers.poll();
-            while (qCustomer != null) {
-                nexts.add(qCustomer.getFullNumber());
-                qCustomer = customers.poll();
-            }
-            indicatorBoard.showNext(nexts);
+//            final LinkedList<String> nexts = new LinkedList<>();
+//            final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
+//            QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
+//                service.getClients().stream().forEach((qCustomer) -> {
+//                    customers.add(qCustomer);
+//                });
+//            });
+//            QCustomer qCustomer = customers.poll();
+//            while (qCustomer != null) {
+//                nexts.add(qCustomer.getFullNumber());
+//                qCustomer = customers.poll();
+//            }
+//            indicatorBoard.showNext(nexts);
         }
     }
 

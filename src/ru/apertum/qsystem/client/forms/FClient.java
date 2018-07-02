@@ -259,7 +259,7 @@ public final class FClient extends javax.swing.JFrame {
             //todo   board.showData(customer.getPrefix() + customer.getNumber(), blinked);
         }
     }
-
+    
     public QCustomer getCustomer() {
         return customer;
     }

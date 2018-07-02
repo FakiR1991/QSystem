@@ -198,7 +198,7 @@ public class FReception extends javax.swing.JFrame {
                 for (int i = 0; i < Uses.get_PRIORITYS_WORD().size(); i++) {
                     if (name.equals(Uses.get_PRIORITYS_WORD().get(i))) {
                         JOptionPane.showMessageDialog(fReception,
-                                                      NetCommander.setCustomerPriority(netProperty, i, num),
+                                                      NetCommander.setCustomerPriority(netProperty, i, num, QConfig.cfg().getUnitId()),
                                                       getLocaleMessage("admin.action.change_priority.title"),
                                                       JOptionPane.INFORMATION_MESSAGE);
                     }
@@ -226,7 +226,8 @@ public class FReception extends javax.swing.JFrame {
                 return;
             }
             NetCommander.killCustomer(netProperty,
-                                      customer.getId());
+                                      customer.getId(),
+                                      customer.getUnitId());
             loadTickets();
         } catch (Exception th) {
             throw new ClientException(new Exception(th));
@@ -2411,7 +2412,7 @@ public class FReception extends javax.swing.JFrame {
         if (service != null && service.isLeaf()) {
             final ServiceState customers;
             try {
-                customers = NetCommander.getServiceConsistency(netProperty, service.getId());
+                customers = NetCommander.getServiceConsistency(netProperty, service.getId(), QConfig.cfg().getUnitId());
             } catch (QException ex) {
                 throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
             }
@@ -2443,17 +2444,23 @@ public class FReception extends javax.swing.JFrame {
         final QCustomer2 cus = (QCustomer2) listLine.getSelectedValue();
         if (cus != null) {
             final String name = (String) JOptionPane.showInputDialog(this,
-                    getLocaleMessage("admin.action.change_priority.get.message"), //NOI18N
-                    getLocaleMessage("admin.action.change_priority.get.title"), //NOI18N
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    Uses.get_PRIORITYS_WORD().values().toArray(),
-                    Uses.get_PRIORITYS_WORD().values().toArray()[1]);
+                                                                     getLocaleMessage("admin.action.change_priority.get.message"), //NOI18N
+                                                                     getLocaleMessage("admin.action.change_priority.get.title"), //NOI18N
+                                                                     JOptionPane.QUESTION_MESSAGE,
+                                                                     null,
+                                                                     Uses.get_PRIORITYS_WORD().values().toArray(),
+                                                                     Uses.get_PRIORITYS_WORD().values().toArray()[1]);
             //Если не выбрали, то выходим
             if (name != null) {
                 for (int i = 0; i < Uses.get_PRIORITYS_WORD().size(); i++) {
                     if (name.equals(Uses.get_PRIORITYS_WORD().get(i))) {
-                        JOptionPane.showMessageDialog(this, NetCommander.setCustomerPriority(netProperty, i, cus.customer.getFullNumber()), getLocaleMessage("admin.action.change_priority.title"), JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(this,
+                                                      NetCommander.setCustomerPriority(netProperty,
+                                                                                       i,
+                                                                                       cus.customer.getFullNumber(),
+                                                                                       QConfig.cfg().getUnitId()),
+                                                      getLocaleMessage("admin.action.change_priority.title"),
+                                                      JOptionPane.INFORMATION_MESSAGE);
                         refreshLines();
                     }
                 }
@@ -2476,7 +2483,13 @@ public class FReception extends javax.swing.JFrame {
             if (name != null) {
                 for (int i = 0; i < Uses.get_PRIORITYS_WORD().size(); i++) {
                     if (name.equals(Uses.get_PRIORITYS_WORD().get(i))) {
-                        JOptionPane.showMessageDialog(this, NetCommander.setCustomerPriority(netProperty, i, num), getLocaleMessage("admin.action.change_priority.title"), JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(this,
+                                                      NetCommander.setCustomerPriority(netProperty,
+                                                                                       i,
+                                                                                       num,
+                                                                                       QConfig.cfg().getUnitId()),
+                                                      getLocaleMessage("admin.action.change_priority.title"),
+                                                      JOptionPane.INFORMATION_MESSAGE);
 
                     }
                 }

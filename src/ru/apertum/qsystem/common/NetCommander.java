@@ -431,11 +431,12 @@ public class NetCommander {
      * @return количество предшествующих.
      * @throws QException
      */
-    public static ServiceState aboutService(INetProperty netProperty, long serviceId) throws QException {
+    public static ServiceState aboutService(INetProperty netProperty, long serviceId, Integer unitId) throws QException {
         QLog.l().logger().info("Встать в очередь.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.serviceId = serviceId;
+        params.unitId = unitId;
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_ABOUT_SERVICE, params);
@@ -462,11 +463,12 @@ public class NetCommander {
      * @return количество предшествующих.
      * @throws QException
      */
-    public static ServiceState getServiceConsistency(INetProperty netProperty, long serviceId) throws QException {
+    public static ServiceState getServiceConsistency(INetProperty netProperty, long serviceId, Integer unitId) throws QException {
         QLog.l().logger().info("Встать в очередь.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.serviceId = serviceId;
+        params.unitId = unitId;
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_GET_SERVICE_CONSISANCY, params);
@@ -494,12 +496,13 @@ public class NetCommander {
      * @return 1 - превышен, 0 - можно встать. 2 - забанен
      * @throws QException
      */
-    public static int aboutServicePersonLimitOver(INetProperty netProperty, long serviceId, String inputData) throws QException {
+    public static int aboutServicePersonLimitOver(INetProperty netProperty, long serviceId, String inputData, Integer unitId) throws QException {
         QLog.l().logger().info("Узнать можно ли вставать в услугу с такими введенными данными.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.serviceId = serviceId;
         params.textData = inputData;
+        params.unitId = unitId;
         String res = null;
         try {
             res = send(netProperty, Uses.TASK_ABOUT_SERVICE_PERSON_LIMIT, params);
@@ -772,11 +775,12 @@ public class NetCommander {
      * @param netProperty параметры соединения с сервером
      * @param customerId тот, кого удаляем
      */
-    public static void killCustomer(INetProperty netProperty, Long customerId) {
+    public static void killCustomer(INetProperty netProperty, Long customerId, Integer unitId) {
         QLog.l().logger().info("FReception - удаление кастомера из очереди.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.customerId = customerId;
+        params.unitId = unitId;
         try {
             send(netProperty, Uses.TASK_KILL_CUSTOMER_FRECEPTION, params);
         } catch (QException e) {// вывод исключений
@@ -994,26 +998,26 @@ public class NetCommander {
      * @param netProperty параметры соединения с сервером
      * @return XML-ответ
      */
-    public static LinkedList<ServiceInfo> getServerState(INetProperty netProperty) {
-        QLog.l().logger().info("Получение описания состояния сервера.");
-        // загрузим ответ
-        String res = null;
-        try {
-            res = send(netProperty, Uses.TASK_SERVER_STATE, null);
-        } catch (QException ex) {// вывод исключений
-            throw new ClientException(Locales.locMes("command_error"), ex);
-        }
-        final Gson gson = GsonPool.getInstance().borrowGson();
-        final RpcGetServerState rpc;
-        try {
-            rpc = gson.fromJson(res, RpcGetServerState.class);
-        } catch (JsonSyntaxException ex) {
-            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
-        } finally {
-            GsonPool.getInstance().returnGson(gson);
-        }
-        return rpc.getResult();
-    }
+//    public static LinkedList<ServiceInfo> getServerState(INetProperty netProperty) {
+//        QLog.l().logger().info("Получение описания состояния сервера.");
+//        // загрузим ответ
+//        String res = null;
+//        try {
+//            res = send(netProperty, Uses.TASK_SERVER_STATE, null);
+//        } catch (QException ex) {// вывод исключений
+//            throw new ClientException(Locales.locMes("command_error"), ex);
+//        }
+//        final Gson gson = GsonPool.getInstance().borrowGson();
+//        final RpcGetServerState rpc;
+//        try {
+//            rpc = gson.fromJson(res, RpcGetServerState.class);
+//        } catch (JsonSyntaxException ex) {
+//            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+//        } finally {
+//            GsonPool.getInstance().returnGson(gson);
+//        }
+//        return rpc.getResult();
+//    }
     
     public static LinkedList<ServiceInfo> getServerState(INetProperty netProperty, Integer unitId) {
         
@@ -1511,16 +1515,17 @@ public class NetCommander {
      * Изменение приоритета кастомеру
      *
      * @param netProperty параметры соединения с сервером
-     * @param prioritet
-     * @param customer
+     * @param priority
+     * @param number
      * @return Текстовый ответ о результате
      */
-    public static String setCustomerPriority(INetProperty netProperty, int prioritet, String customer) {
+    public static String setCustomerPriority(INetProperty netProperty, int priority, String number, Integer unitId) {
         QLog.l().logger().info("Команда на повышение приоритета кастомеру.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
-        params.priority = prioritet;
-        params.clientAuthId = customer;
+        params.priority = priority;
+        params.clientAuthId = number;
+        params.unitId = unitId;
         final String res;
         try {
             res = send(netProperty, Uses.TASK_SET_CUSTOMER_PRIORITY, params);

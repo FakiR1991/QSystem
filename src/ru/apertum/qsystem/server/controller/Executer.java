@@ -445,6 +445,7 @@ public final class Executer {
             // бежим по очередям юзера и ищем первого из первых кастомера
             QCustomer customer = null;
             int servPriority = -1;// временная переменная для приоритета услуг
+            boolean polResult = false;
             // синхронизация работы с клиентом
             CLIENT_TASK_LOCK.lock();
             try {
@@ -487,7 +488,8 @@ public final class Executer {
                             }
 
 //                            final QCustomer cust = serv.peekCustomer(); // первый в этой очереди
-                            final QCustomer cust = serv.peekCustomerByUid(user.getUnitId(), user.getId());
+//                            final QCustomer cust = serv.peekCustomerByUid(user.getUnitId(), user.getId());
+                            final QCustomer cust = serv.peekCustomer(user);
 
                             // если очередь пуста
                             if (cust == null) {
@@ -496,8 +498,8 @@ public final class Executer {
                             
                             // учтем приоритетность кастомеров и приоритетность очередей для юзера в которые они стоят
                             final Integer prior = plan.getCoefficient();
-//                            if (prior > servPriority || (prior == servPriority && customer != null && customer.compareTo(cust) == 1)) {
-                            if (prior > servPriority || (prior == servPriority && customer != null && compareCustomers(customer, cust) == 1)) {
+//                            if (prior > servPriority || (prior == servPriority && customer != null && compareCustomers(customer, cust) == 1)) {
+                            if (prior > servPriority || (prior == servPriority && customer != null && customer.compareTo(cust) == 1)) {
                                 servPriority = prior;
                                 customer = cust;
                             }
@@ -527,7 +529,8 @@ public final class Executer {
                             return new RpcInviteCustomer(null);
                         }
                         // подотрем выбранного кастомера из очереди ожидания, он уже уехал к юзеру теперь.
-                        customer = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer(customer.getId());
+//                        customer = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer(customer.getId(), customer.getUnitId());
+                        polResult = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer(customer);
                     }
                 }
             } catch (Exception ex) {
@@ -535,8 +538,8 @@ public final class Executer {
             } finally {
                 CLIENT_TASK_LOCK.unlock();
             }
-            if (customer == null) {
-                throw new ServerException("Странная проблема с получением кастомера и удалением его из очереди." + " " + ipAdress);
+            if (!polResult) {
+                throw new ServerException("Странная проблема с вызовом талона и удалением его из очереди." + " " + ipAdress);
             }
             
             customer.upRecallCount();
@@ -716,7 +719,7 @@ public final class Executer {
             final QService srvR = QServiceTree.getInstance().getById(cmdParams.serviceId);
             final QService srv = srvR.getLink() != null ? srvR.getLink() : srvR;
             try {
-                return new RpcGetInt(srv.isLimitPersonPerDayOver(cmdParams.textData) ? 1 : 0);
+                return new RpcGetInt(srv.isLimitPersonPerDayOver(cmdParams.textData, cmdParams.unitId) ? 1 : 0);
             } catch (Exception ex) {
                 throw new ServerException("Подохло что-то при определении ограничения." + " " + ipAdress, ex);
             }
@@ -732,7 +735,7 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
             final QService srvR = QServiceTree.getInstance().getById(cmdParams.serviceId);
             final QService srv = srvR.getLink() != null ? srvR.getLink() : srvR;
-            return new RpcGetServiceState(srv.getClients());
+            return new RpcGetServiceState(srv.getClients(cmdParams.unitId));
         }
     };
     /**
@@ -802,12 +805,12 @@ public final class Executer {
             // если да, то возьмем все услуги юзера и  сложим всех кастомеров в очередях
             // самую маленькую сумму отправим в ответ по запросу.
             for (QUser user : QUserList.getInstance().getItems()) {
-                if (user.hasService(cmdParams.serviceId)) {
+                if (user.hasService(cmdParams.serviceId) && Objects.equals(user.getUnitId(), cmdParams.unitId)) {
                     // теперь по услугам юзера
                     int sum = 0;
                     for (QPlanService planServ : user.getPlanServices()) {
                         final QService service = QServiceTree.getInstance().getById(planServ.getService().getId());
-                        sum = sum + service.getCountCustomers();
+                        sum = sum + service.getCountCustomers(cmdParams.unitId);
                     }
                     if (min > sum) {
                         min = sum;
@@ -856,25 +859,25 @@ public final class Executer {
         }
     };
     
-    /**
-     * Получить состояние сервера.
-     */
-    private final Task getServerState = new Task(Uses.TASK_SERVER_STATE) {
-
-        @Override
-        public RpcGetServerState process(CmdParams cmdParams, String ipAdress, byte[] IP) {
-            super.process(cmdParams, ipAdress, IP);
-            final LinkedList<RpcGetServerState.ServiceInfo> srvs = new LinkedList<>();
-
-            QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
-                final QCustomer customer = service.peekCustomer();
-                srvs.add(new RpcGetServerState.ServiceInfo(service,
-                                                           service.getCountCustomers(),
-                                                           customer != null ? customer.getFullNumber() : "-"));
-            });
-            return new RpcGetServerState(srvs);
-        }
-    };
+//    /**
+//     * Получить состояние сервера.
+//     */
+//    private final Task getServerState = new Task(Uses.TASK_SERVER_STATE) {
+//
+//        @Override
+//        public RpcGetServerState process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+//            super.process(cmdParams, ipAdress, IP);
+//            final LinkedList<RpcGetServerState.ServiceInfo> srvs = new LinkedList<>();
+//
+//            QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
+//                final QCustomer customer = service.peekCustomer();
+//                srvs.add(new RpcGetServerState.ServiceInfo(service,
+//                                                           service.getCountCustomers(),
+//                                                           customer != null ? customer.getFullNumber() : "-"));
+//            });
+//            return new RpcGetServerState(srvs);
+//        }
+//    };
     
     /**
      * Получить состояние сервера по unitId.
@@ -887,7 +890,7 @@ public final class Executer {
             final LinkedList<RpcGetServerState.ServiceInfo> srvs = new LinkedList<>();
 
             QServiceTree.getInstance().getNodes().stream().filter((service) -> (service.isLeaf())).forEach((service) -> {
-                final QCustomer customer = service.peekCustomerByUidForReception(cmdParams.unitId);
+                final QCustomer customer = service.peekCustomerForReception(cmdParams.unitId);
                 
                 srvs.add(new RpcGetServerState.ServiceInfo(service,
                                                            customer != null ? String.valueOf(customer.getNumber()) : "-",
@@ -917,12 +920,12 @@ public final class Executer {
             //цикл по списку услуг присвоенных юзеру в админском приложении
             for (QPlanService planService : user.getPlanServices()) {
                 final QService service = QServiceTree.getInstance().getById(planService.getService().getId());
-                //только услуги, которые соответствуют его pointType (то есть если он сидит в СЦ,
-                //то ему не нужно показывать очередь для абон. зальских услуг назначенных ему)
-//                if (user.getPointType() != null && user.getPointType().toString().compareTo(service.getPrefix()) == 0) {
-                    servs.add(new RpcGetSelfSituation.SelfService(service, service.getCountCustomers(), planService.getCoefficient(), planService.getFlexible_coef()));
-                    stateH = stateH + service.getId() + service.getCountCustomers() * (planService.getCoefficient() + 17);
-//                }
+                    servs.add(new RpcGetSelfSituation.SelfService(service,
+                                                                  service.getCountCustomers(user.getUnitId()),
+                                                                  planService.getCoefficient(),
+                                                                  planService.getFlexible_coef(),
+                                                                  user.getUnitId()));
+                    stateH = stateH + service.getId() + service.getCountCustomers(user.getUnitId()) * (planService.getCoefficient() + 17);
             }
             // нужно сделать вставочку приглашенного юзера, если он есть
             stateH = stateH
@@ -1029,11 +1032,19 @@ public final class Executer {
             
             LinkedList<QCustomer> movedToBank = new LinkedList<>();
             
-            for (QCustomer cust : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
-                if (cust.getUnitId().equals(cmdParams.unitId)) {
+            //список ушедших на оплату
+            QMovedToBankList.getInstance().getMovedToBankCustomers().stream().forEach(cust -> {
+                if (Objects.equals(cust.getUnitId(), cmdParams.unitId)) {
                     movedToBank.add(cust);
                 }
-            }
+            });
+            
+            //отложенные, которые имеют статус STATE_PAYMENT
+            QPostponedList.getInstance().getPostponedCustomers().stream().forEach(cust -> {
+                if (Objects.equals(cust.getUnitId(), cmdParams.unitId) && Objects.equals(cust.getState(), CustomerState.STATE_PAYMENT)) {
+                    movedToBank.add(cust);
+                }
+            });
             
             return new RpcGetMovedToPaymentList(movedToBank);
         }
@@ -1050,15 +1061,20 @@ public final class Executer {
             
             LinkedList<QCustomer> ticketsList = new LinkedList<>();
             
-            for (QService service: QServiceTree.getInstance().getNodes()) {
-                if (service.getClients().size() > 0) {
-                    service.getClients().stream().filter(cust -> Objects.equals(cust.getUnitId(), cmdParams.unitId)).forEach(cust -> {
-                        ticketsList.add(cust);
-                    });
+            //из очереди
+            QServiceTree.getInstance().getNodes().forEach((service) -> {
+                if (service.isLeaf()) {
+                    ticketsList.addAll(service.getClients(cmdParams.unitId));
                 }
-            }
+            });
             
+            //отложенные
             QPostponedList.getInstance().getPostponedCustomers().stream().filter(cust -> Objects.equals(cust.getUnitId(), cmdParams.unitId)).forEach(cust -> {
+                ticketsList.add(cust);
+            });
+            
+            //ушедшие на оплату
+            QMovedToBankList.getInstance().getMovedToBankCustomers().stream().filter(cust -> Objects.equals(cust.getUnitId(), cmdParams.unitId)).forEach(cust -> {
                 ticketsList.add(cust);
             });
             
@@ -1107,7 +1123,11 @@ public final class Executer {
                 int cnt = 0;
                 for (QService service : QServiceTree.getInstance().getNodes()) {
                     final LinkedList<QCustomer> for_del = new LinkedList<>();
-                    service.getClients().stream().filter((customer) -> (user.getCustomer().getInput_data().equals(customer.getInput_data()))).forEach((customer) -> {
+                    service.getClients(user.getUnitId()).stream()
+                                                        .filter((customer) -> (user.getCustomer()
+                                                                                   .getInput_data()
+                                                                                   .equals(customer.getInput_data())))
+                                                        .forEach((customer) -> {
                         for_del.add(customer);
                     });
                     for_del.stream().forEach((qCustomer) -> {
@@ -1164,33 +1184,72 @@ public final class Executer {
         public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             
+            //указывает на то в каком из списков нашли кастомера
+            //1 - очередь
+            //2 - отложенные
+            //3 - список ушедших на оплату
+            Integer queueType;
+            
             //ищем кастомера в очереди
-            QCustomer customer = getCustomerById(cmdParams.customerId);
+            QCustomer customer = getCustomerById(cmdParams.customerId, cmdParams.unitId);
+            queueType = 1;
             
-            QLog.l().logger().warn("УДАЛЕНИЕ: Удалили из FReception " + customer.getPrefix() + "-" + customer.getNumber() + ", ip: " + ipAdress);
-
-            QService service = QServiceTree.getInstance().getById(customer.getService().getId());
+            //ищем в отложенных
+            if (customer == null) {
+                customer = QPostponedList.getInstance().getById(cmdParams.customerId);
+                queueType = 2;
+            }
             
-            if (customer.getState() == CustomerState.STATE_POSTPONED || customer.getState() == CustomerState.STATE_POSTPONED_AFTER_SERVICE) {
-                Executer.POSTPONED_TASK_LOCK.lock();
-                try {
-                    QPostponedList.getInstance().removeElement(customer);
-                } finally {
-                    Executer.POSTPONED_TASK_LOCK.unlock();
-                }
-            } else {
-                //удаляем талон из очереди по id
-                service.polCustomer(cmdParams.customerId);
+            //ищем в списке ушедших на оплату
+            if (customer == null) {
+                customer = QMovedToBankList.getInstance().getById(cmdParams.customerId);
+                queueType = 3;
+            }
+            
+            if (customer == null) {
+                throw new ServerException("Талон выбранный для удаления не найден, обновите список талонов.");
+            }
+            
+            //удаляем в зависимости от того где нашли кастомера
+            switch(queueType) {
+                case 1:
+                    Executer.CLIENT_TASK_LOCK.lock();
+                    try {
+                        QService service = QServiceTree.getInstance().getById(customer.getService().getId());
+                        //удаляем талон из очереди по id
+                        service.polCustomer(customer);
+                    } finally {
+                        Executer.CLIENT_TASK_LOCK.unlock();
+                    }
+                    break;
+                case 2:
+                    Executer.POSTPONED_TASK_LOCK.lock();
+                    try {
+                        QPostponedList.getInstance().removeElement(customer);
+                    } finally {
+                        Executer.POSTPONED_TASK_LOCK.unlock();
+                    }
+                    break;
+                case 3:
+                    Executer.MOVED_TO_BANK_TASK_LOCK.lock();
+                    try {
+                        QMovedToBankList.getInstance().removeElement(customer);
+                    } finally {
+                        Executer.MOVED_TO_BANK_TASK_LOCK.unlock();
+                    }
+                    break;
             }
             
             //удаляем кастомера из таблицы clients,
             //а триггер почистит нужные таблицы
             deleteCustomerFromDB(customer.getId());
             
+            QLog.l().logger().warn("УДАЛЕНИЕ: Удалили талон через FReception " + customer.getPrefix() + "-" + customer.getNumber() + ", ip: " + ipAdress);
+            
             // кастомер переходит в состояние "умерщвленности"
             KILLED_CUSTOMERS.put(customer.getFullNumber().toUpperCase(), new Date());
             try {
-                // сохраняем состояния очередей.
+                // сохраняем состояния очередей
                 QServer.savePool();
             } catch (Exception ex) {
                 QLog.l().logger().error(ex);
@@ -1198,9 +1257,9 @@ public final class Executer {
             return new JsonRPC20OK();
         }
         
-        private QCustomer getCustomerById(Long customerId) {
+        private QCustomer getCustomerById(Long customerId, Integer unitId) {
             for (QService service : QServiceTree.getInstance().getNodes()) {
-                for (QCustomer customer : service.getClients()) {
+                for (QCustomer customer : service.getClients(unitId)) {
                     if (customer.getId().equals(customerId)) {
                         return customer;
                     }
@@ -2366,7 +2425,7 @@ public final class Executer {
             final String num = cmdParams.clientAuthId.replaceAll("[^\\p{L}+\\d]", "");
             String s = "";
             for (QService service : QServiceTree.getInstance().getNodes()) {
-                if (service.changeCustomerPriorityByNumber(num, cmdParams.priority)) {
+                if (service.changeCustomerPriorityByNumber(num, cmdParams.priority, cmdParams.unitId)) {
                     s = "Клиенту с номером \"" + num + "\" в услуге \"" + service.getName() + "\" изменен приоритет.";
                     break;
                 }
@@ -2451,8 +2510,8 @@ public final class Executer {
             final String num = cmdParams.clientAuthId.trim().replaceAll("[^\\p{L}+\\d]", "");
             String s = "";
             for (QService service : QServiceTree.getInstance().getNodes()) {
-                for (QCustomer customer : service.getClients()) {
-                    if (num.equalsIgnoreCase(customer.getPrefix() + (customer.getNumber() < 1 ? "" : customer.getNumber()))) {
+                for (QCustomer customer : service.getClients(cmdParams.unitId)) {
+                    if (Objects.equals(customer.getUnitId(), cmdParams.unitId) && num.equalsIgnoreCase(customer.getPrefix() + (customer.getNumber() < 1 ? "" : customer.getNumber()))) {
                         s = String.format(Locales.locMes("client_with_number_to_service"), num, service.getName());
                         break;
                     }
@@ -2460,7 +2519,7 @@ public final class Executer {
             }
             if ("".equals(s)) {
                 for (QCustomer customer : QPostponedList.getInstance().getPostponedCustomers()) {
-                    if (num.equalsIgnoreCase(customer.getPrefix() + (customer.getNumber() < 1 ? "" : customer.getNumber()))) {
+                    if (Objects.equals(customer.getUnitId(), cmdParams.unitId) && num.equalsIgnoreCase(customer.getPrefix() + (customer.getNumber() < 1 ? "" : customer.getNumber()))) {
                         s = String.format(Locales.locMes("client_with_number_postponed"), num);
                         break;
                     }
@@ -2469,12 +2528,23 @@ public final class Executer {
 
             if ("".equals(s)) {
                 for (QUser user : QUserList.getInstance().getItems()) {
-                    if (user.getCustomer() != null && num.equalsIgnoreCase(user.getCustomer().getFullNumber())) {
+                    if (Objects.equals(user.getUnitId(), cmdParams.unitId) && user.getCustomer() != null && num.equalsIgnoreCase(user.getCustomer().getFullNumber())) {
                         s = String.format(Locales.locMes("client_with_number_in_work"), num, user.getName());
                         break;
                     }
                 }
             }
+            
+            if ("".equals(s)) {
+                for (QCustomer customer : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
+                    if (Objects.equals(customer.getUnitId(), cmdParams.unitId) && num.equalsIgnoreCase(customer.getPrefix() + (customer.getNumber() < 1 ? "" : customer.getNumber()))) {
+                        s = String.format("Клиент с номером '%s' отправлен на оплату", num);
+                        break;
+                    }
+                }
+            }
+            
+            
 
             if ("".equals(s) && KILLED_CUSTOMERS.get(num) != null) {
                 s = String.format(Locales.locMes("client_with_number_removed"), num, Locales.getInstance().format_for_label.format(KILLED_CUSTOMERS.get(num)));

@@ -213,7 +213,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
         Long customerId = Long.valueOf(requestId);
         
         for (QService service : QServiceTree.getInstance().getNodes()) {
-            for (QCustomer customer : service.getClients()) {
+            for (QCustomer customer : service.getClients(unitId)) {
                 if (Objects.equals(customer.getUnitId(), unitId) && number.equals(customer.getNumber())) {
                     //если такой номер талона уже есть в обслуживании,
                     //но идентификатор кустомера в обслуживании

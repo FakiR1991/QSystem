@@ -400,7 +400,7 @@ public class QButton extends JButton {
                         // будет ли он стоять или нет
                         final ServiceState servState;
                         try {
-                            servState = NetCommander.aboutService(FWelcome.netProperty, service.getId());
+                            servState = NetCommander.aboutService(FWelcome.netProperty, service.getId(), QConfig.cfg().getUnitId());
                         } catch (Exception ex) {
                             // гасим жестоко, пользователю незачем видеть ошибки. выставим блокировку
                             QLog.l().logger().error("Гасим жестоко. Невозможно отправить команду на сервер. ", ex);
@@ -478,7 +478,7 @@ public class QButton extends JButton {
                             //@return 1 - превышен, 0 - можно встать. 2 - забанен
                             int limitPersonOver;
                             try {
-                                limitPersonOver = NetCommander.aboutServicePersonLimitOver(FWelcome.netProperty, service.getId(), inputData);
+                                limitPersonOver = NetCommander.aboutServicePersonLimitOver(FWelcome.netProperty, service.getId(), inputData, QConfig.cfg().getUnitId());
                             } catch (Exception ex) {
                                 // гасим жестоко, пользователю незачем видеть ошибки. выставим блокировку
                                 QLog.l().logger().error("Гасим жестоко опрос превышения лимита по введенным данным, но не лочим киоск. Невозможно отправить команду на сервер. ", ex);
