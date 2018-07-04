@@ -801,6 +801,7 @@ public final class Executer {
                 QLog.l().logger().warn("Услуга \"" + cmdParams.serviceId + "\" не обрабатывается исходя из рабочего расписания." + " " + ipAdress);
                 return new RpcGetServiceState(min, "");
             }
+            
             // бежим по юзерам и смотрим обрабатывают ли они услугу
             // если да, то возьмем все услуги юзера и  сложим всех кастомеров в очередях
             // самую маленькую сумму отправим в ответ по запросу.
@@ -818,7 +819,12 @@ public final class Executer {
                 }
             }
             if (min == Uses.LOCK_INT) {
-                QLog.l().logger().warn("Услуга \"" + cmdParams.serviceId + "\" не обрабатывается ни одним пользователем." + " " + ipAdress);
+                QLog.l().logger().warn("Услуга \"" + cmdParams.serviceId +
+                                       "\" не обрабатывается ни одним пользователем. СГЛОТНУЛИ ПРЕДУПРЕЖДЕНИЕ (а его вообще не должно было быть). " +
+                                       ipAdress);
+                //нам не нужны предупреждения о том, что услуга не обслуживается никем,
+                //поэтому делаем такую кривую заглушку
+                min = 1;
             }
             return new RpcGetServiceState(min, "");
         }

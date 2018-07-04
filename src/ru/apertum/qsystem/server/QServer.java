@@ -116,7 +116,7 @@ public class QServer extends Thread {
     /**
      * Таймер по которому будем выгонять временных отложенных
      */
-    private static Timer cleanUpMovedToBankTimer = new Timer(60*1000, (ActionEvent e) -> {
+    private static Timer cleanUpMovedToBankTimer = new Timer(60 * 1000, (ActionEvent e) -> {
         //каждый час проверяем надо ли почистить список людей отправленных на оплату
         Executer.MOVED_TO_BANK_TASK_LOCK.lock();
         try {

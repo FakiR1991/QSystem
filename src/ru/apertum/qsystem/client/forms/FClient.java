@@ -1351,7 +1351,12 @@ public final class FClient extends javax.swing.JFrame {
             
             boolean isMine;
             boolean needReturnAfterPayment;
-            boolean newPaymentType = isNewBankSendingEnabled;
+            //выбранный способ отправки на оплату (новый или старый)
+            boolean isNewPaymentType = isNewBankSendingEnabled;
+            //работает ли новая отправка в банк в нужном нам отделении
+            boolean newPaymentEnabledCurrentInUnit = ( customer.getUnitId().compareTo(Uses.UNIT_TIRASPOL_KARL_MARX) == 0
+                                                        /*&&
+                                                       customer.getUnitId().compareTo(Uses.UNIT_BENDERY_LAZO) == 0*/ );
             
             bankForm2 = new FSendToBank2(fClient, true, isNewBankSendingEnabled);
             
@@ -1361,16 +1366,18 @@ public final class FClient extends javax.swing.JFrame {
                 return;
             }
             
-            //если у оператора есть возможность отправлять клиентов в очередь АПБ
+            //если доступна возможность отправлять клиентов в очередь АПБ (параметр в БД),
+            //то даём возможность выбрать отправить клиента в кассу или на оплату другим способом
+            //анализируем выбор оператора
             if (isNewBankSendingEnabled) {
                 int paymentType = bankForm2.getPaymentType();
                 
                 //если выбран тип оплаты через кассу АПБ,
                 //то задействуем механизм новой отправки на оплату
                 if (paymentType == 0) {
-                    newPaymentType = true;
+                    isNewPaymentType = true;
                 } else {
-                    newPaymentType = false;
+                    isNewPaymentType = false;
                 }
             }
 
@@ -1386,7 +1393,8 @@ public final class FClient extends javax.swing.JFrame {
             //и при этом в properties включена отправка в банк с помощью веб-сервиса,
             //и в форме отправки был выбрал тип оплаты "Касса АПБ",
             //то используем новый метод отправки в банк, иначе - старый
-            if (isNewBankSendingEnabled && newPaymentType && customer.getUnitId().compareTo(Uses.UNIT_TIRASPOL_KARL_MARX) == 0) {
+            if ( isNewBankSendingEnabled && isNewPaymentType && newPaymentEnabledCurrentInUnit )
+            {
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
                 try {
                     NetCommander.sendCustomerToBank(netProperty,
@@ -2396,7 +2404,7 @@ public final class FClient extends javax.swing.JFrame {
             }
             
             placeId = QConfig.cfg().getPointN();
-
+            
             Date currDate = NetCommander.getServerTime(netProperty, user.getId());
             
             workingPeriod = new UsersStatistic();
