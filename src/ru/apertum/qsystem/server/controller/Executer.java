@@ -445,7 +445,6 @@ public final class Executer {
             // бежим по очередям юзера и ищем первого из первых кастомера
             QCustomer customer = null;
             int servPriority = -1;// временная переменная для приоритета услуг
-            boolean polResult = false;
             // синхронизация работы с клиентом
             CLIENT_TASK_LOCK.lock();
             try {
@@ -530,16 +529,13 @@ public final class Executer {
                         }
                         // подотрем выбранного кастомера из очереди ожидания, он уже уехал к юзеру теперь.
 //                        customer = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer(customer.getId(), customer.getUnitId());
-                        polResult = QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer(customer);
+                        QServiceTree.getInstance().getById(customer.getService().getId()).polCustomer(customer);
                     }
                 }
             } catch (Exception ex) {
                 throw new ServerException("Ошибка при постановке клиента в очередь" + " " + ipAdress + ex);
             } finally {
                 CLIENT_TASK_LOCK.unlock();
-            }
-            if (!polResult) {
-                throw new ServerException("Странная проблема с вызовом талона и удалением его из очереди." + " " + ipAdress);
             }
             
             customer.upRecallCount();

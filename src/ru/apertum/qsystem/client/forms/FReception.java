@@ -121,7 +121,6 @@ import ru.apertum.qsystem.server.model.postponed.QPostponedList;
  */
 public class FReception extends javax.swing.JFrame {
 
-    private final static int USER_RECEPTION_ID = 3351;
     private static ResourceMap localeMap = null;
 
     private static String getLocaleMessage(String key) {
