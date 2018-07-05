@@ -387,8 +387,8 @@ task runReception (dependsOn: 'classes', type: JavaExec) {
         args '3129'
         args '-sport'
         args '3128'
-        args '-uid'
-        args '6'
+        /*args '-uid'
+        args '6'*/
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}
@@ -408,8 +408,8 @@ task debugReception (dependsOn: 'classes', type: JavaExec) {
         args '3129'
         args '-sport'
         args '3128'
-        args '-uid'
-        args '5'
+        /*args '-uid'
+        args '6'*/
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}

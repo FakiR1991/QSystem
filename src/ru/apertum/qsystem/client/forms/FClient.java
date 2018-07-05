@@ -547,7 +547,7 @@ public final class FClient extends javax.swing.JFrame {
             System.exit(0);
         }
     }
-
+    
     private void init(QUser user, final IClientNetProperty netProperty) {
         addWindowListener(new WindowListener() {
 

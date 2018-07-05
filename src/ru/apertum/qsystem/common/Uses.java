@@ -82,6 +82,11 @@ import ru.apertum.qsystem.server.ServerProps;
  */
 public final class Uses {
 
+    //тип рабочего места - СПиАО (абон. зал)
+    public static final int POINT_TYPE_ABO = 1;
+    //тип рабочего места - СЦ (сервисный центр)
+    public static final int POINT_TYPE_SC = 2;
+    
     //идентификаторы залов совместных с АПБ
     public static final int UNIT_TIRASPOL_KARL_MARX = 5; //г. Тирасполь, ул. Карла Маркса
     public static final int UNIT_BENDERY_LAZO = 6; //г. Бендеры, ул. Лазо
@@ -253,6 +258,7 @@ public final class Uses {
     // Наименования заданий
     public static final String TASK_FOR_ALL_SITE = "Для всех сайтов домена";
     public static final String TASK_STAND_IN = "Поставить в очередь";
+    public static final String TASK_GET_UNITS = "Загрузка списка отделений";
     public static final String TASK_STAND_COMPLEX = "Поставить в несколько очередей";
     public static final String TASK_ADVANCE_STAND_IN = "Поставить в очередь предварительно";
     public static final String TASK_ADVANCE_CHECK_AND_STAND = "Поставить предварительно записанного";

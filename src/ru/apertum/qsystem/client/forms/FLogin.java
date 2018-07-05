@@ -386,7 +386,7 @@ public class FLogin extends javax.swing.JDialog {
 
         final String userPass = user.getPassword();
         String myPass = MD5(new String(passwordField.getPassword()));
-        if (!userPass.equals(MD5(new String(passwordField.getPassword())))) {
+        if (!userPass.equals(myPass)) {
             JOptionPane.showMessageDialog(this, getLocaleMessage("messages.noAccessUser.mess"), getLocaleMessage("messages.noAccess.caption"), JOptionPane.ERROR_MESSAGE);
             return false;
         }

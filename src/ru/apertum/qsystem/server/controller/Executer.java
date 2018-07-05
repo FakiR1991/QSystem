@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 import org.dom4j.DocumentHelper;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -79,6 +80,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetProperties;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
+import ru.apertum.qsystem.common.cmd.RpcGetUnitsList;
 import ru.apertum.qsystem.common.model.QCustomer.Comparators;
 import ru.apertum.qsystem.extra.ISelectNextService;
 import ru.apertum.qsystem.extra.ITask;
@@ -93,6 +95,7 @@ import ru.apertum.qsystem.server.model.QPlanService;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
+import ru.apertum.qsystem.server.model.QUnitList;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
 import ru.apertum.qsystem.server.webservice.QueueIntegration;
@@ -840,6 +843,18 @@ public final class Executer {
     };
     
     /**
+     * Получить описание отделений
+     */
+    final Task getUnitsTask = new Task(Uses.TASK_GET_UNITS) {
+
+        @Override
+        public RpcGetUnitsList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            return new RpcGetUnitsList(QUnitList.getInstance().getItems());
+        }
+    };
+    
+    /**
      * Получить описание пользователей для выбора
      */
     final Task getUsersByUIDTask = new Task(Uses.TASK_GET_USERS_BY_UID) {
@@ -847,14 +862,29 @@ public final class Executer {
         @Override
         public RpcGetUsersList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
-            //todo checkUserLive.refreshUsersFon();
             
             LinkedList<QUser> users = new LinkedList<>();
             
-            for (QUser user : QUserList.getInstance().getItems()) {
-                if (user.getUnitId() != null && user.getUnitId().equals(cmdParams.unitId)) {
-                    users.add(user);
-                }
+            //если передан pointType равный 1 или 2, тогда возвращаем список фильтруя по переданному значения,
+            //иначе просто сравниваем чтобы совпадал unitId, т.е. пользователей с любым pointType
+            switch (cmdParams.pointType) {
+                case Uses.POINT_TYPE_ABO:
+                case Uses.POINT_TYPE_SC:
+                    for (QUser user : QUserList.getInstance().getItems()) {
+                        if (Objects.equals(user.getPointType(), cmdParams.pointType)
+                            && Objects.equals(user.getUnitId(), cmdParams.unitId)) {
+                            users.add(user);
+                        }
+                    }
+                    break;
+                
+                default:
+                    for (QUser user : QUserList.getInstance().getItems()) {
+                        if (Objects.equals(user.getUnitId(), cmdParams.unitId)) {
+                            users.add(user);
+                        }
+                    }
+                    break;
             }
             
             return new RpcGetUsersList(users);

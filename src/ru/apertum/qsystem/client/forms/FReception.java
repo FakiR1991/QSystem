@@ -35,11 +35,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ServiceLoader;
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
@@ -111,6 +113,8 @@ import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceLang;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QStandards;
+import ru.apertum.qsystem.server.model.QUnit;
+import ru.apertum.qsystem.server.model.QUnitList;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
@@ -168,10 +172,10 @@ public class FReception extends javax.swing.JFrame {
 
         init();
         
-         Timer t = new Timer(1000 * 60, (ActionEvent e) -> {
-                 load();
-                });
-                t.start();
+        Timer t = new Timer(1000 * 60, (ActionEvent e) -> {
+            load();
+        });
+        t.start();
     }
     
     private void initManuallyAddedComponents() {
@@ -197,7 +201,7 @@ public class FReception extends javax.swing.JFrame {
                 for (int i = 0; i < Uses.get_PRIORITYS_WORD().size(); i++) {
                     if (name.equals(Uses.get_PRIORITYS_WORD().get(i))) {
                         JOptionPane.showMessageDialog(fReception,
-                                                      NetCommander.setCustomerPriority(netProperty, i, num, QConfig.cfg().getUnitId()),
+                                                      NetCommander.setCustomerPriority(netProperty, i, num, unit.getId().intValue()),
                                                       getLocaleMessage("admin.action.change_priority.title"),
                                                       JOptionPane.INFORMATION_MESSAGE);
                     }
@@ -381,7 +385,7 @@ public class FReception extends javax.swing.JFrame {
     
     private void loadTickets() {
         DefaultListModel<QCustomer> lm = new DefaultListModel<>();
-        LinkedList<QCustomer> tickets = NetCommander.getTickets(netProperty, QConfig.cfg().getUnitId());
+        LinkedList<QCustomer> tickets = NetCommander.getTickets(netProperty, unit.getId().intValue());
         
         for (QCustomer customer : tickets) {
             lm.addElement(customer);
@@ -391,7 +395,7 @@ public class FReception extends javax.swing.JFrame {
     }
     
     private void loadMovedToPaymentList() {
-        jListMovedToPayment.setModel(QMovedToBankList.getInstance().loadMovedToBankList(NetCommander.getMovedToPaymentList(netProperty, QConfig.cfg().getUnitId())));
+        jListMovedToPayment.setModel(QMovedToBankList.getInstance().loadMovedToBankList(NetCommander.getMovedToPaymentList(netProperty, unit.getId().intValue())));
     }
 
     private String title() {
@@ -402,7 +406,7 @@ public class FReception extends javax.swing.JFrame {
 
         btnPushToTalk.setVisible(false);
 
-        setTitle(getTitle() + " " + Uses.getLocaleMessage("project.name" + FAbout.getCMRC_SUFF())); //NOI18N
+//        setTitle(getTitle() + " " + Uses.getLocaleMessage("project.name" + FAbout.getCMRC_SUFF())); //NOI18N
 
         try {
             setIconImage(ImageIO.read(FAdmin.class.getResource("/ru/apertum/qsystem/client/forms/resources/monitor.png"))); //NOI18N
@@ -914,6 +918,8 @@ public class FReception extends javax.swing.JFrame {
         menuRefreshMainData = new javax.swing.JMenuItem();
         menuSendMessage = new javax.swing.JMenuItem();
         menuLangs = new javax.swing.JMenu();
+				menuChangeUnit = new javax.swing.JMenuItem();
+				menuChangePointType = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         menuItemExit = new javax.swing.JMenuItem();
         menuCustomers = new javax.swing.JMenu();
@@ -998,7 +1004,7 @@ public class FReception extends javax.swing.JFrame {
         popupMenuAdvance.add(miAdvanceToLine);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle(resourceMap.getString("Form.title")); // NOI18N
+        setTitle("Мониторинг и прием посетителей в электронной очереди - " + unit.getName() + " [" + getPointTypes().get(pointType) + "]");
         setBackground(resourceMap.getColor("Form.background")); // NOI18N
         setName("Form"); // NOI18N
 
@@ -1682,6 +1688,18 @@ public class FReception extends javax.swing.JFrame {
         menuLangs.setText(resourceMap.getString("menuLangs.text")); // NOI18N
         menuLangs.setName("menuLangs"); // NOI18N
         menuFile.add(menuLangs);
+				
+				menuChangeUnit.setAction(actionMap.get("changeUnit")); // NOI18N
+        menuChangeUnit.setText("Сменить отделение"); // NOI18N
+        menuChangeUnit.setName("menuChangeUnit"); // NOI18N
+				menuChangeUnit.setEnabled(isCanChangeUnit);
+        menuFile.add(menuChangeUnit);
+				
+				menuChangePointType.setAction(actionMap.get("changePointType")); // NOI18N
+        menuChangePointType.setText("Тип рабочих мест"); // NOI18N
+        menuChangePointType.setName("menuChangePointType"); // NOI18N
+				menuChangePointType.setToolTipText("Изменить фильтрацию по типу рабочего места.");
+        menuFile.add(menuChangePointType);
 
         jSeparator1.setName("jSeparator1"); // NOI18N
         menuFile.add(jSeparator1);
@@ -2086,6 +2104,10 @@ public class FReception extends javax.swing.JFrame {
     }//GEN-LAST:event_popupServiceTreePopupMenuWillBecomeVisible
     static FileBasedConfiguration config;
     static FileBasedConfigurationBuilder<FileBasedConfiguration> builder;
+    static QUnit unit = null;
+    static Integer pointType = 0;
+    static LinkedList<QUnit> units = null;
+    static boolean isCanChangeUnit = false;
 
     /**
      * @param args the command line arguments
@@ -2093,7 +2115,8 @@ public class FReception extends javax.swing.JFrame {
     public static void main(String args[]) {
         QLog.initial(args, 2);
         Locale.setDefault(Locales.getInstance().getLangCurrent());
-        Uses.showSplash();
+        
+//        Uses.showSplash();
         // Загрузка плагинов из папки plugins
         if (QConfig.cfg().isPlaginable()) {
             Uses.loadPlugins("./plugins/");
@@ -2112,6 +2135,49 @@ public class FReception extends javax.swing.JFrame {
         final IClientNetProperty netProperty = new ClientNetProperty(args);
         //Загрузим серверные параметры
         QProperties.get().load(netProperty);
+        
+        units = NetCommander.getUnits(netProperty);
+        //если в батнике был указан параметр -uid (т.е. он не равен 0),
+        //то запрещено в программе менять зал (т.е. меню "Изменить отделение" будет недоступно)
+        isCanChangeUnit = QConfig.cfg().getUnitId() == 0;
+        
+        //если параметр -uid указан в bat-файле, то используем его
+        if (QConfig.cfg().getUnitId() != 0) {
+            for (QUnit u : units) {
+                if (Objects.equals(u.getId().intValue(), QConfig.cfg().getUnitId())) {
+                    unit = u;
+                }
+            }
+        }
+        //иначе показываем диалог для выбора нужного unitId
+        else {
+            QUnit u = (QUnit)JOptionPane.showInputDialog(fReception,
+                                                         "Выберите отделение для мониторинга:",
+                                                         "Выбор отделения",
+                                                         JOptionPane.QUESTION_MESSAGE,
+                                                         null,
+                                                         units.toArray(),
+                                                         units.toArray()[0]);
+            //если нажали "Сancel"
+            if (u == null) {
+                System.exit(0);
+            } else {
+                unit = u;
+            }
+        }
+        
+        //если после всех манипуляций unit пуст,
+        //то это не хорошо, чёт пошло не так
+        if (unit == null) {
+            JOptionPane.showMessageDialog(fReception,
+                                          "Не выбрано отделение для мониторинга.",
+                                          "Внимание!",
+                                          JOptionPane.INFORMATION_MESSAGE);
+            System.exit(0);
+        }
+        
+        Uses.showSplash();
+        
         // это заплата на баг с коннектом.
         // без предконнекта из main в дальнейшем сокет не хочет работать,
         // долго висит и вываливает минут через 15-20 эксепшн java.net.SocketException: Malformed reply from SOCKS server  
@@ -2135,8 +2201,7 @@ public class FReception extends javax.swing.JFrame {
                         break;
                     }
                 }
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            }
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) { }
             fReception = new FReception(netProperty);
             Uses.setLocation(fReception);
             res = fReception.load();
@@ -2197,7 +2262,7 @@ public class FReception extends javax.swing.JFrame {
 
         final LinkedList<QUser> users;
         try {
-            users = NetCommander.getUsers(netProperty, QConfig.cfg().getUnitId());
+            users = NetCommander.getUsers(netProperty, unit.getId().intValue(), pointType);
             listUsers.setModel(new DefaultComboBoxModel(users.toArray()));
         } catch (Exception ex) {
             Uses.closeSplash();
@@ -2250,7 +2315,7 @@ public class FReception extends javax.swing.JFrame {
 
         final LinkedList<ServiceInfo> srvs;
         try {
-            srvs = NetCommander.getServerState(netProperty, QConfig.cfg().getUnitId());
+            srvs = NetCommander.getServerState(netProperty, unit.getId().intValue());
             int amt = 0;
             
             amt = srvs.stream().map((serviceInfo) -> serviceInfo.getCountWait()).reduce(amt, Integer::sum);
@@ -2305,6 +2370,62 @@ public class FReception extends javax.swing.JFrame {
             }
         }
     }
+    
+    @Action
+    public void changeUnit() {
+        int i = units.indexOf(unit);
+        
+        QUnit u = (QUnit)JOptionPane.showInputDialog(fReception,
+                                                     "Выберите отделение для мониторинга:",
+                                                     "Выбор отделения",
+                                                     JOptionPane.QUESTION_MESSAGE,
+                                                     null,
+                                                     units.toArray(),
+                                                     units.toArray()[i]);
+        //если выбран другой unit
+        if (u != null && !Objects.equals(u, unit)) {
+            unit = u;
+            loadRelativeData();
+            refreshMainData();
+            setTitle("Мониторинг и прием посетителей в электронной очереди - " + unit.getName() + " [" + getPointTypes().get(pointType) + "]");
+        }
+    }
+    
+    //типы рабочих мест
+    private static LinkedHashMap<Integer, String> pointTypes = new LinkedHashMap<>();
+
+    public static LinkedHashMap<Integer, String> getPointTypes() {
+        pointTypes.put(0, "Все");
+        pointTypes.put(Uses.POINT_TYPE_ABO, "СПиАО");
+        pointTypes.put(Uses.POINT_TYPE_SC, "СЦ");
+        return pointTypes;
+    }
+    
+    @Action
+    public void changePointType() {
+        
+        String selectedPointType = (String)JOptionPane.showInputDialog(fReception,
+                                                                       "Выберите тип рабочего места для мониторинга:",
+                                                                       "Выбор типа рабочего места",
+                                                                       JOptionPane.QUESTION_MESSAGE,
+                                                                       null,
+                                                                       pointTypes.values().toArray(),
+                                                                       //нужный индекс будет соответствовать текущему pointType
+                                                                       pointTypes.values().toArray()[pointType]);
+        
+        if (selectedPointType != null) {
+            for (int i = 0; i < getPointTypes().size(); i++) {
+                //если был выбран pointType и он отличается от текущего
+                if (selectedPointType.equals(getPointTypes().get(i)) && !Objects.equals(i, pointType)) {
+                    //сохраняем новый выбранный pointType
+                    pointType = i;
+                    loadRelativeData();
+                    refreshMainData();
+                    setTitle("Мониторинг и прием посетителей в электронной очереди - " + unit.getName() + " [" + selectedPointType + "]");
+                }
+            }
+        }
+    }
 
     @Action
     public void getAbout() {
@@ -2331,7 +2452,7 @@ public class FReception extends javax.swing.JFrame {
 
             final QCustomer customer;
             try {
-                customer = NetCommander.standInService(netProperty, service.getId(), "1", service.getDefaultPriority(), inputData, QConfig.cfg().getUnitId()); //NOI18N
+                customer = NetCommander.standInService(netProperty, service.getId(), "1", service.getDefaultPriority(), inputData, unit.getId().intValue()); //NOI18N
             } catch (Exception ex) {
                 throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
             }
@@ -2411,7 +2532,7 @@ public class FReception extends javax.swing.JFrame {
         if (service != null && service.isLeaf()) {
             final ServiceState customers;
             try {
-                customers = NetCommander.getServiceConsistency(netProperty, service.getId(), QConfig.cfg().getUnitId());
+                customers = NetCommander.getServiceConsistency(netProperty, service.getId(), unit.getId().intValue());
             } catch (QException ex) {
                 throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
             }
@@ -2457,7 +2578,7 @@ public class FReception extends javax.swing.JFrame {
                                                       NetCommander.setCustomerPriority(netProperty,
                                                                                        i,
                                                                                        cus.customer.getFullNumber(),
-                                                                                       QConfig.cfg().getUnitId()),
+                                                                                       unit.getId().intValue()),
                                                       getLocaleMessage("admin.action.change_priority.title"),
                                                       JOptionPane.INFORMATION_MESSAGE);
                         refreshLines();
@@ -2486,7 +2607,7 @@ public class FReception extends javax.swing.JFrame {
                                                       NetCommander.setCustomerPriority(netProperty,
                                                                                        i,
                                                                                        num,
-                                                                                       QConfig.cfg().getUnitId()),
+                                                                                       unit.getId().intValue()),
                                                       getLocaleMessage("admin.action.change_priority.title"),
                                                       JOptionPane.INFORMATION_MESSAGE);
 
@@ -2503,7 +2624,7 @@ public class FReception extends javax.swing.JFrame {
             final FInfoByTicketNumber f = new FInfoByTicketNumber(this, true);
             f.setTitle(num.toUpperCase());
             Uses.setLocation(f);
-            RpcGetTicketHistory.TicketHistory t = NetCommander.checkCustomerNumber(netProperty, num, QConfig.cfg().getUnitId());
+            RpcGetTicketHistory.TicketHistory t = NetCommander.checkCustomerNumber(netProperty, num, unit.getId().intValue());
             f.setInfo(t.getInfo());
             StringBuilder sb = new StringBuilder("<html>");
             t.getCusts().stream().forEach((c) -> {
@@ -2707,6 +2828,8 @@ public class FReception extends javax.swing.JFrame {
     private javax.swing.JMenuItem menuItemServDisable;
     private javax.swing.JMenuItem menuItemStand;
     private javax.swing.JMenu menuLangs;
+		private javax.swing.JMenuItem menuChangeUnit;
+		private javax.swing.JMenuItem menuChangePointType;
     private javax.swing.JMenuItem menuRefreshMainData;
     private javax.swing.JMenuItem menuSendMessage;
     private javax.swing.JMenuItem menuSetPriority;

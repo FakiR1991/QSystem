@@ -73,6 +73,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetUsersList;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory.TicketHistory;
+import ru.apertum.qsystem.common.cmd.RpcGetUnitsList;
 import ru.apertum.qsystem.common.cmd.RpcGetUser;
 import ru.apertum.qsystem.common.cmd.RpcInviteCustomer;
 import ru.apertum.qsystem.common.cmd.RpcStandInService;
@@ -89,6 +90,7 @@ import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QStandards;
+import ru.apertum.qsystem.server.model.QUnit;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.UsersStatistic;
 import ru.apertum.qsystem.server.model.infosystem.QInfoItem;
@@ -363,6 +365,27 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+    
+    public static LinkedList<QUnit> getUnits(INetProperty netProperty) {
+        QLog.l().logger().info("Встать в очередь.");
+        // загрузим ответ
+        String res = null;
+        try {
+            res = send(netProperty, Uses.TASK_GET_UNITS, null);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetUnitsList rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetUnitsList.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
 
     /**
      * Постановка в очередь.
@@ -558,15 +581,16 @@ public class NetCommander {
      *
      * @param netProperty параметры соединения с сервером
      * @param unitId ИД зала
+     * @param pointType СЦ или СПиАО (сервисный центр или абон. зал)
      * @return XML-ответ все юзеры системы
      */
-    public static LinkedList<QUser> getUsers(INetProperty netProperty, Integer unitId) {
+    public static LinkedList<QUser> getUsers(INetProperty netProperty, Integer unitId, Integer pointType) {
         QLog.l().logger().info("Получение описания всех юзеров для выбора себя.");
         // загрузим ответ
         String res = null;
         CmdParams params = new CmdParams();
         params.unitId = unitId;
-        
+        params.pointType = pointType;
         try {
             res = send(netProperty, Uses.TASK_GET_USERS_BY_UID, params);
         } catch (QException e) {// вывод исключений
