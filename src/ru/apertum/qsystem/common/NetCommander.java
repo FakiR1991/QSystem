@@ -2209,7 +2209,7 @@ public class NetCommander {
     }
     
     /**
-     * Получение версии ПО
+     * Получение версии клиентского ПО
      *
      * @param netProperty
      * @return
@@ -2221,6 +2221,34 @@ public class NetCommander {
         final String res;
         try {
             res = send(netProperty, Uses.TASK_GET_LAST_VERSION_SOFTWARE, params);
+        } catch (QException ex) {
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetSrt rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetSrt.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Получение date_reception из БД
+     *
+     * @param netProperty
+     * @return
+     */
+    public static String getDateReceptionSoftware(INetProperty netProperty) {
+        QLog.l().logger().info("Получить дату ПО FReception");
+        final CmdParams params = new CmdParams();
+
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_GET_DATE_RECEPTION_SOFTWARE, params);
         } catch (QException ex) {
             throw new ClientException(Locales.locMes("command_error"), ex);
         }

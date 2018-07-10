@@ -75,6 +75,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
+import ru.apertum.qsystem.About;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
@@ -2135,6 +2136,36 @@ public class FReception extends javax.swing.JFrame {
         final IClientNetProperty netProperty = new ClientNetProperty(args);
         //Загрузим серверные параметры
         QProperties.get().load(netProperty);
+        
+        /*--------------- ПРОВЕРКА ОБНОВЛЕНИЙ ПО ----------------------*/
+        //текущая версия ПО
+        String currentDateReception = About.date;
+        //новая версия ПО
+        String lastDateReception = null;
+        
+        try {
+            //получаем от сервера актуальную версию ПО
+            lastDateReception = NetCommander.getDateReceptionSoftware(netProperty);
+        } catch(Exception e) {
+            JOptionPane.showMessageDialog(new JFrame(),
+                                          "Возникла ошибка во время проверки наличия обновлений ПО FReception.\n" +
+                                          e.getMessage());
+            QLog.l().logger().error("Ошибка проверки наличия обновлений ПО FReception (currentDateReception=" +
+                                    currentDateReception == null ? "" : currentDateReception + ", lastDateReception=" +
+                                    lastDateReception == null ? "" : lastDateReception + ")",
+                                    e);
+        }
+        
+        QLog.l().logger().info("Версия клиентского ПО (currentDateReception=" + currentDateReception + ", lastDateReception=" + lastDateReception + ")");
+        
+        //если есть новая версия, то открываем окно обновления
+        if (lastDateReception != null && !Objects.equals(currentDateReception, lastDateReception)) {
+            //передаём type=2, это означает, что запускаем обновление из FReception
+            FUpdate updateForm = new FUpdate(fReception, true, 2);
+            Uses.setLocation(updateForm);
+            updateForm.setVisible(true);
+        }
+        /*-------------------------------------------------------------*/
         
         units = NetCommander.getUnits(netProperty);
         //если в батнике был указан параметр -uid (т.е. он не равен 0),

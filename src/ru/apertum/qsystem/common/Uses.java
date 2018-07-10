@@ -326,6 +326,7 @@ public final class Uses {
     public static final String TASK_INIT_PROPERTIES = "Создать все параметры в БД";
     public static final String TASK_REINIT_ROLL = "Reinit roll of tickets";
     public static final String TASK_GET_LAST_VERSION_SOFTWARE = "Получить номер последней версии клиентского ПО";
+    public static final String TASK_GET_DATE_RECEPTION_SOFTWARE = "Получить дату ПО FReception из БД";
     // Формат отчетов
     public static final String REPORT_FORMAT_HTML = "html";
     public static final String REPORT_FORMAT_RTF = "rtf";

@@ -141,6 +141,16 @@ public class Spring {
         return response;
     }
     
+    public Date executeSelectDate(String q) {
+        final Session ses = getTxManager().getSessionFactory().getCurrentSession();  
+        Query query = ses.createQuery(q);
+        //query.setDate("today", new Date());
+        List list = query.list();
+        Date response = (Date)list.get(0);
+        ses.flush();
+        return response;
+    }
+    
     public ArrayList<QNotificationsInfo> executeSelectNotificationsInfo(String q) {
         ArrayList<QNotificationsInfo> ni = new ArrayList<QNotificationsInfo>();
         

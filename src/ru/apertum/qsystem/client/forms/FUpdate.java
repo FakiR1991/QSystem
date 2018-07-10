@@ -30,12 +30,22 @@ public class FUpdate extends javax.swing.JDialog {
     
     private Frame parent;
     private boolean modal;
+    //1 - клиент, 2 - ресепшн
+    private int type = 1;
     private String completeUpdateMessage = "Возникла ошибка во время обновления приложения.";
 
     public FUpdate(Frame parent, boolean modal) {
         super(parent, modal);
         this.parent = parent;
         this.modal = modal;
+        initComponents();
+    }
+    
+    public FUpdate(Frame parent, boolean modal, int type) {
+        super(parent, modal);
+        this.parent = parent;
+        this.modal = modal;
+        this.type = type;
         initComponents();
     }
     
@@ -157,20 +167,42 @@ public class FUpdate extends javax.swing.JDialog {
     }
     
     private void runUpdate() throws Exception {
+        
         //имя архива с обновлением
-        String archiveName = "QSystem.zip";
+        String archiveName = "";
         //пусть к папке запущенного ПО
         String appPath = About.appPath + File.separator + "dist";
         //путь для сохранения файлов обновления (переменная окружения TEMP)
         String tempFolderPath = System.getenv("TEMP") == null ? "C:\\temp" : System.getenv("TEMP");
         //путь к архиву из которого будет обновляться программа
-        String tempZipFilePath = tempFolderPath + File.separator + archiveName;
+        String tempZipFilePath = "";
+        //пусть к папке для обновления
+        String autoUpdatePath = "";
+        
+        /**
+         * Анализируем параметр type чтобы понять откуда было запущено обновление.
+         * 1 - клиентского ПО;
+         * 2 - ПО для мониторинга;
+         */
+        switch (type) {
+            case 1:
+                archiveName = "QSystem.zip";
+                tempZipFilePath = tempFolderPath + File.separator + archiveName;
+                autoUpdatePath = "file://10.5.0.2/ProgsUpdate/QSystem-autoupdate/";
+                break;
+                
+            case 2:
+                archiveName = "FReception.zip";
+                tempZipFilePath = tempFolderPath + File.separator + archiveName;
+                autoUpdatePath = "file://10.5.0.2/ProgsUpdate/QSystem-autoupdate/FReception/";
+                break;
+        }
         
         URL link = null;
         InputStream is = null;
 
         try {
-            link = new URL("file://10.5.0.2/ProgsUpdate/QSystem-autoupdate/" + archiveName);
+            link = new URL(autoUpdatePath + archiveName);
             is = new BufferedInputStream(link.openStream());
         } catch(IOException e) {
             QLog.l().logger().error("Ошибка в процессе обновления ПО.", e);
@@ -197,7 +229,6 @@ public class FUpdate extends javax.swing.JDialog {
             fos.write(response);
             fos.close();
         } catch(IOException e) {
-//            JOptionPane.showMessageDialog(this, "Ошибка записи в файл.\n" + e.getMessage());
             QLog.l().logger().error("Ошибка записи в файл.", e);
             throw new ClientException("Ошибка записи в файл.", e);
         }

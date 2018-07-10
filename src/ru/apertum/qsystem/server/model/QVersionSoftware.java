@@ -8,6 +8,7 @@ package ru.apertum.qsystem.server.model;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -29,8 +30,6 @@ public class QVersionSoftware implements Serializable {
     @SerializedName("id")
     private Long id;
     
-    private String version;
-    
     @Id
     @Column(name = "id")
     public Long getId() {
@@ -41,6 +40,8 @@ public class QVersionSoftware implements Serializable {
         this.id = id;
     }
     
+    private String version;
+    
     @Column(name = "version")
     public String getVersion() {
         return version;
@@ -48,5 +49,16 @@ public class QVersionSoftware implements Serializable {
     
     public void setVersion(String version) {
         this.version = version;
+    }
+    
+    private Date dateReception;
+    
+    @Column(name = "date_reception")
+    public Date getDateReception() {
+        return dateReception;
+    }
+    
+    public void setDateReception(Date dateReception) {
+        this.dateReception = dateReception;
     }
 }
