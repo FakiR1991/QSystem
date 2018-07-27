@@ -268,6 +268,7 @@ public final class Uses {
     public static final String TASK_ABOUT_SERVICE = "Получить описание услуги";
     public static final String TASK_GET_SERVICE_CONSISANCY = "Получить очередь услуги";
     public static final String TASK_ABOUT_SERVICE_PERSON_LIMIT = "Получить возможность встать с этими данными";
+    public static final String TASK_GET_WORK_MAX_STANDARD = "Получить значение максимального времени обслуживания клиентов по стандарту";
     public static final String TASK_GET_SERVICE_PREINFO = "Получить информацию по услуге";
     public static final String TASK_GET_INFO_PRINT = "Получить информацию для печати";
     public static final String TASK_GET_USERS = "Получить перечень пользователей";

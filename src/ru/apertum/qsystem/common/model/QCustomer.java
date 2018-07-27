@@ -43,6 +43,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QConfig;
+import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.extra.IChangeCustomerStateEvent;
 import ru.apertum.qsystem.server.Spring;
@@ -704,9 +705,10 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     @Override
     public String toString() {
         return String.format("%03d", this.getNumber())
+                + (standTime != null ? " встал в очередь " + Uses.FORMAT_DD_MM_YYYY_TIME.format(standTime) : "")
                 + (getInput_data().isEmpty() ? "" : " " + getInput_data())
                 + (postponedStatus.isEmpty() ? "" : " " + postponedStatus + (" (" + (postponPeriod > 0 ? postponPeriod : "...") + " / " + (System.currentTimeMillis() - startPontpone) / 1000 / 60 + " min.)")
-                        + (isMine != null ? " Private!" : ""));
+                + (isMine != null ? " Private!" : ""));
     }
 
     @Transient

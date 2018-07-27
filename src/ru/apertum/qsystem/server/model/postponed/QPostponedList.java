@@ -20,6 +20,7 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Objects;
 import javax.swing.DefaultListModel;
 import javax.swing.Timer;
 import org.apache.commons.collections.CollectionUtils;
@@ -80,15 +81,16 @@ public class QPostponedList extends DefaultListModel {
                                 QLog.l().logger().debug("Перемещение по таймеру из отложенных кастомера №" + customer.getPrefix() + customer.getNumber() + " в услугу \"" + customer.getService().getName() + "\"");
                                 // время сидения вышло, пора отправляться в очередь.
                                 forDel.add(customer);
-                                // в очередь, сукины дети
-                                // время постановки проставляется автоматом при создании кастомера.
-                                if ( customer.getState().equals(CustomerState.STATE_PAYMENT) ||
-                                     customer.getState().equals(CustomerState.STATE_POSTPONED) ||
-                                     customer.getState().equals(CustomerState.STATE_POSTPONED_AFTER_SERVICE) ) {
-                                    if (customer.getPriority().get() < 2) {
+                                
+                                //если кастомер после оплаты, то ставим максимальный приоритет
+                                if ( customer.getState().equals(CustomerState.STATE_PAYMENT) ) {
+                                    customer.setPriority(Uses.PRIORITY_VIP);
+                                }
+                                //иначе повышаем на единичку, если кастомер меньше Повышенного приоритета
+                                else if ( Objects.equals(customer.getState(), CustomerState.STATE_POSTPONED) ||
+                                          Objects.equals(customer.getState(), CustomerState.STATE_POSTPONED_AFTER_SERVICE) ) {
+                                    if (customer.getPriority().get() < Uses.PRIORITY_HI) {
                                         customer.setPriority(customer.getPriority().get() + 1);
-                                    } else {
-                                        customer.setPriority(customer.getPriority().get());
                                     }
                                 }
                                 //добавим нового пользователя

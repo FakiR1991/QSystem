@@ -725,6 +725,20 @@ public final class Executer {
             }
         }
     };
+    
+    final Task getWorkMaxStandard = new Task(Uses.TASK_GET_WORK_MAX_STANDARD) {
+
+        @Override
+        public RpcGetInt process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            try {
+                return new RpcGetInt(ServerProps.getInstance().getStandards().getWorkMax());
+            } catch (Exception ex) {
+                throw new ServerException("Ошибка получения значения максимального времени обслуживания по стандарту. " + ipAdress, ex);
+            }
+        }
+    };
+    
     /**
      * Получить описание состояния услуги
      */
@@ -1509,6 +1523,7 @@ public final class Executer {
                                                       additionInfo);
                     QLog.l().logger().info("Ответ сервиса АПБ=" + apbCustomerId);
                 } catch (Exception e) {
+                    QLog.l().logger().trace("Не удалось отправить клиента в АПБ:", e);
                     throw e;
                 }
                 customer.setExtId(Long.valueOf(apbCustomerId));

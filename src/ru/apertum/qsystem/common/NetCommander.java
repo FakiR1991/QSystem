@@ -543,6 +543,26 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+    
+    public static int getWorkMaxStandard(INetProperty netProperty) throws QException {
+        QLog.l().logger().info("Получить значение максимального времени обслуживания клиентов по стандарту.");
+        String res = null;
+        try {
+            res = send(netProperty, Uses.TASK_GET_WORK_MAX_STANDARD, null);
+        } catch (QException ex) {// вывод исключений
+            throw new QException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetInt rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetInt.class);
+        } catch (JsonSyntaxException ex) {
+            throw new QException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
 
     /**
      * Получение описания всех юзеров для выбора себя.

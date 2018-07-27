@@ -53,6 +53,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import org.dom4j.DocumentException;
 import org.jdesktop.application.Action;
 import javax.swing.JFrame;
@@ -100,6 +101,7 @@ import ru.apertum.qsystem.common.model.IClientNetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IStartClient;
 import ru.apertum.qsystem.fx.OrangeClientboard;
+import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
@@ -1302,6 +1304,41 @@ public final class FClient extends javax.swing.JFrame {
         }
     }
     
+    private Timer clientServicingTimer = null;
+    
+    private void startServicingTimer() {
+        if (clientServicingTimer == null) {
+            clientServicingTimer = new Timer(5 * 60 * 1000, (ActionEvent e) -> {
+                if (customer == null) {
+                    return;
+                }
+
+                Long startServicing = customer.getStartTime().getTime();
+                Long now = new Date().getTime();
+                Integer workMaxStandard;
+                Integer clientServicing = new Long((now - startServicing) / 1000 / 60).intValue();
+                try {
+                    workMaxStandard = NetCommander.getWorkMaxStandard(netProperty);
+                } catch (Exception ex) {
+                    QLog.l().logger().trace("Ошибка получения стандарта по времени обслуживания клиентов", ex);
+                    return;
+                }
+
+                //если превышена норма по обслуживанию клиентов, то уведомляем,
+                //а так же уведомляем каждые 5 минут после превышения нормы
+                //норма в данный момент 20 минут - уведомление будет через 20 минут, а потом каждые 5 минут
+                if (clientServicing >= workMaxStandard) {
+                    JOptionPane optionPane = new JOptionPane("Время обслуживания клиента: " + String.valueOf(clientServicing) + " минут",
+                                                             JOptionPane.WARNING_MESSAGE);
+                    JDialog dialog = optionPane.createDialog("Внимание!");
+                    dialog.setAlwaysOnTop(true);
+                    dialog.setVisible(true);
+                }
+            });
+            clientServicingTimer.start();
+        }
+    }
+    
     /**
      * Действие по нажатию кнопки "Начать прием"
      *
@@ -1311,6 +1348,10 @@ public final class FClient extends javax.swing.JFrame {
     public void getStartCustomer(ActionEvent evt) {
         try {
             final long start = go();
+            
+            //таймер, который будет выводить сообщение об времени обслуживания
+            startServicingTimer();
+            
             // Переводим кастомера в разряд обрабатываемых
             /*if(denyTimer.isRunning())
                denyTimer.stop();*/
@@ -1409,7 +1450,7 @@ public final class FClient extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(this, "Возникла ошибка во время отправки клиента в банк. Попробуйте повторить попытку.\n\n" + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
+                
                 //здесь у оператора состояние 2, но так как мы при нажатии на кнопку
                 //"Начать приём" завершаем состояние 3, а состояние 2 записывается в таблицу триггером,
                 //то здесь нам можно было бы лишь обновить состояние 1, но это не критично, так как
@@ -1461,7 +1502,7 @@ public final class FClient extends javax.swing.JFrame {
     public void getStopCustomer(ActionEvent evt) {
         try {
             //Обозначим результат если требуется
-            final long start = go();
+            final long start = go();            
             // Переводим кастомера в разряд обрабатанных
             // это должно выкинуть кастомера нафиг, но как обработанного
             final Long res = setResult();

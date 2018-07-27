@@ -944,9 +944,11 @@ public class QServer extends Thread {
                             if (temp.get(0).state == 1) {
                                 QLog.l().logger().debug("Попытаемся кастомера " + temp.get(0).code + " переместить в очередь из отложенных");
                                 //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
-                                if (customer.getPriority().get() < Uses.PRIORITY_HI) {
-                                    customer.setPriority(customer.getPriority().get() + 1);
-                                }
+//                                if (customer.getPriority().get() < Uses.PRIORITY_HI) {
+//                                    customer.setPriority(customer.getPriority().get() + 1);
+//                                }
+                                //делаем максимальный приоритет после оплаты
+                                customer.setPriority(Uses.PRIORITY_VIP);
                                 
                                 //вроде как только что встал в очередь, ну и время проставим,
                                 //а то ожидание будет огромное только что встал типо;
