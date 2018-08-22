@@ -110,6 +110,8 @@ import ru.apertum.qsystem.server.model.response.QResponseTree;
 import ru.apertum.qsystem.server.model.results.QResult;
 import ru.apertum.qsystem.server.model.results.QResultList;
 import ru.apertum.qsystem.server.model.schedule.QSchedule;
+import ru.apertum.qsystem.server.model.schedule.QSchedule2;
+import ru.apertum.qsystem.server.model.schedule.QSchedule2List;
 
 /**
  * Пул очередей. Пул очередей - главная структура управления очередями. В системе существуют несколько очередей, например для оказания разных услуг. Пул
@@ -478,11 +480,11 @@ public final class Executer {
                         }
                     }
                 }// Мерзость закончилась. Вызвали по номеру если надо было.
-
                 if (customer == null) {
                     QService rollService = null;
                     for (QPlanService plan : user.getPlanServices()) {
-                        final QService serv = QServiceTree.getInstance().getById(plan.getService().getId()); // очередная очередь
+                        final Long serviceOrLink = plan.getService().getLink() != null ? plan.getService().getLink().getId() : plan.getService().getId();
+                        final QService serv = QServiceTree.getInstance().getById(serviceOrLink); // очередная очередь
                         //только услуги, которые соответствуют его pointType (то есть если он сидит в СЦ,
                         //то ему не нужно показывать очередь для абон. зальских услуг назначенных ему)
 //                        if (user.getPointType() != null && user.getPointType().toString().compareTo(serv.getPrefix()) == 0) {
@@ -732,7 +734,20 @@ public final class Executer {
         public RpcGetInt process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             try {
-                return new RpcGetInt(ServerProps.getInstance().getStandards().getWorkMax());
+                
+                Integer workMaxStandard = null;
+                
+                if (cmdParams.serviceId != null) {
+                    workMaxStandard = QServiceTree.getInstance().getById(cmdParams.serviceId).getDuration();
+                } else if (cmdParams.userId != null) {
+                    QCustomer customer = QUserList.getInstance().getById(cmdParams.userId).getCustomer();
+                    Long serviceId = customer != null ? customer.getService().getId() : null;
+                    if (serviceId != null) {
+                        workMaxStandard = QServiceTree.getInstance().getById(serviceId).getDuration();
+                    }
+                }
+                
+                return new RpcGetInt(workMaxStandard);
             } catch (Exception ex) {
                 throw new ServerException("Ошибка получения значения максимального времени обслуживания по стандарту. " + ipAdress, ex);
             }
@@ -773,6 +788,23 @@ public final class Executer {
                 QLog.l().logger().warn("Услуга \"" + srv.getName() + "\" не обрабатывается исходя из достижения лимита возможной обработки кастомеров в день." + " " + ipAdress);
                 return new RpcGetServiceState(Uses.LOCK_PER_DAY_INT, "");
             }
+            
+//            //пустой ли префикс?
+//            boolean isEmptyPrefix = srvR.getPrefix() == null || Objects.equals(srvR.getPrefix().trim(), "");
+//            //правильный ли префикс? (должен состоять из цифр)
+//            boolean isWrongPrefix = false;
+//            Integer servicePrefix = null;
+//            try {
+//                servicePrefix = Integer.valueOf(srvR.getPrefix());
+//            } catch (Exception ex) {
+//                isWrongPrefix = true;
+//            }
+//            //если префикс услуги пустой или буквенный, например, то type приравниваем null
+//            Integer type = isEmptyPrefix || isWrongPrefix ? null : servicePrefix;
+//            
+//            //получаем расписание по unitId и type
+//            QSchedule2 schedule = QSchedule2List.getInstance().getSchedule(cmdParams.unitId, type);
+            
             // Если нет расписания, календаря или выходной то отказ по расписанию
             if (srv.getSchedule() == null
                     || QCalendarList.getInstance().getById(1).checkFreeDay(day)
@@ -966,13 +998,14 @@ public final class Executer {
             final LinkedList<RpcGetSelfSituation.SelfService> servs = new LinkedList<>();
             //цикл по списку услуг присвоенных юзеру в админском приложении
             for (QPlanService planService : user.getPlanServices()) {
-                final QService service = QServiceTree.getInstance().getById(planService.getService().getId());
-                    servs.add(new RpcGetSelfSituation.SelfService(service,
-                                                                  service.getCountCustomers(user.getUnitId()),
-                                                                  planService.getCoefficient(),
-                                                                  planService.getFlexible_coef(),
-                                                                  user.getUnitId()));
-                    stateH = stateH + service.getId() + service.getCountCustomers(user.getUnitId()) * (planService.getCoefficient() + 17);
+                final Long serviceOrLink = planService.getService().getLink() != null ? planService.getService().getLink().getId() : planService.getService().getId();
+                final QService service = QServiceTree.getInstance().getById(serviceOrLink);
+                servs.add(new RpcGetSelfSituation.SelfService(service,
+                                                              service.getCountCustomers(user.getUnitId()),
+                                                              planService.getCoefficient(),
+                                                              planService.getFlexible_coef(),
+                                                              user.getUnitId()));
+                stateH = stateH + service.getId() + service.getCountCustomers(user.getUnitId()) * (planService.getCoefficient() + 17);
             }
             // нужно сделать вставочку приглашенного юзера, если он есть
             stateH = stateH

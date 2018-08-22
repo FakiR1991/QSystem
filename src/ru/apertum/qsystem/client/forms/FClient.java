@@ -1305,38 +1305,50 @@ public final class FClient extends javax.swing.JFrame {
     }
     
     private Timer clientServicingTimer = null;
+    private Integer workMaxForService = null;
     
     private void startServicingTimer() {
-        if (clientServicingTimer == null) {
-            clientServicingTimer = new Timer(5 * 60 * 1000, (ActionEvent e) -> {
-                if (customer == null) {
-                    return;
-                }
-
-                Long startServicing = customer.getStartTime().getTime();
-                Long now = new Date().getTime();
-                Integer workMaxStandard;
-                Integer clientServicing = new Long((now - startServicing) / 1000 / 60).intValue();
-                try {
-                    workMaxStandard = NetCommander.getWorkMaxStandard(netProperty);
-                } catch (Exception ex) {
-                    QLog.l().logger().trace("Ошибка получения стандарта по времени обслуживания клиентов", ex);
-                    return;
-                }
-
-                //если превышена норма по обслуживанию клиентов, то уведомляем,
-                //а так же уведомляем каждые 5 минут после превышения нормы
-                //норма в данный момент 20 минут - уведомление будет через 20 минут, а потом каждые 5 минут
-                if (clientServicing >= workMaxStandard) {
-                    JOptionPane optionPane = new JOptionPane("Время обслуживания клиента: " + String.valueOf(clientServicing) + " минут",
-                                                             JOptionPane.WARNING_MESSAGE);
-                    JDialog dialog = optionPane.createDialog("Внимание!");
-                    dialog.setAlwaysOnTop(true);
-                    dialog.setVisible(true);
-                }
-            });
-            clientServicingTimer.start();
+        if (clientServicingTimer != null) {
+            clientServicingTimer.stop();
         }
+        
+        workMaxForService = null;
+        try {
+            workMaxForService = NetCommander.getWorkMaxForService(netProperty, customer.getService().getId(), null);
+        } catch (Exception e) {
+            QLog.l().logger().error("Ошибка получения стандарта по времени обслуживания для услуги " + customer.getService().getId(), e);
+        }
+        
+        clientServicingTimer = new Timer(1 * 60 * 1000, (ActionEvent e) -> {
+            if (customer == null) {
+                return;
+            }
+
+            Long startServicing = customer.getStartTime().getTime();
+            Long now = new Date().getTime();
+            Integer clientServicing = new Long((now - startServicing) / 1000 / 60).intValue();
+            
+            //разница между временем обслуживания клиента и нормативом по обслуживанию
+            int delta = clientServicing - workMaxForService;
+            
+            //за одну минуту до превышения нормы
+            if (clientServicing == workMaxForService - 1) {
+                showServicingTimeWarning(clientServicing, workMaxForService);
+            }
+            //каждые пять минут после превышения нормы
+            else if (delta > 0 && delta % 5 == 0) {
+                showServicingTimeWarning(clientServicing, workMaxForService);
+            }
+            
+        });
+        clientServicingTimer.start();
+    }
+    
+    private void showServicingTimeWarning(Integer clientServicing, Integer standard) {
+        JOptionPane optionPane = new JOptionPane("Время обслуживания: " + String.valueOf(clientServicing) + " мин. (норматив: " + standard + " мин.)", JOptionPane.WARNING_MESSAGE);
+        JDialog dialog = optionPane.createDialog("Внимание!");
+        dialog.setAlwaysOnTop(true);
+        dialog.setVisible(true);
     }
     
     /**
@@ -1395,9 +1407,11 @@ public final class FClient extends javax.swing.JFrame {
             //выбранный способ отправки на оплату (новый или старый)
             boolean isNewPaymentType = isNewBankSendingEnabled;
             //работает ли новая отправка в банк в нужном нам отделении
-            boolean newPaymentEnabledCurrentInUnit = ( customer.getUnitId().compareTo(Uses.UNIT_TIRASPOL_KARL_MARX) == 0
-                                                        /*&&
-                                                       customer.getUnitId().compareTo(Uses.UNIT_BENDERY_LAZO) == 0*/ );
+            boolean isNewPaymentEnabledInCurrentUnit = ( customer.getUnitId().compareTo(Uses.UNIT_TIRASPOL_KARL_MARX) == 0
+                                                            ||
+                                                         customer.getUnitId().compareTo(Uses.UNIT_BENDERY_LAZO) == 0
+                                                            /*||
+                                                         customer.getUnitId().compareTo(Uses.UNIT_RYBNICA) == 0*/ );
             
             bankForm2 = new FSendToBank2(fClient, true, isNewBankSendingEnabled);
             
@@ -1434,7 +1448,7 @@ public final class FClient extends javax.swing.JFrame {
             //и при этом в properties включена отправка в банк с помощью веб-сервиса,
             //и в форме отправки был выбрал тип оплаты "Касса АПБ",
             //то используем новый метод отправки в банк, иначе - старый
-            if ( isNewBankSendingEnabled && isNewPaymentType && newPaymentEnabledCurrentInUnit )
+            if ( isNewBankSendingEnabled && isNewPaymentType && isNewPaymentEnabledInCurrentUnit )
             {
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
                 try {
@@ -1622,7 +1636,7 @@ public final class FClient extends javax.swing.JFrame {
             case Uses.UNIT_RYBNICA:
                 //терминалы в Рыбнице имеют point=7
                 terminalPoint = "7";
-            break;
+                break;
             
             default:
                 terminalPoint = "-1";

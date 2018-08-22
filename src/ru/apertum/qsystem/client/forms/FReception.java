@@ -25,7 +25,6 @@ package ru.apertum.qsystem.client.forms;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
-import java.awt.HeadlessException;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -35,7 +34,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
@@ -54,7 +52,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
-import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
@@ -80,7 +77,6 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
-import static ru.apertum.qsystem.client.forms.FClient.getLocaleMessage;
 import ru.apertum.qsystem.client.model.JTreeComboBox;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.CustomerState;
@@ -115,7 +111,6 @@ import ru.apertum.qsystem.server.model.QServiceLang;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QStandards;
 import ru.apertum.qsystem.server.model.QUnit;
-import ru.apertum.qsystem.server.model.QUnitList;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
@@ -706,7 +701,13 @@ public class FReception extends javax.swing.JFrame {
                             return "<HTML><SPAN STYLE='COLOR:" + (toolong ? "RED" : "GREEN") + "'>" + getLocaleMessage("Free2") + " " + mnt + getLocaleMessage("min.min") + "</span>";
                     } else {
                         final int mnt = Math.round((new Date().getTime() - greed.get(rowIndex).getShadow().getStartTime().getTime()) / 1000 / 60);
-                        final boolean toolong = (mnt > standards.getDowntimeMax());
+                        Integer workMaxStandard;
+                        try {
+                            workMaxStandard = NetCommander.getWorkMaxForService(netProperty, null, greed.get(rowIndex).getId());
+                        } catch (Exception e) {
+                            workMaxStandard = 20;
+                        }
+                        final boolean toolong = (mnt >= workMaxStandard);
                         return "<html><span style='color:" + (toolong ? "red" : "green") + "'>" + "В работе" + " " + mnt + "мин." + "</span>"; //NOI18N
                     }
                 default:

@@ -198,6 +198,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
          * @param countWait количество ожидающих в этой услуге
          * @param priority приоритет услуги
          * @param flexy возможность менять приоритет услуги юзеру
+         * @param unitId ИД отделения
          */
         public SelfService(QService service, int countWait, int priority, boolean flexy, Integer unitId) {
             this.serviceName = service.getName();
@@ -214,6 +215,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
                 line.addLast(sp);
             }
         }
+        
         @Expose
         @SerializedName("id")
         private long id;

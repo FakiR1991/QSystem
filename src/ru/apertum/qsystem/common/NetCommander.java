@@ -74,7 +74,6 @@ import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory.TicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcGetUnitsList;
-import ru.apertum.qsystem.common.cmd.RpcGetUser;
 import ru.apertum.qsystem.common.cmd.RpcInviteCustomer;
 import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.exceptions.ClientException;
@@ -544,11 +543,22 @@ public class NetCommander {
         return rpc.getResult();
     }
     
-    public static int getWorkMaxStandard(INetProperty netProperty) throws QException {
-        QLog.l().logger().info("Получить значение максимального времени обслуживания клиентов по стандарту.");
+    /**
+     * Получить стандарт по времени обслуживания для конкретной услуги
+     * @param netProperty
+     * @param serviceId
+     * @return
+     * @throws QException 
+     */
+    public static int getWorkMaxForService(INetProperty netProperty, Long serviceId, Long userId) throws QException {
+        QLog.l().logger().info("Получить стандарт по времени обслуживания услуги " + serviceId);
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.serviceId = serviceId;
+        params.userId = userId;
         String res = null;
         try {
-            res = send(netProperty, Uses.TASK_GET_WORK_MAX_STANDARD, null);
+            res = send(netProperty, Uses.TASK_GET_WORK_MAX_STANDARD, params);
         } catch (QException ex) {// вывод исключений
             throw new QException(Locales.locMes("command_error"), ex);
         }

@@ -400,7 +400,9 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
     }
 
     public boolean hasService(long serviceId) {
-        return planServices.stream().anyMatch((qPlanService) -> (serviceId == qPlanService.getService().getId()));
+        return planServices.stream().anyMatch(
+            (qPlanService) -> (qPlanService.getService().getId() == serviceId || (qPlanService.getService().getLink() != null && qPlanService.getService().getLink().getId() == serviceId))
+        );
     }
 
     public boolean hasService(QService service) {

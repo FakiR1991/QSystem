@@ -43,7 +43,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QConfig;
-import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.extra.IChangeCustomerStateEvent;
 import ru.apertum.qsystem.server.Spring;
@@ -222,7 +221,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
             case STATE_DEAD:
                 QLog.l().logger().debug("Статус: Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет домой по неявке");
                 if (!isFReception) {
-                    getUser().getPlanService(getService()).inkKilled();
+//                    getUser().getPlanService(getService()).inkKilled();
                 }
                 // хер с ним, сохраним чтоб потом почекать неподошедших. сохраним кастомера в базе
                 // только финиш_тайм надо проставить, хер сним, и старт_тайм тоже, ядренбатон
@@ -255,7 +254,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 break;
             case STATE_REDIRECT:
                 QLog.l().logger().debug("Статус: Кастомера редиректили с номером \"" + getPrefix() + getNumber() + "\"");
-                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
+//                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
                 setFinishTime(new Date());
                 // сохраним кастомера в базе
                 saveToSelfDB();
@@ -263,11 +262,11 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 break;
             case STATE_WORK:
                 QLog.l().logger().debug("Начали работать с кастомером с номером \"" + getPrefix() + getNumber() + "\"");
-                getUser().getPlanService(getService()).upWait(System.currentTimeMillis() - getStandTime().getTime());
+//                getUser().getPlanService(getService()).upWait(System.currentTimeMillis() - getStandTime().getTime());
                 break;
             case STATE_WORK_SECONDARY:
                 QLog.l().logger().debug("Статус: Далее по цепочки начали работать с кастомером с номером \"" + getPrefix() + getNumber() + "\"");
-                getUser().getPlanService(getService()).upWait(System.currentTimeMillis() - getStandTime().getTime());
+//                getUser().getPlanService(getService()).upWait(System.currentTimeMillis() - getStandTime().getTime());
                 break;
             case STATE_BACK:
                 QLog.l().logger().debug("Статус: Кастомер с номером \"" + getPrefix() + getNumber() + "\" вернут в преднюю услугу");
@@ -275,7 +274,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
                 break;
             case STATE_FINISH:
                 QLog.l().logger().debug("Статус: С кастомером с номером \"" + getPrefix() + getNumber() + "\" закончили работать");
-                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
+//                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
                 setFinishTime(new Date());
                 QLog.l().logger().debug(getFinishTime() + "FINISH TIME ++++ DEBUG");
                 // сохраним кастомера в базе
@@ -285,7 +284,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
             case STATE_POSTPONED_AFTER_SERVICE:
                 QLog.l().logger().debug("Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет ждать в список отложенных");
                 QLog.l().logger().debug(getStartTime());
-                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
+//                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
                 setFinishTime(new Date());
                 // сохраним кастомера в базе
                 saveToSelfDB();
@@ -294,7 +293,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
             case STATE_PAYMENT:
                 QLog.l().logger().debug("Кастомер с номером \"" + getPrefix() + getNumber() + "\" идет оплачивать услугу");
                 QLog.l().logger().debug(getStartTime());
-                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
+//                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
                 setFinishTime(new Date());
                 // сохраним кастомера в базе
                 saveToSelfDB();
@@ -302,7 +301,7 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
             case STATE_DEAD_AFTER_PAYMENT:
                 QLog.l().logger().debug("Кастомер с номером \"" + getPrefix() + getNumber() + "\" удаляется по таймеру из очереди ушёдших на оплату");
                 QLog.l().logger().debug(getStartTime());
-                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
+//                getUser().getPlanService(getService()).inkWorked(System.currentTimeMillis() - getStartTime().getTime());
                 setFinishTime(new Date());
                 //в данном случае у кастомера getUser равен null,
                 //возникнет ошибка во время сохранения данных
@@ -705,7 +704,6 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     @Override
     public String toString() {
         return String.format("%03d", this.getNumber())
-                + (standTime != null ? " встал в очередь " + Uses.FORMAT_DD_MM_YYYY_TIME.format(standTime) : "")
                 + (getInput_data().isEmpty() ? "" : " " + getInput_data())
                 + (postponedStatus.isEmpty() ? "" : " " + postponedStatus + (" (" + (postponPeriod > 0 ? postponPeriod : "...") + " / " + (System.currentTimeMillis() - startPontpone) / 1000 / 60 + " min.)")
                 + (isMine != null ? " Private!" : ""));

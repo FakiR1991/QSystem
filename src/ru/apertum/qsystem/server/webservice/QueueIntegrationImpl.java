@@ -112,7 +112,8 @@ public class QueueIntegrationImpl implements QueueIntegration {
             }
 
             //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
-            if (customer.getPriority().get() < Uses.PRIORITY_HI) {
+            //увеличиваем приоритет только если кастомер не инициирован АПБ
+            if (!initFromApb && customer.getPriority().get() < Uses.PRIORITY_HI) {
                 customer.setPriority(customer.getPriority().get() + 1);
             }
 
