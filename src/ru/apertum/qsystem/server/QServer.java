@@ -36,7 +36,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -155,8 +154,7 @@ public class QServer extends Thread {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        
-        workloadTimer.start();
+//        workloadTimer.start();
         cleanUpMovedToBankTimer.start();
         
         publishWebService();
@@ -371,7 +369,7 @@ public class QServer extends Thread {
         }// while
         
         //останавливаем таймер проверки очередей
-        workloadTimer.stop();
+//        workloadTimer.stop();
 
         QLog.l().logger().debug("Закрываем серверный сокет.");
         server.close();

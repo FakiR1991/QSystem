@@ -160,6 +160,7 @@ import ru.apertum.qsystem.server.model.schedule.QSchedule;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceLang;
 import ru.apertum.qsystem.server.model.QServiceTree;
+import ru.apertum.qsystem.server.model.QUnitList;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
 import ru.apertum.qsystem.server.model.calendar.CalendarTableModel;
@@ -176,6 +177,8 @@ import ru.apertum.qsystem.server.model.results.QResult;
 import ru.apertum.qsystem.server.model.results.QResultList;
 import ru.apertum.qsystem.server.model.schedule.QBreaks;
 import ru.apertum.qsystem.server.model.schedule.QBreaksList;
+import ru.apertum.qsystem.server.model.schedule.QSchedule2;
+import ru.apertum.qsystem.server.model.schedule.QSchedule2List;
 import ru.apertum.qsystem.server.model.schedule.QScheduleList;
 import ru.apertum.qsystem.server.model.schedule.QSpecSchedule;
 
@@ -643,6 +646,75 @@ public class FAdmin extends javax.swing.JFrame {
         }
     }
     
+    private void changeScheduleSelection() {
+        if (jListSchedule.getLastVisibleIndex() == -1) {
+            return;
+        }
+        final QSchedule2 schedule = (QSchedule2)jListSchedule.getSelectedValue();
+        if (schedule == null) {
+            clearRelativeScheduleData();
+            return;
+        }
+        showRelativeScheduleData(schedule);
+    }
+    
+    private void clearRelativeScheduleData() {
+        jLabelScheduleName.setText("...");
+        jLabelUnitValue.setText("...");
+        jLabelTypeValue.setText("...");
+        jLabelMonValue.setText("...");
+        jLabelTueValue.setText("...");
+        jLabelWedValue.setText("...");
+        jLabelThuValue.setText("...");
+        jLabelFriValue.setText("...");
+        jLabelSatValue.setText("...");
+        jLabelSunValue.setText("...");
+    }
+    
+    private void showRelativeScheduleData(QSchedule2 schedule) {
+        String typeName = "";
+        switch(schedule.getType()) {
+            case 1:
+                typeName = "СПиАО";
+                break;
+            case 2:
+                typeName = "СЦ";
+                break;
+            default:
+                typeName = "...";
+                break;
+        }
+        
+        jLabelScheduleName.setText(schedule.getName());
+        jLabelUnitValue.setText(QUnitList.getInstance().getById(schedule.getUnitId()).getName());
+        jLabelTypeValue.setText(typeName);
+        jLabelMonValue.setText(schedule.getDay1Begin() != null || schedule.getDay1End() != null
+                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay1Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay1End())
+                                    : "...");
+        jLabelTueValue.setText(schedule.getDay2Begin() != null || schedule.getDay2End() != null
+                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay2Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay2End())
+                                    : "...");
+        jLabelWedValue.setText(schedule.getDay3Begin() != null || schedule.getDay3End() != null
+                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay3Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay3End())
+                                    : "...");
+        jLabelThuValue.setText(schedule.getDay4Begin() != null || schedule.getDay4End() != null
+                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay4Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay4End())
+                                    : "...");
+        jLabelFriValue.setText(schedule.getDay5Begin() != null || schedule.getDay5End() != null
+                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay5Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay5End())
+                                    : "...");
+        jLabelSatValue.setText(schedule.getDay6Begin() != null || schedule.getDay6End() != null
+                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay6Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay6End())
+                                    : "...");
+        jLabelSunValue.setText(schedule.getDay7Begin() != null || schedule.getDay7End() != null
+                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay7Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay7End())
+                                    : "...");
+    }
+    
+    private void loadSchedule() {
+        jListSchedule.setModel(QSchedule2List.getInstance());
+    };
+    
     /**
      * Creates new form FAdmin
      */
@@ -653,6 +725,8 @@ public class FAdmin extends javax.swing.JFrame {
         init();
         
         loadListIP();
+        
+        loadSchedule();
 
         tabbedPaneMain.remove(tabHide);
 
@@ -681,7 +755,7 @@ public class FAdmin extends javax.swing.JFrame {
             item.setName("QRadioButtonMenuItem" + (ii++)); // NOI18N
             menuLangs.add(item);
         }
-
+        
         // Определим события выбора итемов в списках.
         listUsers.addListSelectionListener((ListSelectionEvent e) -> {
             userListChange();
@@ -2026,8 +2100,10 @@ public class FAdmin extends javax.swing.JFrame {
                     QBreaksList.getInstance().save();
 
                     // Сохраняем планы расписания
-                    QScheduleList.getInstance().save();
-
+//                    QScheduleList.getInstance().save();
+                    // Сохраняем планы расписания
+                    QSchedule2List.getInstance().save();
+                    
                     // хз что за коммент: Сохраняем календари услуг, главное раньше расписаний, не то спец расписания будут ругаться.
                     QCalendarList.getInstance().save();
 
@@ -2485,6 +2561,35 @@ public class FAdmin extends javax.swing.JFrame {
         jSeparator17 = new javax.swing.JPopupMenu.Separator();
         jMenuItemBagtracker = new javax.swing.JMenuItem();
         jMenuItemForum = new javax.swing.JMenuItem();
+				
+        //переменные для вкладки расписания услуг
+        jPanelSchedule = new javax.swing.JPanel();
+        jLabelScheduleListTitle = new javax.swing.JLabel();
+        jScrollPaneSchedule = new javax.swing.JScrollPane();
+        jListSchedule = new javax.swing.JList();
+        jButtonAddSchedule = new javax.swing.JButton();
+        jButtonEditSchedule = new javax.swing.JButton();
+        jButtonDeleteSchedule = new javax.swing.JButton();
+        jLabelScheduleTitle = new javax.swing.JLabel();
+        jLabelScheduleName = new javax.swing.JLabel();
+        jLabelMonTitle = new javax.swing.JLabel();
+        jLabelTueTitle = new javax.swing.JLabel();
+        jLabelWedTitle = new javax.swing.JLabel();
+        jLabelThuTitle = new javax.swing.JLabel();
+        jLabelFriTitle = new javax.swing.JLabel();
+        jLabelSatTitle = new javax.swing.JLabel();
+        jLabelSunTitle = new javax.swing.JLabel();
+        jLabelUnitTitle = new javax.swing.JLabel();
+        jLabelTypeTitle = new javax.swing.JLabel();
+        jLabelMonValue = new javax.swing.JLabel();
+        jLabelTueValue = new javax.swing.JLabel();
+        jLabelWedValue = new javax.swing.JLabel();
+        jLabelThuValue = new javax.swing.JLabel();
+        jLabelFriValue = new javax.swing.JLabel();
+        jLabelSatValue = new javax.swing.JLabel();
+        jLabelSunValue = new javax.swing.JLabel();
+        jLabelUnitValue = new javax.swing.JLabel();
+        jLabelTypeValue = new javax.swing.JLabel();
 
         popupUser.setName("popupUser"); // NOI18N
 
@@ -3922,8 +4027,194 @@ public class FAdmin extends javax.swing.JFrame {
                         .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
 
-        tabbedPaneMain.addTab(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FAdmin.class).getString("jPanel17.TabConstraints.tabTitle"), jPanel17); // NOI18N
+        //tabbedPaneMain.addTab(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FAdmin.class).getString("jPanel17.TabConstraints.tabTitle"), jPanel17); // NOI18N
+				
+				
+        jLabelScheduleListTitle.setText("Список планов:");
 
+        jListSchedule.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        jListSchedule.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() > 1) {
+                    final QSchedule2 schedule = (QSchedule2)jListSchedule.getSelectedValue();
+                    if (schedule != null) {
+                        editSchedule2();
+                    }
+                }
+            }
+        });
+        jListSchedule.addListSelectionListener((ListSelectionEvent e) -> {
+            changeScheduleSelection();
+        });
+        jListSchedule.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jListScheduleMousePressed(evt);
+            }
+        });
+        jScrollPaneSchedule.setViewportView(jListSchedule);
+
+        jButtonAddSchedule.setText("Добавить");
+        jButtonAddSchedule.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonAddScheduleActionPerformed(evt);
+            }
+        });
+
+        jButtonEditSchedule.setText("Редактировать");
+        jButtonEditSchedule.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonEditScheduleActionPerformed(evt);
+            }
+        });
+
+        jButtonDeleteSchedule.setText("Удалить");
+        jButtonDeleteSchedule.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonDeleteScheduleActionPerformed(evt);
+            }
+        });
+
+        jLabelScheduleTitle.setText("<html><b>Название плана:</html></b>");
+
+        jLabelScheduleName.setText("<html><font color=#blue>...</font></html>");
+
+        jLabelMonTitle.setText("<html><b>Понедельник:</b></html>");
+
+        jLabelTueTitle.setText("<html><b>Вторник:</b></html>");
+
+        jLabelWedTitle.setText("<html><b>Среда:</b></html>");
+
+        jLabelThuTitle.setText("<html><b>Четверг:</b></html>");
+
+        jLabelFriTitle.setText("<html><b>Пятница:</b></html>");
+
+        jLabelSatTitle.setText("<html><b>Суббота:</b></html>");
+
+        jLabelSunTitle.setText("<html><b>Воскресенье:</b></html>");
+
+        jLabelUnitTitle.setText("<html><b>Отделение:</b></html>");
+
+        jLabelTypeTitle.setText("<html><b>Тип плана:</b></html>");
+
+        jLabelMonValue.setText("...");
+
+        jLabelTueValue.setText("...");
+
+        jLabelWedValue.setText("...");
+
+        jLabelThuValue.setText("...");
+
+        jLabelFriValue.setText("...");
+
+        jLabelSatValue.setText("...");
+
+        jLabelSunValue.setText("...");
+
+        jLabelUnitValue.setText("...");
+
+        jLabelTypeValue.setText("...");
+
+        javax.swing.GroupLayout jPanelScheduleLayout = new javax.swing.GroupLayout(jPanelSchedule);
+        jPanelSchedule.setLayout(jPanelScheduleLayout);
+        jPanelScheduleLayout.setHorizontalGroup(
+            jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelScheduleLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanelScheduleLayout.createSequentialGroup()
+                        .addComponent(jButtonDeleteSchedule, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButtonEditSchedule, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButtonAddSchedule, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabelScheduleListTitle)
+                    .addComponent(jScrollPaneSchedule))
+                .addGap(33, 33, 33)
+                .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabelScheduleTitle)
+                    .addComponent(jLabelScheduleName, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanelScheduleLayout.createSequentialGroup()
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jLabelSunTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelSatTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelFriTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelThuTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelWedTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelMonTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelTueTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelUnitTitle, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelTypeTitle, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelMonValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelTueValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelWedValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelThuValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelFriValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelSatValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelSunValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelUnitValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelTypeValue, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addContainerGap(371, Short.MAX_VALUE))
+        );
+        jPanelScheduleLayout.setVerticalGroup(
+            jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelScheduleLayout.createSequentialGroup()
+                .addGap(19, 19, 19)
+                .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelScheduleListTitle)
+                    .addComponent(jLabelScheduleTitle))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPaneSchedule, javax.swing.GroupLayout.PREFERRED_SIZE, 455, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanelScheduleLayout.createSequentialGroup()
+                        .addComponent(jLabelScheduleName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(27, 27, 27)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelMonTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelMonValue))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelTueTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelTueValue))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelWedTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelWedValue))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelThuTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelThuValue))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelFriTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelFriValue))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelSatTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelSatValue))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelSunTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelSunValue))
+                        .addGap(23, 23, 23)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelUnitTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelUnitValue))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabelTypeTitle, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelTypeValue))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanelScheduleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonAddSchedule)
+                    .addComponent(jButtonDeleteSchedule)
+                    .addComponent(jButtonEditSchedule))
+                .addContainerGap(31, Short.MAX_VALUE))
+        );
+				tabbedPaneMain.addTab("Расписание услуг", jPanelSchedule); // NOI18N
+				
         jPanel2.setAutoscrolls(true);
         jPanel2.setName("jPanel2"); // NOI18N
 
@@ -5410,6 +5701,82 @@ public class FAdmin extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void editSchedule2() {
+        QSchedule2 schedule = (QSchedule2)jListSchedule.getSelectedValue();
+        if (schedule == null) {
+            JOptionPane.showMessageDialog(this, "Не выбран план для редактирования.", "Внимание!", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        scheduleEditor = new FScheduleEditor(this, true, Uses.Mode.UPDATE, schedule);
+        Uses.setLocation(scheduleEditor);
+        scheduleEditor.setVisible(true);
+        if (scheduleEditor.isOkClicked()) {
+            QSchedule2 newSchedule = scheduleEditor.getSchedule();
+            if (newSchedule != null) {
+                showRelativeScheduleData(newSchedule);
+            }
+        }
+    }
+    
+    private void addSchedule2() {
+        scheduleEditor = new FScheduleEditor(this, true, Uses.Mode.INSERT, null);
+        Uses.setLocation(scheduleEditor);
+        scheduleEditor.setVisible(true);
+        if (scheduleEditor.isOkClicked()) {
+            QSchedule2 newSchedule = scheduleEditor.getSchedule();
+            QSchedule2List.getInstance().addElement(newSchedule);
+            //выделяем последний добавленный
+            jListSchedule.setSelectedIndex(jListSchedule.getModel().getSize() - 1);
+        }
+    }
+    
+    private void deleteSchedule2() {
+        QSchedule2 schedule = (QSchedule2)jListSchedule.getSelectedValue();
+        if (schedule == null) {
+            JOptionPane.showMessageDialog(this,
+                                          "Не выбран план для удаления.",
+                                          "Внимание!",
+                                          JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this,
+                                          "Вы хотите удалить план «" + schedule.getName() + "»?",
+                                          "Удаление",
+                                          JOptionPane.YES_NO_OPTION,
+                                          JOptionPane.INFORMATION_MESSAGE) != 0) {
+            return;
+        }
+        QSchedule2List.getInstance().removeElement((QSchedule2)schedule);
+        if (jListSchedule.getModel().getSize() > 0) {
+            jListSchedule.setSelectedIndex(0);
+        } else {
+            clearRelativeScheduleData();
+        }
+    }
+    
+    private FScheduleEditor scheduleEditor;
+    
+    private void jButtonAddScheduleActionPerformed(java.awt.event.ActionEvent evt) {
+        addSchedule2();
+    }
+
+    private void jButtonEditScheduleActionPerformed(java.awt.event.ActionEvent evt) {
+        editSchedule2();
+    }
+
+    private void jButtonDeleteScheduleActionPerformed(java.awt.event.ActionEvent evt) {
+        deleteSchedule2();
+    }
+
+    private void jListScheduleMousePressed(java.awt.event.MouseEvent evt) {
+        if (SwingUtilities.isRightMouseButton(evt)) {
+            JList list = (JList)evt.getSource();
+            int row = list.locationToIndex(evt.getPoint());
+            list.setSelectedIndex(row);
+        }
+    }
+    
+    
 private void checkBoxServerAutoStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_checkBoxServerAutoStateChanged
     buttonServerRequest.setEnabled(!checkBoxServerAuto.isSelected());
     if (timer.isRunning() && checkBoxServerAuto.isSelected()) {
@@ -7619,4 +7986,33 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     private javax.swing.JTree treeServices;
     private javax.swing.JList userServsList;
     // End of variables declaration//GEN-END:variables
+    // Variables declaration - do not modify                     
+    private javax.swing.JButton jButtonAddSchedule;
+    private javax.swing.JButton jButtonDeleteSchedule;
+    private javax.swing.JButton jButtonEditSchedule;
+    private javax.swing.JLabel jLabelFriTitle;
+    private javax.swing.JLabel jLabelFriValue;
+    private javax.swing.JLabel jLabelMonTitle;
+    private javax.swing.JLabel jLabelMonValue;
+    private javax.swing.JLabel jLabelSatTitle;
+    private javax.swing.JLabel jLabelSatValue;
+    private javax.swing.JLabel jLabelScheduleListTitle;
+    private javax.swing.JLabel jLabelScheduleName;
+    private javax.swing.JLabel jLabelScheduleTitle;
+    private javax.swing.JLabel jLabelSunTitle;
+    private javax.swing.JLabel jLabelSunValue;
+    private javax.swing.JLabel jLabelThuTitle;
+    private javax.swing.JLabel jLabelThuValue;
+    private javax.swing.JLabel jLabelTueTitle;
+    private javax.swing.JLabel jLabelTueValue;
+    private javax.swing.JLabel jLabelTypeTitle;
+    private javax.swing.JLabel jLabelTypeValue;
+    private javax.swing.JLabel jLabelUnitTitle;
+    private javax.swing.JLabel jLabelUnitValue;
+    private javax.swing.JLabel jLabelWedTitle;
+    private javax.swing.JLabel jLabelWedValue;
+    private javax.swing.JList jListSchedule;
+    private javax.swing.JPanel jPanelSchedule;
+    private javax.swing.JScrollPane jScrollPaneSchedule;
+    // End of variables declaration
 }

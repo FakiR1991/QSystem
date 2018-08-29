@@ -789,27 +789,27 @@ public final class Executer {
                 return new RpcGetServiceState(Uses.LOCK_PER_DAY_INT, "");
             }
             
-//            //пустой ли префикс?
-//            boolean isEmptyPrefix = srvR.getPrefix() == null || Objects.equals(srvR.getPrefix().trim(), "");
-//            //правильный ли префикс? (должен состоять из цифр)
-//            boolean isWrongPrefix = false;
-//            Integer servicePrefix = null;
-//            try {
-//                servicePrefix = Integer.valueOf(srvR.getPrefix());
-//            } catch (Exception ex) {
-//                isWrongPrefix = true;
-//            }
-//            //если префикс услуги пустой или буквенный, например, то type приравниваем null
-//            Integer type = isEmptyPrefix || isWrongPrefix ? null : servicePrefix;
-//            
-//            //получаем расписание по unitId и type
-//            QSchedule2 schedule = QSchedule2List.getInstance().getSchedule(cmdParams.unitId, type);
+            //пустой ли префикс
+            boolean isEmptyPrefix = srvR.getPrefix() == null || Objects.equals(srvR.getPrefix().trim(), "");
+            //правильный ли префикс (должен состоять из цифр)
+            boolean isWrongPrefix = false;
+            Integer servicePrefix = null;
+            try {
+                servicePrefix = Integer.valueOf(srvR.getPrefix());
+            } catch (Exception ex) {
+                isWrongPrefix = true;
+            }
+            //если префикс услуги пустой или буквенный, например, то type приравниваем null
+            Integer type = isEmptyPrefix || isWrongPrefix ? null : servicePrefix;
+            
+            //получаем расписание по unitId и type
+            QSchedule2 schedule = QSchedule2List.getInstance().getSchedule(cmdParams.unitId, type);
             
             // Если нет расписания, календаря или выходной то отказ по расписанию
-            if (srv.getSchedule() == null
+            if (schedule == null
                     || QCalendarList.getInstance().getById(1).checkFreeDay(day)
                     || (srv.getCalendar() != null && srv.getCalendar().checkFreeDay(day))) {
-                if (srv.getSchedule() == null) {
+                if (schedule == null) {
                     QLog.l().logger().warn("Если нет расписания, то отказ по расписанию." + " " + ipAdress);
                 } else if (QCalendarList.getInstance().getById(1).checkFreeDay(day)) {
                     QLog.l().logger().warn("Если выходной то отказ по расписанию." + " " + ipAdress);
@@ -818,8 +818,8 @@ public final class Executer {
                 }
                 min = Uses.LOCK_FREE_INT;
             } else {
-                // Определим время начала и kонца работы на этот день
-                final QSchedule.Interval interval = srv.getSchedule().getWorkInterval(day);
+                // Определим время начала и конца работы на этот день
+                final QSchedule2.Interval interval = schedule.getWorkInterval(day);
                 // Определили начало и конец рабочего дня на сегодня
                 // Если работаем в этот день то определим попадает ли "сейчас" в рабочий промежуток
                 final GregorianCalendar gc_day = new GregorianCalendar();

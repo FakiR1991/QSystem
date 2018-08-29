@@ -1033,4 +1033,19 @@ public final class Uses {
         }
         return localeMap.getString(key);
     }
+    
+    public enum Mode {
+        /**
+         * 0 неопределённый режим
+         */
+        UNDEFINED,
+        /**
+         * 1 режим добавления
+         */
+        INSERT,
+        /**
+         * 2 режим редактирования
+         */
+        UPDATE
+    }
 }
