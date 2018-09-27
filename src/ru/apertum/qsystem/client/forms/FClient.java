@@ -16,6 +16,8 @@
  */
 package ru.apertum.qsystem.client.forms;
 
+import com.sun.jna.platform.win32.WinDef;
+import com.sun.jna.platform.win32.Wtsapi32;
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Font;
@@ -82,6 +84,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
+import ru.apertum.qsystem.client.Win32Window;
 import ru.apertum.qsystem.client.help.Helper;
 import ru.apertum.qsystem.client.model.ParallelCellRenderer;
 import ru.apertum.qsystem.common.NetCommander;
@@ -745,7 +748,7 @@ public final class FClient extends javax.swing.JFrame {
     
     private Timer denyTimer;
     private final JLabel labelMotiv = new JLabel();
-    private final JCheckBox ch = new JCheckBox(getLocaleMessage("client.pause"));
+    private static final JCheckBox ch = new JCheckBox(getLocaleMessage("client.pause"));
 
     class TimerMotiv implements ActionListener {
         String oldKeys = "";
@@ -1226,6 +1229,7 @@ public final class FClient extends javax.swing.JFrame {
             throw new ClientException(new Exception(th));
         }
     }
+    
     private boolean fkill = false;
 
     /**
@@ -1258,7 +1262,7 @@ public final class FClient extends javax.swing.JFrame {
             }
             fkill = false;
             final long start = go();
-            if (customer.getRecallCount() >= 3) {
+            if (customer.getRecallCount() >= 2) {
                 if (JOptionPane.showConfirmDialog(this,
                                                   "Вы действительно хотите удалить клиента из очереди по причине неявки?",
                                                   "Удалить клиента по неявке",
@@ -2501,6 +2505,23 @@ public final class FClient extends javax.swing.JFrame {
             System.exit(0);
         } finally {
             Uses.closeSplash();
+            try {
+                //инициализируем класс для перехвата системных событий о блокировке ПК
+                new Win32Window() {
+                    @Override
+                    protected void onSessionChange(WinDef.WPARAM wParam, WinDef.LPARAM lParam) {
+                        switch (wParam.intValue()) {
+                            case Wtsapi32.WTS_SESSION_LOCK:
+                            case Wtsapi32.WTS_SESSION_UNLOCK: {
+                                ch.doClick();
+                                break;
+                            }
+                        }
+                    }
+                };
+            } catch (Exception e) {
+                QLog.l().logger().error("Не удалось подписаться на событие блокировки компьютера", e);
+            }
         }
         //     }
         //  });

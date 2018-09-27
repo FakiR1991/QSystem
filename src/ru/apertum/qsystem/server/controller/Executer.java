@@ -1439,6 +1439,7 @@ public final class Executer {
             
             if (cmdParams.isPostponedForPayment) {
                 customer.setState(CustomerState.STATE_PAYMENT);
+                customer.setRecallCount(0);
             } else {
                 // в этом случае завершаем с пациентом
                 // "все что хирург забыл в вас - в пул отложенных"
@@ -1446,6 +1447,7 @@ public final class Executer {
                 // кастомер переходит в состояние "Завершенности", но не "мертвости"
                 if (cmdParams.isPostponedAfterService) {
                     customer.setState(CustomerState.STATE_POSTPONED_AFTER_SERVICE);
+                    customer.setRecallCount(0);
                 } else {
                     customer.setState(CustomerState.STATE_POSTPONED);
                 }

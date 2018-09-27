@@ -77,8 +77,7 @@ dependencies {
     compile( group: 'wsdl4j', name: 'wsdl4j', version: '1.6.3')
     compile( group: 'org.apache.axis', name: 'axis', version: '1.4')
     compile( group: 'javax.xml.rpc', name: 'javax.xml.rpc-api', version: '1.1.1')
-
-
+    compile( group: 'net.java.dev.jna', name: 'jna-platform', version: '4.1.0')
         
     compile( group: 'org.springframework', name: 'spring-tx', version: '4.0.0.RELEASE'){ transitive = false }
     compile( group: 'org.springframework', name: 'spring-orm', version: '4.0.0.RELEASE'){ transitive = false }
