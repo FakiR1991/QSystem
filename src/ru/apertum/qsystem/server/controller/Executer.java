@@ -18,6 +18,7 @@ package ru.apertum.qsystem.server.controller;
 
 import com.agroprombank.services.QMSServiceSoapProxy;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import org.springframework.transaction.TransactionStatus;
 import ru.apertum.qsystem.common.SoundPlayer;
@@ -35,7 +36,6 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 import org.dom4j.DocumentHelper;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -1240,6 +1240,45 @@ public final class Executer {
     };
     
     /**
+     * Снять приватность кастомеров определённого юзера
+     */
+    final Task removePrivacyTask = new Task(Uses.TASK_REMOVE_PRIVACY) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            final QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            //отложенные
+            for (QCustomer cust : QPostponedList.getInstance().getPostponedCustomers()) {
+                removePrivacy(cust, user.getId());
+            }
+            //ушедшие на оплату
+            for (QCustomer cust : QMovedToBankList.getInstance().getMovedToBankCustomers()) {
+                removePrivacy(cust, user.getId());
+            }
+            //очередь
+            for (QService service : QServiceTree.getInstance().getNodes()) {
+                for (QCustomer cust : service.getClients(user.getUnitId())) {
+                    removePrivacy(cust, user.getId());
+                }
+            }
+            try {
+                // сохраняем состояния очередей.
+                QServer.savePool();
+            } catch (Exception ex) {
+                QLog.l().logger().error(ex);
+            }
+            return new JsonRPC20OK();
+        }
+    };
+    
+    private void removePrivacy(QCustomer cust, Long userId) {
+        if (cust.getIsMine() != null || Objects.equals(cust.getIsMine(), userId)) {
+            cust.setIsMine(null);
+        }
+    }
+    
+    /**
      * Очистим тень юзера при выходе из программы.
      */
     final Task clearShadowTask = new Task(Uses.TASK_CLEAR_SHADOW) {
@@ -1967,6 +2006,128 @@ public final class Executer {
             return new JsonRPC20OK();
         }
     };
+    
+    /**
+     * Сохранить список услуг выбранных оператором
+     */
+    final Task serviceCompletion = new Task(Uses.TASK_SERVICE_COMPLETION) {
+
+        @Override
+        synchronized public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            
+            final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+            def.setName("SomeTxName");
+            def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+            TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
+            
+            //получаем id нужной записи статистики,
+            //чтобы добавить записи детализированной статистики
+            Long id = getStatisticId(cmdParams.userId,
+                                     cmdParams.client_id);
+            if (id == null) {
+                return new JsonRPC20Error();
+            } else {
+                try {
+                    //время обслуживания по стандартам
+                    Long totalStandardWorkPeriod = getTotalStandardWorkPeriod(cmdParams.services);
+                    
+                    long totalUserWorkPeriod = (user.getCustFinishTime().getTime() - cmdParams.customerStartTime) / 1000;
+                    
+                    //сохраняем статистику расширенную
+                    saveDetailedStatistic(cmdParams.services,
+                                          id,
+                                          totalUserWorkPeriod,
+                                          totalStandardWorkPeriod);
+                } catch (Exception e) {
+                    return new JsonRPC20Error();
+                }
+            }
+            
+            Spring.getInstance().getTxManager().commit(status);
+            
+            return new JsonRPC20OK();
+        }
+    };
+    
+    /**
+     * Получаем общее время обслуживания по стандартам для списка переданных услуг (в секундах)
+     * @param services услуги выбранные оператором для сохранения
+     * @return общее время обслуживания по списку услуг исходя из нормативов
+     */
+    private Long getTotalStandardWorkPeriod(List<QService> services) {
+        String qSelectTotalStandard = "select sum(duration) from services where id in (";
+        for (int i = 0; i < services.size(); i++) {
+            qSelectTotalStandard += services.get(i).getId();
+            if (i < services.size() - 1) {
+                 qSelectTotalStandard += ",";
+            }
+        }
+        qSelectTotalStandard += ")";
+        
+        Long totalStandardWorkPeriod = null;
+        try {
+            final Session ses = Spring.getInstance().getTxManager().getSessionFactory().getCurrentSession();
+            Query query = ses.createSQLQuery(qSelectTotalStandard);
+            List<BigDecimal> rows = query.list();
+            for (BigDecimal row : rows) {
+                totalStandardWorkPeriod = row.longValue();
+            }
+            ses.flush();
+        } catch (Exception ex) {
+            QLog.l().logger().error("Ошибка получения id записи статистики", ex);
+            throw new ServerException("\n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+        }
+        return totalStandardWorkPeriod * 60;
+    }
+    
+    private void saveDetailedStatistic(List<QService> services, Long statisticId, Long totalUserWorkPeriod, Long totalStandardWorkPeriod) {
+        for (QService service : services) {
+            String qInsertStatisticDetails = "insert into statistic_details (statistic_id, service_id, service_prefix, total_user_work_period, total_standard_work_period) " +
+                               "values(:statisticId, :serviceId, :servicePrefix, :totalUserWorkPeriod, :totalStandardWorkPeriod)";
+            try {
+                final Session ses = Spring.getInstance().getTxManager().getSessionFactory().getCurrentSession();
+                //добавим данные очередного ip в таблицу ip_to_unit
+                Query query = ses.createSQLQuery(qInsertStatisticDetails);
+                query.setParameter("statisticId", statisticId);
+                query.setParameter("serviceId", service.getId());
+                query.setParameter("servicePrefix", service.getPrefix());
+                query.setParameter("totalUserWorkPeriod", totalUserWorkPeriod);
+                query.setParameter("totalStandardWorkPeriod", totalStandardWorkPeriod);
+                query.executeUpdate();
+                ses.flush();
+            } catch (Exception ex) {
+                throw new ServerException("\n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+            }
+        }
+    }
+    
+    /**
+     * Получаем нужный id из таблицы statistic
+     * КОСТЫЛИ ДЕТЕКТЕД
+     */
+    private Long getStatisticId(Long userId, Long clientId) {
+        String qSelectStatisticId  = "select id from statistic where user_id=:userId and client_id=:clientId order by id desc limit 1";
+        Long id = null;
+        try {
+            final Session ses = Spring.getInstance().getTxManager().getSessionFactory().getCurrentSession();
+            Query query = ses.createSQLQuery(qSelectStatisticId);
+            query.setParameter("userId", userId);
+            query.setParameter("clientId", clientId);
+            List<BigInteger> rows = query.list();
+            for (BigInteger row : rows) {
+                id = row.longValue();
+            }
+            ses.flush();
+        } catch (Exception ex) {
+            QLog.l().logger().error("Ошибка получения id записи статистики", ex);
+            throw new ServerException("\n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
+        }
+        return id;
+    }
+    
     /**
      * Получение конфигурации главного табло - ЖК или плазмы. Это XML-файл лежащий в папку приложения mainboard.xml
      */

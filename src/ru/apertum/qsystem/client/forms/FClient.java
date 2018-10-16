@@ -47,6 +47,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ServiceLoader;
@@ -713,6 +714,13 @@ public final class FClient extends javax.swing.JFrame {
                 menuItemFinish.setEnabled(false);
                 buttonSendToBank.setEnabled(false);
                 
+                try {
+                    //снимаем приватность всех кастомеров, так как оператор свалил на перерыв
+                    NetCommander.removePrivacy(netProperty, user.getId());
+                } catch(Exception ex) {
+                    QLog.l().logger().error("Ошибка во время снятия приватности с кастомеров.", ex);
+                }
+                
                 userStatistic.changeState(Uses.PAUSE_STAT, workingPeriod, netProperty);
             } else {
                 ch.setForeground(new Color(0, 150, 0));
@@ -1308,53 +1316,6 @@ public final class FClient extends javax.swing.JFrame {
         }
     }
     
-    private Timer clientServicingTimer = null;
-    private Integer workMaxForService = null;
-    
-    private void startServicingTimer() {
-        if (clientServicingTimer != null) {
-            clientServicingTimer.stop();
-        }
-        
-        workMaxForService = null;
-        try {
-            workMaxForService = NetCommander.getWorkMaxForService(netProperty, customer.getService().getId(), null);
-        } catch (Exception e) {
-            QLog.l().logger().error("Ошибка получения стандарта по времени обслуживания для услуги " + customer.getService().getId(), e);
-        }
-        
-        clientServicingTimer = new Timer(1 * 60 * 1000, (ActionEvent e) -> {
-            if (customer == null) {
-                return;
-            }
-
-            Long startServicing = customer.getStartTime().getTime();
-            Long now = new Date().getTime();
-            Integer clientServicing = new Long((now - startServicing) / 1000 / 60).intValue();
-            
-            //разница между временем обслуживания клиента и нормативом по обслуживанию
-            int delta = clientServicing - workMaxForService;
-            
-            //за одну минуту до превышения нормы
-            if (clientServicing == workMaxForService - 1) {
-                showServicingTimeWarning(clientServicing, workMaxForService);
-            }
-            //каждые пять минут после превышения нормы
-            else if (delta > 0 && delta % 5 == 0) {
-                showServicingTimeWarning(clientServicing, workMaxForService);
-            }
-            
-        });
-        clientServicingTimer.start();
-    }
-    
-    private void showServicingTimeWarning(Integer clientServicing, Integer standard) {
-        JOptionPane optionPane = new JOptionPane("Время обслуживания: " + String.valueOf(clientServicing) + " мин. (норматив: " + standard + " мин.)", JOptionPane.WARNING_MESSAGE);
-        JDialog dialog = optionPane.createDialog("Внимание!");
-        dialog.setAlwaysOnTop(true);
-        dialog.setVisible(true);
-    }
-    
     /**
      * Действие по нажатию кнопки "Начать прием"
      *
@@ -1365,13 +1326,6 @@ public final class FClient extends javax.swing.JFrame {
         try {
             final long start = go();
             
-            //таймер, который будет выводить сообщение об времени обслуживания
-            startServicingTimer();
-            
-            // Переводим кастомера в разряд обрабатываемых
-            /*if(denyTimer.isRunning())
-               denyTimer.stop();*/
-
             NetCommander.getStartCustomer(netProperty, user.getId());
             
             //завершим состояние 3, а по завершении обслуживания клиента и нажатию
@@ -1414,8 +1368,8 @@ public final class FClient extends javax.swing.JFrame {
             boolean isNewPaymentEnabledInCurrentUnit = ( customer.getUnitId().compareTo(Uses.UNIT_TIRASPOL_KARL_MARX) == 0
                                                             ||
                                                          customer.getUnitId().compareTo(Uses.UNIT_BENDERY_LAZO) == 0
-                                                            /*||
-                                                         customer.getUnitId().compareTo(Uses.UNIT_RYBNICA) == 0*/ );
+                                                            ||
+                                                         customer.getUnitId().compareTo(Uses.UNIT_RYBNICA) == 0 );
             
             bankForm2 = new FSendToBank2(fClient, true, isNewBankSendingEnabled);
             
@@ -1447,6 +1401,11 @@ public final class FClient extends javax.swing.JFrame {
                                    ", customerId=" + customer.getId().toString() +
                                    ", isNewBankSending=" + (isNewBankSendingEnabled ? "TRUE" : "FALSE") +
                                    ", unitId=" + user.getUnitId());
+            
+            QCustomer tempCust = customer;
+            //когда начали работать с клиентом, сохраняем здесь,
+            //так как customer обнулится после вызова функции getFinishCustomer
+            Long customerStartTime = customer.getStartTime().getTime();
             
             //если кастомер из зала, где работает совместная очередь с АПБ,
             //и при этом в properties включена отправка в банк с помощью веб-сервиса,
@@ -1503,6 +1462,8 @@ public final class FClient extends javax.swing.JFrame {
                 NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
             }
             
+            showServiceCompletionWindow(customerStartTime, user, tempCust);
+            
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             end(start);
@@ -1537,6 +1498,11 @@ public final class FClient extends javax.swing.JFrame {
                     resComments = user.getName() + ": " + dlg.getTempComments();
                 }
             }
+            
+            //когда начали работать с клиентом, сохраняем здесь,
+            //так как customer обнулится после вызова функции getFinishCustomer
+            Long customerStartTime = customer.getStartTime().getTime();
+            
             // вернется кастомер и возможно он еще не домой а по списку услуг. Список определяется при старте кастомера в обработку специяльным юзером в регистратуре
             final QCustomer cust = NetCommander.getFinishCustomer(netProperty,
                                                                   user.getId(),
@@ -1547,6 +1513,14 @@ public final class FClient extends javax.swing.JFrame {
             if (cust != null && cust.getService() != null && cust.getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE) {
                 JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + String.format("%03d", cust.getNumber()) + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
             }
+            
+            //когда закончили работать с клиентом, эта дата доступна только в объекте cust,
+            //который возвращает функция getFinishCustomer
+//            Long customerFinishTime = cust.getFinishTime().getTime();
+            
+            //время обслуживания клиента
+//            long totalUserWorkPeriod = Math.round((double)(customerFinishTime - customerStartTime) / 1000 / 60);
+            showServiceCompletionWindow(customerStartTime, user, cust);
             
             movedToBank = false;
             
@@ -1562,6 +1536,23 @@ public final class FClient extends javax.swing.JFrame {
             throw new ClientException(new Exception(th));
         }
     }
+    
+    private void showServiceCompletionWindow(Long customerStartTime, QUser user, QCustomer customer) {
+        //показываем окно для выбора оказанных услуг
+        FServiceCompletion completionWindow = new FServiceCompletion(netProperty, fClient, true, customer.getService());
+        completionWindow.setVisible(true);
+
+        Uses.setLocation(completionWindow);
+
+        //если есть выбранные услуги для сохранения детализированной статистики в таблицу statistic_details
+        if (completionWindow.getSelectedServices() != null && completionWindow.getSelectedServices().size() > 0) {
+            //чтобы в статистику не записывались 0 значения, если обслуживание длилось меньше половины минуты
+            List<QService> services = completionWindow.getSelectedServices();
+
+            NetCommander.serviceCompletion(netProperty, customerStartTime, services, user.getId(), customer.getId());
+        }
+    }
+    
     protected FRedirect servicesForm = null;
 
     /**
@@ -1597,7 +1588,12 @@ public final class FClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Выбранная услуга не доступна для обслуживания в вашем отделении!", "Внимание!", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-
+            
+            QCustomer tempCust = customer;
+            //когда начали работать с клиентом, сохраняем здесь,
+            //так как customer обнулится после вызова функции getFinishCustomer
+            Long customerStartTime = customer.getStartTime().getTime();
+            
             NetCommander.redirectCustomer(netProperty,
                                           user.getId(),
                                           customer.getId(),
@@ -1605,6 +1601,10 @@ public final class FClient extends javax.swing.JFrame {
                                           dlg.getRequestBack(),
                                           user.getName() + ": " + dlg.getTempComments(),
                                           res);
+            
+//            //время обслуживания клиента
+//            long totalUserWorkPeriod = Math.round((double)(customerFinishTime - customerStartTime) / 1000 / 60);
+            showServiceCompletionWindow(customerStartTime, user, tempCust);
             
             // Получаем новую обстановку
             //Получаем состояние очередей для юзера
@@ -2495,6 +2495,7 @@ public final class FClient extends javax.swing.JFrame {
             fClient.buttonKill.setText("Отклонить клиента по неявке");
             fClient.exitMenuItem.setText("Выход");
             fClient.buttonMoveToPostponed.setText("Отложить клиента после обслуживания");
+            Uses.setLocation(fClient);
             fClient.setVisible(true);
             
         } catch (AWTException ex) {
@@ -2512,8 +2513,18 @@ public final class FClient extends javax.swing.JFrame {
                     protected void onSessionChange(WinDef.WPARAM wParam, WinDef.LPARAM lParam) {
                         switch (wParam.intValue()) {
                             case Wtsapi32.WTS_SESSION_LOCK:
+                                QLog.l().logger().info("ПК ЗАБЛОКИРОВАЛСЯ");
+                                //если не стоит галочка "Перерыв", то ставим её
+                                if (!ch.isSelected()) {
+                                    ch.doClick();
+                                }
+                                break;
                             case Wtsapi32.WTS_SESSION_UNLOCK: {
-                                ch.doClick();
+                                QLog.l().logger().info("ПК РАЗБЛОКИРОВАЛСЯ");
+                                //если стоит галочка "Перерыв", то снимаем её
+                                if (ch.isSelected()) {
+                                    ch.doClick();
+                                }
                                 break;
                             }
                         }
@@ -2600,6 +2611,12 @@ public final class FClient extends javax.swing.JFrame {
             if (!moveToPostponed.isOK()) {
                 return;
             }
+            
+            QCustomer tempCust = customer;
+            //когда начали работать с клиентом, сохраняем здесь,
+            //так как customer обнулится после вызова функции getFinishCustomer
+            Long customerStartTime = customer.getStartTime().getTime();
+            
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
             NetCommander.сustomerToPostpone(netProperty,
                                             user.getId(),
@@ -2611,6 +2628,8 @@ public final class FClient extends javax.swing.JFrame {
                                             false, //isPostponedForPayment
                                             false  //needReturnAfterPayment
             );
+            
+            showServiceCompletionWindow(customerStartTime, user, tempCust);
             
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));

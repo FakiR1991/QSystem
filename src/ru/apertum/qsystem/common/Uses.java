@@ -283,6 +283,7 @@ public final class Uses {
     public static final String TASK_GET_SELF_SERVICES_CHECK = "Получить состояние очередей с проверкой";
     public static final String TASK_INVITE_NEXT_CUSTOMER = "Получить следующего клиента";
     public static final String TASK_KILL_NEXT_CUSTOMER = "Удалить следующего клиента";
+    public static final String TASK_REMOVE_PRIVACY = "Снять приватность кастомеров";
     public static final String TASK_CLEAR_SHADOW = "Очистить shadow юзера";
     public static final String TASK_KILL_CUSTOMER_FRECEPTION = "FReception - удалить клиента из очереди";
     public static final String TASK_CUSTOMER_TO_POSTPON = "Клиента в пул отложенных";
@@ -315,6 +316,7 @@ public final class Uses {
     public static final String TASK_CHANGE_FLEX_PRIORITY = "Изменить гибкий приоритет";
     public static final String TASK_CHANGE_RUNNING_TEXT_ON_BOARD = "Изменить бегущий текст на табло";
     public static final String TASK_CHANGE_TEMP_AVAILABLE_SERVICE = "Изменить временную доступность";
+    public static final String TASK_SERVICE_COMPLETION = "Сохранение списка услуг выбранных оператором";
     public static final String TASK_GET_STANDARDS = "Получить нормативы";
     public static final String TASK_SET_BUSSY = "Перерыв оператора";
     public static final String TASK_SAVE_USER_STAT = "Сохранить статистику юзера";

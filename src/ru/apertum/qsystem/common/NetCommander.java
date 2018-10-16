@@ -444,6 +444,29 @@ public class NetCommander {
             throw new ClientException(Locales.locMes("command_error"), ex);
         }
     }
+    
+    /**
+     * Сохранение списка услуг, которые были оказаны кастомеру.
+     * Вызывается при завершении обслуживания, перенаправлении, откладывании после обслуживания и отправке в банк.
+     *
+     * @param netProperty netProperty параметры соединения с сервером.
+     * @param totalUserWorkPeriod время которое было затрачено на обслуживание (в минутах)
+     * @param services список услуг, которые были выбраны оператором
+     */
+    public static void serviceCompletion(INetProperty netProperty, long customerStartTime, List<QService> services, Long userId, Long clientId) {
+        QLog.l().logger().info("Сделать услугу временно неактивной/активной.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.customerStartTime = customerStartTime;
+        params.services = services;
+        params.userId = userId;
+        params.client_id = clientId;
+        try {
+            send(netProperty, Uses.TASK_SERVICE_COMPLETION, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+    }
 
     /**
      * Узнать сколько народу стоит к услуге и т.д.
@@ -806,6 +829,23 @@ public class NetCommander {
         params.customerId = customerId;
         try {
             send(netProperty, Uses.TASK_KILL_NEXT_CUSTOMER, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        }
+    }
+    
+    /**
+     * Снять приватность со всех кастомеров выбранного юзера.
+     * @param netProperty 
+     * @param userId ИД пользователя
+     */
+    public static void removePrivacy(INetProperty netProperty, long userId) {
+        QLog.l().logger().info("Удаление вызванного юзером кастомера.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        try {
+            send(netProperty, Uses.TASK_REMOVE_PRIVACY, params);
         } catch (QException e) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error2"), e);
         }

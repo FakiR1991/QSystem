@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import ru.apertum.qsystem.server.model.QProperty;
+import ru.apertum.qsystem.server.model.QService;
 
 /**
  *
@@ -145,6 +146,12 @@ public class CmdParams {
     @Expose
     @SerializedName("is_postponed_for_payment")
     public Boolean isPostponedForPayment;
+    @Expose
+    @SerializedName("customer_start_time")
+    public Long customerStartTime;
+    @Expose
+    @SerializedName("services")
+    public List<QService> services;
     
     
     /**

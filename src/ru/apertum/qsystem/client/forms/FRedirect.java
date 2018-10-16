@@ -85,36 +85,38 @@ public class FRedirect extends JDialog {
             setVisible(false);
         });
 
-        final QService service = NetCommander.getServiсes(netProperty).getRoot();
-        if (service == null) {
-            throw new ClientException("Невозможно получить список предлагаемых услуг.");
-        }
-        final LinkedList<QService> list = new LinkedList<>();
-        QServiceTree.sailToStorm(service, (TreeNode service1) -> {
-            final QService ser = (QService) service1;
-            if (STATUS_FOR_USING.contains(ser.getStatus())) {
-                list.add(ser);
+        if (ServiceTreeModel.list == null) {
+            final QService service = NetCommander.getServiсes(netProperty).getRoot();
+            if (service == null) {
+                throw new ClientException("Невозможно получить список предлагаемых услуг.");
             }
-        });
-        // дело в том, что из всего дерева услуг надо убрать заглушки и неактивные чтобы в них не перенаправлять.
-        // а дерево строится не по указанию на предка, а от корня по дочерним.
-        // вот и приходится удалять из дочерних.
-        list.stream().forEach((ser) -> {
-            final LinkedList<QService> del = new LinkedList<>();
-            ser.getChildren().stream().filter((che) -> (!STATUS_FOR_USING.contains(che.getStatus()))).forEach((che) -> {
-                del.add(che);
+            final LinkedList<QService> list = new LinkedList<>();
+            QServiceTree.sailToStorm(service, (TreeNode service1) -> {
+                final QService ser = (QService) service1;
+                if (STATUS_FOR_USING.contains(ser.getStatus())) {
+                    list.add(ser);
+                }
             });
-            del.stream().forEach((qService) -> {
-                ser.remove(qService);
+            // дело в том, что из всего дерева услуг надо убрать заглушки и неактивные чтобы в них не перенаправлять.
+            // а дерево строится не по указанию на предка, а от корня по дочерним.
+            // вот и приходится удалять из дочерних.
+            list.stream().forEach((ser) -> {
+                final LinkedList<QService> del = new LinkedList<>();
+                ser.getChildren().stream().filter((che) -> (!STATUS_FOR_USING.contains(che.getStatus()))).forEach((che) -> {
+                    del.add(che);
+                });
+                del.stream().forEach((qService) -> {
+                    ser.remove(qService);
+                });
             });
-        });
-        ServiceTreeModel.list = list; // это две связанные строчки
+            ServiceTreeModel.list = list; // это две связанные строчки
+        }
         final JTreeComboBox cbServs = new JTreeComboBox(new ServiceTreeModel()); // это две связанные строчки
         // cmp.setSize(250, 24);
         panelTreeCmbx.setLayout(new GridLayout(1, 1));
         panelTreeCmbx.add(cbServs);
 
-        for (QService qService : list) {
+        for (QService qService : ServiceTreeModel.list) {
             if (qService.isLeaf()) {
                 cbServs.setSelectedItem(qService);
                 lastSelected = qService;
@@ -138,9 +140,9 @@ public class FRedirect extends JDialog {
     final JTreeComboBox comboBoxServices;
     private QService lastSelected = null;
 
-    private static final class ServiceTreeModel extends ATreeModel<QService> {
+    static final class ServiceTreeModel extends ATreeModel<QService> {
 
-        private static LinkedList<QService> list;
+        static LinkedList<QService> list;
 
         public ServiceTreeModel() {
             super();
