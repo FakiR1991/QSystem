@@ -1411,8 +1411,7 @@ public final class FClient extends javax.swing.JFrame {
             //и при этом в properties включена отправка в банк с помощью веб-сервиса,
             //и в форме отправки был выбрал тип оплаты "Касса АПБ",
             //то используем новый метод отправки в банк, иначе - старый
-            if ( isNewBankSendingEnabled && isNewPaymentType && isNewPaymentEnabledInCurrentUnit )
-            {
+            if ( isNewBankSendingEnabled && isNewPaymentType && isNewPaymentEnabledInCurrentUnit ) {
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
                 try {
                     NetCommander.sendCustomerToBank(netProperty,
@@ -1443,6 +1442,7 @@ public final class FClient extends javax.swing.JFrame {
 
                 //самостоятельно завершаем работу с кастомером
                 //после его отправки на оплату в банк
+                //P.S. - здесь нажмётся кнопка Завершить приём, тогда и окошко для выбора услуг покажется
                 buttonFinish.doClick();
             } else {
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
@@ -1460,9 +1460,11 @@ public final class FClient extends javax.swing.JFrame {
                 workingPeriod.setDtStop(NetCommander.getServerTime(netProperty, user.getId()));
                 workingPeriod.setDt(workingPeriod.getDtStop());
                 NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
+                
+                //если отправили не через API в банк, а просто отложили клиента на оплату,
+                //то показываем окно, т.к. выше вызывается код "buttonFinish.doClick()" который покажет окно для выбора услуг
+                showServiceCompletionWindow(customerStartTime, user, tempCust);
             }
-            
-            showServiceCompletionWindow(customerStartTime, user, tempCust);
             
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
@@ -1514,14 +1516,6 @@ public final class FClient extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + String.format("%03d", cust.getNumber()) + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
             }
             
-            //когда закончили работать с клиентом, эта дата доступна только в объекте cust,
-            //который возвращает функция getFinishCustomer
-//            Long customerFinishTime = cust.getFinishTime().getTime();
-            
-            //время обслуживания клиента
-//            long totalUserWorkPeriod = Math.round((double)(customerFinishTime - customerStartTime) / 1000 / 60);
-            showServiceCompletionWindow(customerStartTime, user, cust);
-            
             movedToBank = false;
             
             //Получаем новую обстановку
@@ -1532,14 +1526,22 @@ public final class FClient extends javax.swing.JFrame {
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 6);
             
             end(start);
+            
+            //открываем окно для выбора услуг для сохранения
+            showServiceCompletionWindow(customerStartTime, user, cust);
         } catch (HeadlessException | QException th) {
             throw new ClientException(new Exception(th));
         }
     }
     
+    private static FServiceCompletion completionWindow;
+    
     private void showServiceCompletionWindow(Long customerStartTime, QUser user, QCustomer customer) {
-        //показываем окно для выбора оказанных услуг
-        FServiceCompletion completionWindow = new FServiceCompletion(netProperty, fClient, true, customer.getService());
+        if (completionWindow == null) {
+            completionWindow = new FServiceCompletion(netProperty, fClient, true);
+        }
+        //указываем какая услуга будет выделена в дереве по умолчанию
+        completionWindow.setDefaultService(customer.getService());
         completionWindow.setVisible(true);
 
         Uses.setLocation(completionWindow);
@@ -1602,16 +1604,15 @@ public final class FClient extends javax.swing.JFrame {
                                           user.getName() + ": " + dlg.getTempComments(),
                                           res);
             
-//            //время обслуживания клиента
-//            long totalUserWorkPeriod = Math.round((double)(customerFinishTime - customerStartTime) / 1000 / 60);
-            showServiceCompletionWindow(customerStartTime, user, tempCust);
-            
             // Получаем новую обстановку
             //Получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             // поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 4);
             end(start);
+            
+            //открываем окно для выбора услуг для сохранения
+            showServiceCompletionWindow(customerStartTime, user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }
@@ -2629,13 +2630,14 @@ public final class FClient extends javax.swing.JFrame {
                                             false  //needReturnAfterPayment
             );
             
-            showServiceCompletionWindow(customerStartTime, user, tempCust);
-            
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             // поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), new ActionEvent(buttonMoveToPostponed, 13, buttonMoveToPostponed.getActionCommand(), System.currentTimeMillis(), 1), 5);
             end(start);
+            
+            //открываем окно для выбора услуг для сохранения
+            showServiceCompletionWindow(customerStartTime, user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }

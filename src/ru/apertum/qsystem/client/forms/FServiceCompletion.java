@@ -27,7 +27,7 @@ import ru.apertum.qsystem.server.model.QServiceTree;
  */
 public class FServiceCompletion extends javax.swing.JDialog {
     
-    private final QService defaultService;
+    private QService defaultService;
 
     /**
      * Creates new form FServiceCompletion
@@ -36,22 +36,24 @@ public class FServiceCompletion extends javax.swing.JDialog {
      * @param modal
      * @param defaultService услуга, которую нужно выделить в дереве по умолчанию
      */
-    public FServiceCompletion(INetProperty netProperty, java.awt.Frame parent, boolean modal, QService defaultService) {
+    public FServiceCompletion(INetProperty netProperty, java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         
-        this.defaultService = defaultService;
         this.setTitle("Выбор услуг оказанных клиенту");
-        
         loadContent(netProperty);
         initComponents();
-        setDefaults();
         
 //        jTree1.setUI( new MySelectionTreeUI() );
 //        jTree1.setSelectionModel(new MyTreeSelectionModel());
     }
     
+    public void setDefaultService(QService defaultService) {
+        this.defaultService = defaultService;
+    }
+    
     private void setDefaults() {
         jTree1.setModel(new FRedirect.ServiceTreeModel());
+        //обходим все узлы и выделяем дефолтную услугу
         visitAllNodes(jTree1);
     }
     
@@ -133,6 +135,11 @@ public class FServiceCompletion extends javax.swing.JDialog {
         jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                formComponentShown(evt);
+            }
+        });
 
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         jTree1.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
@@ -175,6 +182,10 @@ public class FServiceCompletion extends javax.swing.JDialog {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         this.setVisible(false);
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void formComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentShown
+        setDefaults();
+    }//GEN-LAST:event_formComponentShown
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;

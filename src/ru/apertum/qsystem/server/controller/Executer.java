@@ -1273,7 +1273,8 @@ public final class Executer {
     };
     
     private void removePrivacy(QCustomer cust, Long userId) {
-        if (cust.getIsMine() != null || Objects.equals(cust.getIsMine(), userId)) {
+        if (cust.getIsMine() != null && Objects.equals(cust.getIsMine(), userId)) {
+            QLog.l().logger().info("Сняли приватность: userId=" + userId + ", customerId=" + cust.getId());
             cust.setIsMine(null);
         }
     }
@@ -1601,6 +1602,8 @@ public final class Executer {
                     throw e;
                 }
                 customer.setExtId(Long.valueOf(apbCustomerId));
+                //если отправили на оплату, то обнуляем количество вызовов
+                customer.setRecallCount(0);
             }
             catch (NumberFormatException fe) {
                 QLog.l().logger().trace("Ошибка парсинга идентификатора из системы АПБ, apbCustomerId=\"" + apbCustomerId + "\"", fe);
@@ -2033,7 +2036,6 @@ public final class Executer {
                 try {
                     //время обслуживания по стандартам
                     Long totalStandardWorkPeriod = getTotalStandardWorkPeriod(cmdParams.services);
-                    
                     long totalUserWorkPeriod = (user.getCustFinishTime().getTime() - cmdParams.customerStartTime) / 1000;
                     
                     //сохраняем статистику расширенную
