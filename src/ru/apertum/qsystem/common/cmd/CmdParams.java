@@ -147,9 +147,6 @@ public class CmdParams {
     @SerializedName("is_postponed_for_payment")
     public Boolean isPostponedForPayment;
     @Expose
-    @SerializedName("customer_start_time")
-    public Long customerStartTime;
-    @Expose
     @SerializedName("services")
     public List<QService> services;
     

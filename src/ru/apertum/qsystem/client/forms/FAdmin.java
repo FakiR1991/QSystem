@@ -5932,7 +5932,7 @@ private void treeServicesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRS
 }//GEN-LAST:event_treeServicesMouseClicked
 
 private void buttonRestartServerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRestartServerActionPerformed
-    if (JOptionPane.showConfirmDialog(null, "Ты точно хочешь проделать эту богомерскую операцию?", "Подумай три раза, о мышкатыкатель!", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == 1) {
+    if (JOptionPane.showConfirmDialog(null, "Перезапустить сервер?", "Внимание!", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == 1) {
         return;
     }
     NetCommander.restartServer(new ServerNetProperty());

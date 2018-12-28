@@ -769,6 +769,24 @@
       </ExternalSystemSettings>
       <method />
     </configuration>
+    <configuration default="false" name="runSessionManager" type="GradleRunConfiguration" factoryName="Gradle">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/build.gradle" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="runSessionManager" />
+          </list>
+        </option>
+        <option name="vmOptions" value="" />
+      </ExternalSystemSettings>
+      <method />
+    </configuration>
     <configuration default="false" name="runWelcome" type="GradleRunConfiguration" factoryName="Gradle">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -859,7 +877,7 @@
       </ExternalSystemSettings>
       <method />
     </configuration>
-    <list size="8">
+    <list size="9">
       <item index="0" class="java.lang.String" itemvalue="Gradle.runAdmin" />
       <item index="1" class="java.lang.String" itemvalue="Gradle.runServer" />
       <item index="2" class="java.lang.String" itemvalue="Gradle.runClient" />
@@ -868,6 +886,7 @@
       <item index="5" class="java.lang.String" itemvalue="Gradle.runConfigServer" />
       <item index="6" class="java.lang.String" itemvalue="Gradle.runTabloRedactor" />
       <item index="7" class="java.lang.String" itemvalue="Gradle.runUB" />
+      <item index="8" class="java.lang.String" itemvalue="Gradle.runSessionManager" />
     </list>
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
       <Host>localhost</Host>

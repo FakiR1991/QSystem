@@ -178,7 +178,8 @@ public class UsersStatistic {
     }
     
     public void completeCurrentState(UsersStatistic workingPeriod, INetProperty netProperty) {
-        Date currDate = NetCommander.getServerTime(netProperty, getUserId());
+//        Date currDate = NetCommander.getServerTime(netProperty, getUserId());
+        Date currDate = new Date();
         
         completePreviousState(currentState, currDate, workingPeriod, netProperty);
         
@@ -199,7 +200,8 @@ public class UsersStatistic {
             return;
         }
         
-        Date currDate = NetCommander.getServerTime(netProperty, getUserId());
+//        Date currDate = NetCommander.getServerTime(netProperty, getUserId());
+        Date currDate = new Date();
         
         completePreviousState(currentState, currDate, workingPeriod, netProperty);
         

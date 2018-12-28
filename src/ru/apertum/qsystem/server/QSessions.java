@@ -92,13 +92,14 @@ public class QSessions {
         return sessions.add(new QSession(QUserList.getInstance().getById(userId), ipAdress, IP));
     }
 
-    public synchronized void remove(Long userId) {
+    public synchronized boolean remove(Long userId) {
         for (QSession session : sessions) {
             if (userId.equals(session.getUser().getId())) {
                 sessions.remove(session);
-                return;
+                return true;
             }
         }
+        return false;
     }
 
 }

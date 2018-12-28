@@ -74,6 +74,7 @@ import ru.apertum.qsystem.common.cmd.RpcInviteCustomer;
 import ru.apertum.qsystem.common.cmd.RpcStandInService;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.cmd.RpcBanList;
+import ru.apertum.qsystem.common.cmd.RpcGetAllSessions;
 import ru.apertum.qsystem.common.cmd.RpcGetDateTime;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
 import ru.apertum.qsystem.common.cmd.RpcGetMovedToPaymentList;
@@ -747,7 +748,7 @@ public final class Executer {
                     }
                 }
                 
-                return new RpcGetInt(workMaxStandard);
+                return new RpcGetInt(workMaxStandard == null ? 20 : workMaxStandard);
             } catch (Exception ex) {
                 throw new ServerException("Ошибка получения значения максимального времени обслуживания по стандарту. " + ipAdress, ex);
             }
@@ -1090,6 +1091,17 @@ public final class Executer {
     };
     
     /**
+     * Получить список активных сессий на сервере
+     */
+    final Task getSessions = new Task(Uses.TASK_GET_SESSIONS) {
+
+        @Override
+        public synchronized RpcGetAllSessions process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            return new RpcGetAllSessions(QSessions.getInstance().getSessions());
+        }
+    };
+    
+    /**
      * Получить состояние пула отложенных
      */
     final Task getPostponedPoolInfo = new Task(Uses.TASK_GET_POSTPONED_POOL) {
@@ -1236,6 +1248,23 @@ public final class Executer {
                 QLog.l().logger().error(ex);
             }
             return new JsonRPC20OK();
+        }
+    };
+    
+    /**
+     * Удалить сессию выбранного пользователя
+     */
+    final Task removeSessionTask = new Task(Uses.TASK_REMOVE_SESSION) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            boolean res = QSessions.getInstance().remove(cmdParams.userId);
+            if (res) {
+                return new JsonRPC20OK();
+            } else {
+                return new JsonRPC20Error();
+            }
         }
     };
     
@@ -1862,6 +1891,9 @@ public final class Executer {
             }
             final QCustomer customer = user.getCustomer();
             
+            //сбрасываем количество вызовов
+            customer.setRecallCount(0);
+            
             //обнуляем приватность кастомера, если она была
             if (customer.getIsMine() != null) {
                 QLog.l().logger().info("Сняли приватность кастомера (id=" + customer.getId() + ") при перенаправлении на другую услугу.");
@@ -2019,8 +2051,6 @@ public final class Executer {
         synchronized public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             
-            QUser user = QUserList.getInstance().getById(cmdParams.userId);
-            
             final DefaultTransactionDefinition def = new DefaultTransactionDefinition();
             def.setName("SomeTxName");
             def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -2031,19 +2061,14 @@ public final class Executer {
             Long id = getStatisticId(cmdParams.userId,
                                      cmdParams.client_id);
             if (id == null) {
+                QLog.l().logger().error("statistic_id is null; user_id=" + cmdParams.userId + ", client_id=" + cmdParams.client_id);
                 return new JsonRPC20Error();
             } else {
                 try {
-                    //время обслуживания по стандартам
-                    Long totalStandardWorkPeriod = getTotalStandardWorkPeriod(cmdParams.services);
-                    long totalUserWorkPeriod = (user.getCustFinishTime().getTime() - cmdParams.customerStartTime) / 1000;
-                    
                     //сохраняем статистику расширенную
-                    saveDetailedStatistic(cmdParams.services,
-                                          id,
-                                          totalUserWorkPeriod,
-                                          totalStandardWorkPeriod);
+                    saveDetailedStatistic(cmdParams.services, id);
                 } catch (Exception e) {
+                    QLog.l().logger().error("Ошибка сохранения детальной информации", e);
                     return new JsonRPC20Error();
                 }
             }
@@ -2054,41 +2079,10 @@ public final class Executer {
         }
     };
     
-    /**
-     * Получаем общее время обслуживания по стандартам для списка переданных услуг (в секундах)
-     * @param services услуги выбранные оператором для сохранения
-     * @return общее время обслуживания по списку услуг исходя из нормативов
-     */
-    private Long getTotalStandardWorkPeriod(List<QService> services) {
-        String qSelectTotalStandard = "select sum(duration) from services where id in (";
-        for (int i = 0; i < services.size(); i++) {
-            qSelectTotalStandard += services.get(i).getId();
-            if (i < services.size() - 1) {
-                 qSelectTotalStandard += ",";
-            }
-        }
-        qSelectTotalStandard += ")";
-        
-        Long totalStandardWorkPeriod = null;
-        try {
-            final Session ses = Spring.getInstance().getTxManager().getSessionFactory().getCurrentSession();
-            Query query = ses.createSQLQuery(qSelectTotalStandard);
-            List<BigDecimal> rows = query.list();
-            for (BigDecimal row : rows) {
-                totalStandardWorkPeriod = row.longValue();
-            }
-            ses.flush();
-        } catch (Exception ex) {
-            QLog.l().logger().error("Ошибка получения id записи статистики", ex);
-            throw new ServerException("\n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
-        }
-        return totalStandardWorkPeriod * 60;
-    }
-    
-    private void saveDetailedStatistic(List<QService> services, Long statisticId, Long totalUserWorkPeriod, Long totalStandardWorkPeriod) {
+    private void saveDetailedStatistic(List<QService> services, Long statisticId) {
         for (QService service : services) {
-            String qInsertStatisticDetails = "insert into statistic_details (statistic_id, service_id, service_prefix, total_user_work_period, total_standard_work_period) " +
-                               "values(:statisticId, :serviceId, :servicePrefix, :totalUserWorkPeriod, :totalStandardWorkPeriod)";
+            String qInsertStatisticDetails = "insert into statistic_details (statistic_id, service_id, service_prefix) " +
+                                             "values(:statisticId, :serviceId, :servicePrefix)";
             try {
                 final Session ses = Spring.getInstance().getTxManager().getSessionFactory().getCurrentSession();
                 //добавим данные очередного ip в таблицу ip_to_unit
@@ -2096,8 +2090,6 @@ public final class Executer {
                 query.setParameter("statisticId", statisticId);
                 query.setParameter("serviceId", service.getId());
                 query.setParameter("servicePrefix", service.getPrefix());
-                query.setParameter("totalUserWorkPeriod", totalUserWorkPeriod);
-                query.setParameter("totalStandardWorkPeriod", totalStandardWorkPeriod);
                 query.executeUpdate();
                 ses.flush();
             } catch (Exception ex) {

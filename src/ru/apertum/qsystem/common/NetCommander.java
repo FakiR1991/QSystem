@@ -51,6 +51,7 @@ import ru.apertum.qsystem.common.cmd.JsonRPC20OK;
 import ru.apertum.qsystem.common.cmd.RpcBanList;
 import ru.apertum.qsystem.common.cmd.RpcGetAdvanceCustomer;
 import ru.apertum.qsystem.common.cmd.RpcGetAllServices;
+import ru.apertum.qsystem.common.cmd.RpcGetAllSessions;
 import ru.apertum.qsystem.common.cmd.RpcGetAuthorizCustomer;
 import ru.apertum.qsystem.common.cmd.RpcGetBool;
 import ru.apertum.qsystem.common.cmd.RpcGetDateTime;
@@ -81,6 +82,7 @@ import ru.apertum.qsystem.common.exceptions.QException;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
+import ru.apertum.qsystem.server.QSession;
 import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.http.CommandHandler;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
@@ -453,11 +455,10 @@ public class NetCommander {
      * @param totalUserWorkPeriod время которое было затрачено на обслуживание (в минутах)
      * @param services список услуг, которые были выбраны оператором
      */
-    public static void serviceCompletion(INetProperty netProperty, long customerStartTime, List<QService> services, Long userId, Long clientId) {
+    public static void serviceCompletion(INetProperty netProperty, List<QService> services, Long userId, Long clientId) {
         QLog.l().logger().info("Сделать услугу временно неактивной/активной.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
-        params.customerStartTime = customerStartTime;
         params.services = services;
         params.userId = userId;
         params.client_id = clientId;
@@ -489,7 +490,7 @@ public class NetCommander {
             throw new QException(Locales.locMes("command_error"), ex);
         }
         final Gson gson = GsonPool.getInstance().borrowGson();
-        final RpcGetServiceState rpc;
+        final RpcGetServiceState rpc;;
         try {
             rpc = gson.fromJson(res, RpcGetServiceState.class);
         } catch (JsonSyntaxException ex) {
@@ -751,6 +752,33 @@ public class NetCommander {
     }
     
     /**
+     * Получить активные сессии пользователей
+     *
+     * @param netProperty параметры соединения с сервером
+     * @return список сессий активных
+     */
+    public static LinkedList<QSession> getSessions(INetProperty netProperty) {
+        QLog.l().logger().info("Получить список сессий пользователей.");
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_GET_SESSIONS, null);
+        } catch (QException e) {// вывод исключений
+            Uses.closeSplash();
+            throw new ServerException(Locales.locMes("command_error2"), e);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetAllSessions rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetAllSessions.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
      * Получение слeдующего юзера из очередей, обрабатываемых юзером.
      *
      * @param netProperty параметры соединения с сервером
@@ -829,6 +857,24 @@ public class NetCommander {
         params.customerId = customerId;
         try {
             send(netProperty, Uses.TASK_KILL_NEXT_CUSTOMER, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        }
+    }
+    
+    /**
+     * Удаление сессии пользователя.
+     *
+     * @param netProperty параметры соединения с сервером
+     * @param userId ИД пользователя
+     */
+    public static void removeSession(INetProperty netProperty, long userId) {
+        QLog.l().logger().info("Удаление сессии пользователя.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        try {
+            send(netProperty, Uses.TASK_REMOVE_SESSION, params);
         } catch (QException e) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error2"), e);
         }

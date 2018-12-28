@@ -1,0 +1,1 @@
+start javaw  -cp dist/QSystem.jar ru.apertum.qsystem.client.forms.FSessionManager -sport 3128 -cport 3129 -s localhost

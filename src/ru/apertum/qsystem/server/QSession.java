@@ -16,6 +16,8 @@
  */
 package ru.apertum.qsystem.server;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 import java.util.HashMap;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.server.model.QUser;
@@ -27,10 +29,20 @@ import ru.apertum.qsystem.server.model.QUser;
  */
 public class QSession {
 
+    @Expose
+    @SerializedName("ipAdress")
     private String ipAdress;
+    @Expose
+    @SerializedName("ip")
     private byte[] IP;
+    @Expose
+    @SerializedName("user")
     private QUser user;
+    @Expose
+    @SerializedName("time")
     private long time = 0;
+    @Expose
+    @SerializedName("LIVE_TIME")
     private static final long LIVE_TIME = 65000;//65 sec.
 
     public QSession(QUser user, String ipAdress, byte[] IP) {
@@ -104,4 +116,11 @@ public class QSession {
         return (System.currentTimeMillis() - time) < LIVE_TIME;
     }
 
+    @Override
+    public String toString() {
+        String userInfo = "USER: " + getUser().getName();
+        String ipInfo = "IP: " + getIpAdress();
+        String isValidInfo = (isValid() ? "<font color='green'>VALID</font>" : "<font color='red'>INVALID</font>");
+        return "<html>" + userInfo + "; " + ipInfo + " (" + isValidInfo + ")" + "<html>";
+    }
 }

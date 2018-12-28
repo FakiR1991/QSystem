@@ -16,8 +16,6 @@
  */
 package ru.apertum.qsystem.client.forms;
 
-import com.sun.jna.platform.win32.WinDef;
-import com.sun.jna.platform.win32.Wtsapi32;
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Font;
@@ -56,7 +54,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import org.dom4j.DocumentException;
 import org.jdesktop.application.Action;
 import javax.swing.JFrame;
@@ -85,7 +82,6 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
-import ru.apertum.qsystem.client.Win32Window;
 import ru.apertum.qsystem.client.help.Helper;
 import ru.apertum.qsystem.client.model.ParallelCellRenderer;
 import ru.apertum.qsystem.common.NetCommander;
@@ -105,7 +101,6 @@ import ru.apertum.qsystem.common.model.IClientNetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IStartClient;
 import ru.apertum.qsystem.fx.OrangeClientboard;
-import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.postponed.QPostponedList;
@@ -179,6 +174,7 @@ public final class FClient extends javax.swing.JFrame {
                 priority = getLocaleMessage("messages.priority.strange");
             }
         }
+        
         String s = customer.getService().getInput_caption().replaceAll("<[^>]*>", "");
         if (s == null) {
             s = "";
@@ -237,7 +233,9 @@ public final class FClient extends javax.swing.JFrame {
                 break;
             }
             default: {
-                throw new ClientException("Не известное состояние клиента \"" + customer.getState() + "\" для данного случая.");
+                tray.showMessageTray("Сообщите разработчику", "Не известное состояние клиента \"" + customer.getState() + "\" для данного случая.", MessageType.WARNING);
+//                JOptionPane.showMessageDialog(this, "Не известное состояние клиента \"" + customer.getState() + "\" для данного случая.");
+//                throw new ClientException("Не известное состояние клиента \"" + customer.getState() + "\" для данного случая.");
             }
         }
         //нефиг счелкать касторами пока процесс вызывания идет при параллельном приеме
@@ -1403,9 +1401,6 @@ public final class FClient extends javax.swing.JFrame {
                                    ", unitId=" + user.getUnitId());
             
             QCustomer tempCust = customer;
-            //когда начали работать с клиентом, сохраняем здесь,
-            //так как customer обнулится после вызова функции getFinishCustomer
-            Long customerStartTime = customer.getStartTime().getTime();
             
             //если кастомер из зала, где работает совместная очередь с АПБ,
             //и при этом в properties включена отправка в банк с помощью веб-сервиса,
@@ -1463,7 +1458,7 @@ public final class FClient extends javax.swing.JFrame {
                 
                 //если отправили не через API в банк, а просто отложили клиента на оплату,
                 //то показываем окно, т.к. выше вызывается код "buttonFinish.doClick()" который покажет окно для выбора услуг
-                showServiceCompletionWindow(customerStartTime, user, tempCust);
+//                showServiceCompletionWindow(user, tempCust);
             }
             
             // Показываем обстановку
@@ -1501,10 +1496,6 @@ public final class FClient extends javax.swing.JFrame {
                 }
             }
             
-            //когда начали работать с клиентом, сохраняем здесь,
-            //так как customer обнулится после вызова функции getFinishCustomer
-            Long customerStartTime = customer.getStartTime().getTime();
-            
             // вернется кастомер и возможно он еще не домой а по списку услуг. Список определяется при старте кастомера в обработку специяльным юзером в регистратуре
             final QCustomer cust = NetCommander.getFinishCustomer(netProperty,
                                                                   user.getId(),
@@ -1515,7 +1506,6 @@ public final class FClient extends javax.swing.JFrame {
             if (cust != null && cust.getService() != null && cust.getState() == CustomerState.STATE_WAIT_COMPLEX_SERVICE) {
                 JOptionPane.showMessageDialog(this, "Следующая услуга" + " \"" + cust.getService().getName() + "\". " + "Номер посетителя" + " \"" + String.format("%03d", cust.getNumber()) + "\"." + "\n\n" + cust.getService().getDescription(), "Продолжение комплексой услуги", JOptionPane.INFORMATION_MESSAGE);
             }
-            
             movedToBank = false;
             
             //Получаем новую обстановку
@@ -1528,32 +1518,33 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-            showServiceCompletionWindow(customerStartTime, user, cust);
+//            showServiceCompletionWindow(user, cust);
+            
         } catch (HeadlessException | QException th) {
             throw new ClientException(new Exception(th));
         }
     }
     
-    private static FServiceCompletion completionWindow;
+//    private static FServiceCompletion completionWindow;
     
-    private void showServiceCompletionWindow(Long customerStartTime, QUser user, QCustomer customer) {
-        if (completionWindow == null) {
-            completionWindow = new FServiceCompletion(netProperty, fClient, true);
-        }
-        //указываем какая услуга будет выделена в дереве по умолчанию
-        completionWindow.setDefaultService(customer.getService());
-        completionWindow.setVisible(true);
-
-        Uses.setLocation(completionWindow);
-
-        //если есть выбранные услуги для сохранения детализированной статистики в таблицу statistic_details
-        if (completionWindow.getSelectedServices() != null && completionWindow.getSelectedServices().size() > 0) {
-            //чтобы в статистику не записывались 0 значения, если обслуживание длилось меньше половины минуты
-            List<QService> services = completionWindow.getSelectedServices();
-
-            NetCommander.serviceCompletion(netProperty, customerStartTime, services, user.getId(), customer.getId());
-        }
-    }
+//    private void showServiceCompletionWindow(QUser user, QCustomer customer) {
+//        if (completionWindow == null) {
+//            completionWindow = new FServiceCompletion(netProperty, fClient, true);
+//        }
+//        //указываем какая услуга будет выделена в дереве по умолчанию
+//        completionWindow.setDefaultService(customer.getService());
+//        completionWindow.setVisible(true);
+//
+//        Uses.setLocation(completionWindow);
+//
+//        //если есть выбранные услуги для сохранения детализированной статистики в таблицу statistic_details
+//        if (completionWindow.getSelectedServices() != null && completionWindow.getSelectedServices().size() > 0) {
+//            //чтобы в статистику не записывались 0 значения, если обслуживание длилось меньше половины минуты
+//            List<QService> services = completionWindow.getSelectedServices();
+//
+//            NetCommander.serviceCompletion(netProperty, services, user.getId(), customer.getId());
+//        }
+//    }
     
     protected FRedirect servicesForm = null;
 
@@ -1592,9 +1583,6 @@ public final class FClient extends javax.swing.JFrame {
             }
             
             QCustomer tempCust = customer;
-            //когда начали работать с клиентом, сохраняем здесь,
-            //так как customer обнулится после вызова функции getFinishCustomer
-            Long customerStartTime = customer.getStartTime().getTime();
             
             NetCommander.redirectCustomer(netProperty,
                                           user.getId(),
@@ -1612,7 +1600,7 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-            showServiceCompletionWindow(customerStartTime, user, tempCust);
+//            showServiceCompletionWindow(user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }
@@ -2507,33 +2495,33 @@ public final class FClient extends javax.swing.JFrame {
             System.exit(0);
         } finally {
             Uses.closeSplash();
-            try {
-                //инициализируем класс для перехвата системных событий о блокировке ПК
-                new Win32Window() {
-                    @Override
-                    protected void onSessionChange(WinDef.WPARAM wParam, WinDef.LPARAM lParam) {
-                        switch (wParam.intValue()) {
-                            case Wtsapi32.WTS_SESSION_LOCK:
-                                QLog.l().logger().info("ПК ЗАБЛОКИРОВАЛСЯ");
-                                //если не стоит галочка "Перерыв", то ставим её
-                                if (!ch.isSelected()) {
-                                    ch.doClick();
-                                }
-                                break;
-                            case Wtsapi32.WTS_SESSION_UNLOCK: {
-                                QLog.l().logger().info("ПК РАЗБЛОКИРОВАЛСЯ");
-                                //если стоит галочка "Перерыв", то снимаем её
-                                if (ch.isSelected()) {
-                                    ch.doClick();
-                                }
-                                break;
-                            }
-                        }
-                    }
-                };
-            } catch (Exception e) {
-                QLog.l().logger().error("Не удалось подписаться на событие блокировки компьютера", e);
-            }
+//            try {
+//                //инициализируем класс для перехвата системных событий о блокировке ПК
+//                new Win32Window() {
+//                    @Override
+//                    protected void onSessionChange(WinDef.WPARAM wParam, WinDef.LPARAM lParam) {
+//                        switch (wParam.intValue()) {
+//                            case Wtsapi32.WTS_SESSION_LOCK:
+//                                QLog.l().logger().info("ПК ЗАБЛОКИРОВАЛСЯ");
+//                                //если не стоит галочка "Перерыв", то ставим её
+//                                if (!ch.isSelected()) {
+//                                    ch.doClick();
+//                                }
+//                                break;
+////                            case Wtsapi32.WTS_SESSION_UNLOCK: {
+////                                QLog.l().logger().info("ПК РАЗБЛОКИРОВАЛСЯ");
+////                                //если стоит галочка "Перерыв", то снимаем её
+////                                if (ch.isSelected()) {
+////                                    ch.doClick();
+////                                }
+////                                break;
+////                            }
+//                        }
+//                    }
+//                };
+//            } catch (Exception e) {
+//                QLog.l().logger().error("Не удалось подписаться на событие блокировки компьютера", e);
+//            }
         }
         //     }
         //  });
@@ -2613,10 +2601,12 @@ public final class FClient extends javax.swing.JFrame {
                 return;
             }
             
+            
+//                протестировать как будет сохраняться без этих двух полей
+//                и нужно на рабочем серваке сделать эти два поля не NOT NULL
+            
+            
             QCustomer tempCust = customer;
-            //когда начали работать с клиентом, сохраняем здесь,
-            //так как customer обнулится после вызова функции getFinishCustomer
-            Long customerStartTime = customer.getStartTime().getTime();
             
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
             NetCommander.сustomerToPostpone(netProperty,
@@ -2637,7 +2627,7 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-            showServiceCompletionWindow(customerStartTime, user, tempCust);
+//            showServiceCompletionWindow(user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }

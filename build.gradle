@@ -314,6 +314,40 @@ task debugClient (dependsOn: 'classes', type: JavaExec) {
     doLast {}
 }
 
+task runSessionManager (dependsOn: 'classes', type: JavaExec) {
+    doFirst {
+        main = 'ru.apertum.qsystem.client.forms.FSessionManager'
+        classpath = sourceSets.main.runtimeClasspath
+        args 'ru.apertum.qsystem.client.forms.FSessionManager'
+        args '-ide'
+        args '-s'
+        args '127.0.0.1'
+        args '-cport'
+        args '3129'
+        args '-sport'
+        args '3128'
+        systemProperty 'simple.message', 'Hello '
+    }
+    doLast {}
+}
+
+task debugSessionManager (dependsOn: 'classes', type: JavaExec) {
+    doFirst {
+        main = 'ru.apertum.qsystem.client.forms.FSessionManager'
+        classpath = sourceSets.main.runtimeClasspath
+        args 'ru.apertum.qsystem.client.forms.FSessionManager'
+        args '-ide'
+        args '-s'
+        args '127.0.0.1'
+        args '-cport'
+        args '3129'
+        args '-sport'
+        args '3128'
+        systemProperty 'simple.message', 'Hello '
+    }
+    doLast {}
+}
+
 task runWelcome (dependsOn: 'classes', type: JavaExec) {
     doFirst {
         main = 'ru.apertum.qsystem.client.forms.FWelcome'
