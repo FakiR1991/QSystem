@@ -104,6 +104,8 @@ public class Spring {
         //ht = new HibernateTemplate(sessionFactory);
 
         final ComboPooledDataSource bds = (ComboPooledDataSource) factory.getBean("c3p0DataSource");
+        bds.setMaxPoolSize(50);
+        bds.setMaxStatements(0);
         driverClassName = bds.getDriverClass();
         url = bds.getJdbcUrl();
         username = bds.getUser();

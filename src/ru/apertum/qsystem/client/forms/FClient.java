@@ -1458,7 +1458,7 @@ public final class FClient extends javax.swing.JFrame {
                 
                 //если отправили не через API в банк, а просто отложили клиента на оплату,
                 //то показываем окно, т.к. выше вызывается код "buttonFinish.doClick()" который покажет окно для выбора услуг
-//                showServiceCompletionWindow(user, tempCust);
+                showServiceCompletionWindow(user, tempCust);
             }
             
             // Показываем обстановку
@@ -1518,33 +1518,33 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-//            showServiceCompletionWindow(user, cust);
+            showServiceCompletionWindow(user, cust);
             
         } catch (HeadlessException | QException th) {
             throw new ClientException(new Exception(th));
         }
     }
     
-//    private static FServiceCompletion completionWindow;
+    private static FServiceCompletion completionWindow;
     
-//    private void showServiceCompletionWindow(QUser user, QCustomer customer) {
-//        if (completionWindow == null) {
-//            completionWindow = new FServiceCompletion(netProperty, fClient, true);
-//        }
-//        //указываем какая услуга будет выделена в дереве по умолчанию
-//        completionWindow.setDefaultService(customer.getService());
-//        completionWindow.setVisible(true);
-//
-//        Uses.setLocation(completionWindow);
-//
-//        //если есть выбранные услуги для сохранения детализированной статистики в таблицу statistic_details
-//        if (completionWindow.getSelectedServices() != null && completionWindow.getSelectedServices().size() > 0) {
-//            //чтобы в статистику не записывались 0 значения, если обслуживание длилось меньше половины минуты
-//            List<QService> services = completionWindow.getSelectedServices();
-//
-//            NetCommander.serviceCompletion(netProperty, services, user.getId(), customer.getId());
-//        }
-//    }
+    private void showServiceCompletionWindow(QUser user, QCustomer customer) {
+        if (completionWindow == null) {
+            completionWindow = new FServiceCompletion(netProperty, fClient, true);
+        }
+        //указываем какая услуга будет выделена в дереве по умолчанию
+        completionWindow.setDefaultService(customer.getService());
+        completionWindow.setVisible(true);
+
+        Uses.setLocation(completionWindow);
+
+        //если есть выбранные услуги для сохранения детализированной статистики в таблицу statistic_details
+        if (completionWindow.getSelectedServices() != null && completionWindow.getSelectedServices().size() > 0) {
+            //чтобы в статистику не записывались 0 значения, если обслуживание длилось меньше половины минуты
+            List<QService> services = completionWindow.getSelectedServices();
+
+            NetCommander.serviceCompletion(netProperty, services, user.getId(), customer.getId());
+        }
+    }
     
     protected FRedirect servicesForm = null;
 
@@ -1600,7 +1600,7 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-//            showServiceCompletionWindow(user, tempCust);
+            showServiceCompletionWindow(user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }
@@ -2627,7 +2627,7 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-//            showServiceCompletionWindow(user, tempCust);
+            showServiceCompletionWindow(user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }
