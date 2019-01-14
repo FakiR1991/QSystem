@@ -915,17 +915,30 @@ public class NetCommander {
      * @param netProperty параметры соединения с сервером
      * @param customerId тот, кого удаляем
      */
-    public static void killCustomer(INetProperty netProperty, Long customerId, Integer unitId) {
+    public static String killCustomer(INetProperty netProperty, Long customerId, Integer unitId) {
         QLog.l().logger().info("FReception - удаление кастомера из очереди.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.customerId = customerId;
         params.unitId = unitId;
+        
+        
+        final String res;
         try {
-            send(netProperty, Uses.TASK_KILL_CUSTOMER_FRECEPTION, params);
-        } catch (QException e) {// вывод исключений
-            throw new ClientException(Locales.locMes("command_error2"), e);
+            res = send(netProperty, Uses.TASK_KILL_CUSTOMER_FRECEPTION, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
         }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetSrt rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetSrt.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("command_error2"));
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
     }
 
     /**
@@ -1669,6 +1682,40 @@ public class NetCommander {
         final String res;
         try {
             res = send(netProperty, Uses.TASK_SET_CUSTOMER_PRIORITY, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetSrt rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetSrt.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Изменение статуса талона на В РАБОТЕ
+     *
+     * @param netProperty параметры соединения с сервером
+     * @param customerId
+     * @param userId
+     * @param unitId
+     * @return Текстовый ответ о результате
+     */
+    public static String changeCustomerState(INetProperty netProperty, long customerId, long userId, Integer unitId) {
+        QLog.l().logger().info("Изменить текущий статус кастомера на В РАБОТЕ.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.customerId = customerId;
+        params.userId = userId;
+        params.unitId = unitId;
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_SET_CUSTOMER_STATE_CHANGE, params);
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }

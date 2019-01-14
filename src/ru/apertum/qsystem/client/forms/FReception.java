@@ -224,9 +224,12 @@ public class FReception extends javax.swing.JFrame {
                                               JOptionPane.YES_NO_OPTION) == 1) {
                 return;
             }
-            NetCommander.killCustomer(netProperty,
-                                      customer.getId(),
-                                      customer.getUnitId());
+            String result = NetCommander.killCustomer(netProperty,
+                                                      customer.getId(),
+                                                      customer.getUnitId());
+            
+            JOptionPane.showMessageDialog(fReception, result, "Внимание", JOptionPane.INFORMATION_MESSAGE);
+            
             loadTickets();
         } catch (Exception th) {
             throw new ClientException(new Exception(th));
@@ -239,6 +242,7 @@ public class FReception extends javax.swing.JFrame {
         jPopupMenuItemRemoveTicket = new javax.swing.JMenuItem();
         jPopupMenuItemEditPriority = new javax.swing.JMenuItem();
         jPopupMenuItemRefreshList = new javax.swing.JMenuItem();
+        jPopupMenuItemChangeState = new javax.swing.JMenuItem();
         
         jPanelTickets = new javax.swing.JPanel();
         jScrollTickets = new javax.swing.JScrollPane();
@@ -254,10 +258,12 @@ public class FReception extends javax.swing.JFrame {
         jPopupMenuItemRefreshList.setText("Обновить список");
         jPopupMenuItemEditPriority.setText("Изменить приоритет");
         jPopupMenuItemRemoveTicket.setText("Удалить из очереди");
+        jPopupMenuItemChangeState.setText("Изменить статус");
         
         jPopupMenuTickets.add(jPopupMenuItemRefreshList);
         jPopupMenuTickets.addSeparator();
         jPopupMenuTickets.add(jPopupMenuItemEditPriority);
+        jPopupMenuTickets.add(jPopupMenuItemChangeState);
         jPopupMenuTickets.add(jPopupMenuItemRemoveTicket);
         
         jPopupMenuItemRefreshList.addMouseListener(new MouseAdapter() {
@@ -284,6 +290,15 @@ public class FReception extends javax.swing.JFrame {
                 super.mouseReleased(e);
                 
                 changePriority();
+            }
+        });
+        
+        jPopupMenuItemChangeState.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                
+                changeCustomerState();
             }
         });
         
@@ -334,6 +349,30 @@ public class FReception extends javax.swing.JFrame {
         );
 
         tabsPane.addTab("Талоны", jPanelTickets);
+    }
+    
+    //меняем статус талона на "STATE_WORK"
+    //нужно только если у оператора в обслуживании вдруг появился талон с не правильным статусом
+    //например, "STATE_DEAD" или "STATE_POSTPONED"
+    private void changeCustomerState() {
+        QCustomer cust = (QCustomer)jListTickets.getSelectedValue();
+        QUser user = cust.getUser();
+        
+        if (JOptionPane.showConfirmDialog(fReception,
+                                          "Сменить статус талона \"" + cust.getState().name() + "\" на \"STATE_WORK\"?",
+                                          "Внимание!",
+                                          JOptionPane.YES_NO_OPTION,
+                                          JOptionPane.WARNING_MESSAGE) != 0) {
+            return;
+        }
+        if (jListTickets.getSelectedValue() != null) {
+            JOptionPane.showMessageDialog(fReception,
+                                          NetCommander.changeCustomerState(netProperty, cust.getId(), user.getId(), unit.getId().intValue()),
+                                          "Смена статуса",
+                                          JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(fReception, "Не выбран талон из списка", "Внимание", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     
     private void initMovedToBankTab() {
@@ -2788,6 +2827,7 @@ public class FReception extends javax.swing.JFrame {
     private javax.swing.JPopupMenu jPopupMenuTickets;
     private javax.swing.JMenuItem jPopupMenuItemRemoveTicket;
     private javax.swing.JMenuItem jPopupMenuItemRefreshList;
+    private javax.swing.JMenuItem jPopupMenuItemChangeState;
     private javax.swing.JMenuItem jPopupMenuItemEditPriority;
 
     

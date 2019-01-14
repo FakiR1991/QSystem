@@ -1170,6 +1170,13 @@ public final class Executer {
                 ticketsList.add(cust);
             });
             
+            //в обслуживании
+            QUserList.getInstance().getItems().stream().filter(user -> Objects.equals(user.getUnitId(), cmdParams.unitId)).forEach(user -> {
+                if (user.getCustomer() != null) {
+                    ticketsList.add(user.getCustomer());
+                }
+            });
+            
             ticketsList.sort(Comparators.number);
             
             return new RpcGetMovedToPaymentList(ticketsList);
@@ -1356,7 +1363,18 @@ public final class Executer {
             }
             
             if (customer == null) {
-                throw new ServerException("Талон выбранный для удаления не найден, обновите список талонов.");
+                final QUser tempUser = new QUser();
+                QUserList.getInstance().getItems().stream().filter(user -> Objects.equals(user.getUnitId(), cmdParams.unitId)).forEach(user -> {
+                    if (user.getCustomer() != null && Objects.equals(user.getCustomer().getId(), cmdParams.customerId)) {
+                        tempUser.setName(user.getName());
+                    }
+                });
+                
+                if (tempUser.getName() != null) {
+                    return new RpcGetSrt("Талон находится в обслуживании у оператора " + tempUser.getName() + ", его нельзя удалить.");
+                } else {
+                    return new RpcGetSrt("Талон выбранный для удаления не найден, обновите список талонов.");
+                }
             }
             
             //удаляем в зависимости от того где нашли кастомера
@@ -1403,7 +1421,7 @@ public final class Executer {
             } catch (Exception ex) {
                 QLog.l().logger().error(ex);
             }
-            return new JsonRPC20OK();
+            return new RpcGetSrt("Талон успешно удалён");
         }
         
         private QCustomer getCustomerById(Long customerId, Integer unitId) {
@@ -1424,7 +1442,8 @@ public final class Executer {
             TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
 
             //сначала удалим назначенные услуги, а затем сам ip
-            String qDeleteClient = "delete from clients where id=:id";
+//            String qDeleteClient = "delete from clients where id=:id";
+            String qDeleteClient = "update clients set state_in = 0 where id=:id";
             try {
                 final Session ses = Spring.getInstance().getTxManager().getSessionFactory().getCurrentSession();
 
@@ -2651,6 +2670,7 @@ public final class Executer {
             return new RpcGetResultsList(QResultList.getInstance().getItems());
         }
     };
+    
     /**
      * Изменение приоритета кастомеру
      */
@@ -2671,6 +2691,29 @@ public final class Executer {
             return new RpcGetSrt("".equals(s) ? String.format(Locales.locMes("client_not_found_by_num"), num) : s);
         }
     };
+    
+    /**
+     * Изменение статуса кастомера
+     */
+    final Task setCustomerStateChange = new Task(Uses.TASK_SET_CUSTOMER_STATE_CHANGE) {
+
+        @Override
+        public RpcGetSrt process(final CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            QCustomer customer = user.getCustomer();
+            if (customer == null) {
+                return new RpcGetSrt("Не найден талон в обслуживании у оператора");
+            } else {
+                customer.setState(CustomerState.STATE_WORK);
+                QServer.savePool();
+            }
+            
+            return new RpcGetSrt("Успешно изменён статус талона");
+        }
+    };
+    
     /**
      * Назначение параметров юзеру
      */

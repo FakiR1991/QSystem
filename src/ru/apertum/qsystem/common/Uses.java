@@ -102,6 +102,7 @@ public final class Uses {
     public static final int PRIORITY_VIP = 3;
     public static final int[] PRIORITYS = {PRIORITY_LOW, PRIORITY_NORMAL, PRIORITY_HI, PRIORITY_VIP};
     private static final LinkedHashMap<Integer, String> PRIORITYS_WORD = new LinkedHashMap<>();
+    private static final LinkedHashMap<Integer, String> CUSTOMER_STATES_WORDS = new LinkedHashMap<>();
     public static final String PROPERTIES_FILE = "config/qsystem.properties";
 
     public static LinkedHashMap<Integer, String> get_PRIORITYS_WORD() {
@@ -110,6 +111,11 @@ public final class Uses {
         PRIORITYS_WORD.put(PRIORITY_HI, FServicePriority.getLocaleMessage("client.priority.hi"));
         PRIORITYS_WORD.put(PRIORITY_VIP, FServicePriority.getLocaleMessage("client.priority.vip"));
         return PRIORITYS_WORD;
+    }
+    public static LinkedHashMap<Integer, String> get_CUSTOMER_STATE_WORDS() {
+        CUSTOMER_STATES_WORDS.put(CustomerState.STATE_WORK.ordinal(), "В работе");
+        CUSTOMER_STATES_WORDS.put(CustomerState.STATE_WORK_SECONDARY.ordinal(), "Снова в работе");
+        return CUSTOMER_STATES_WORDS;
     }
     // значения приоритета обрабатываемых услуг для юзера
     // public static final int SERVICE_EXCLUDE = -1;
@@ -313,6 +319,7 @@ public final class Uses {
     public static final String REPORT_CURRENT_SERVICES = "current_services";
     public static final String TASK_GET_CLIENT_AUTHORIZATION = "Идентифицировать клиента";
     public static final String TASK_SET_CUSTOMER_PRIORITY = "Изменить приоритет";
+    public static final String TASK_SET_CUSTOMER_STATE_CHANGE = "Изменить статус талона на В РАБОТЕ";
     public static final String TASK_SET_USER_PARAMS = "Установить указанному юзеру переданные параметры";
     public static final String TASK_CHECK_CUSTOMER_NUMBER = "Проверить номер";
     public static final String TASK_CHANGE_FLEX_PRIORITY = "Изменить гибкий приоритет";
