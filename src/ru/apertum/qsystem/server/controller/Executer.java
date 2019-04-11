@@ -2079,6 +2079,7 @@ public final class Executer {
             //чтобы добавить записи детализированной статистики
             Long id = getStatisticId(cmdParams.userId,
                                      cmdParams.client_id);
+            
             if (id == null) {
                 QLog.l().logger().error("statistic_id is null; user_id=" + cmdParams.userId + ", client_id=" + cmdParams.client_id);
                 return new JsonRPC20Error();
@@ -2087,7 +2088,7 @@ public final class Executer {
                     //сохраняем статистику расширенную
                     saveDetailedStatistic(cmdParams.services, id);
                 } catch (Exception e) {
-                    QLog.l().logger().error("Ошибка сохранения детальной информации", e);
+                    QLog.l().logger().error("Ошибка сохранения детальной информации (id=" + id + ")", e);
                     return new JsonRPC20Error();
                 }
             }

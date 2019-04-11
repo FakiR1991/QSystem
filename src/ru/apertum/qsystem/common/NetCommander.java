@@ -452,11 +452,12 @@ public class NetCommander {
      * Вызывается при завершении обслуживания, перенаправлении, откладывании после обслуживания и отправке в банк.
      *
      * @param netProperty netProperty параметры соединения с сервером.
-     * @param totalUserWorkPeriod время которое было затрачено на обслуживание (в минутах)
      * @param services список услуг, которые были выбраны оператором
+     * @param userId ИД оператора
+     * @param clientId ИД талона
      */
     public static void serviceCompletion(INetProperty netProperty, List<QService> services, Long userId, Long clientId) {
-        QLog.l().logger().info("Сделать услугу временно неактивной/активной.");
+        QLog.l().logger().info("Сохранить детальную статистику обслуживания.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.services = services;

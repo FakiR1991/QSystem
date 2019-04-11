@@ -18,6 +18,7 @@ package ru.apertum.qsystem.client.forms;
 
 import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Dialog;
 import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.Toolkit;
@@ -54,6 +55,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import org.dom4j.DocumentException;
 import org.jdesktop.application.Action;
 import javax.swing.JFrame;
@@ -1184,6 +1186,9 @@ public final class FClient extends javax.swing.JFrame {
                 }
                 // Показываем обстановку
                 setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+                
+                startNotificationTimer();
+                
                 /*if(!denyTimer.isRunning())
                      denyTimer.start();*/
                 // поддержка расширяемости плагинами
@@ -1196,7 +1201,6 @@ public final class FClient extends javax.swing.JFrame {
         }
     }
     private long lastInvite = 0;
-
     
     /**
      * Действие по нажатию кнопки "Вызов"
@@ -1226,6 +1230,9 @@ public final class FClient extends javax.swing.JFrame {
             }
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            
+            startNotificationTimer();
+            
             /*if(!denyTimer.isRunning())
                 denyTimer.start();*/
             // поддержка расширяемости плагинами
@@ -1234,6 +1241,60 @@ public final class FClient extends javax.swing.JFrame {
         } catch (HeadlessException | QException th) {
             throw new ClientException(new Exception(th));
         }
+    }
+    
+    /**
+     * Таймер включается сразу после вызова
+     * клиента и срабатывает через 45 секунд.
+     * По истечение времени уведомляем оператора
+     * о том, что он забыл начать обслуживание
+     * клиента в программе.
+     */
+    private Timer notificationTimer = null;
+    
+    /**
+     * Таймер включается после уведомления оператора
+     * о том, что через 15 секунд автоматически
+     * запустится обслуживание клиента вызванного
+     */
+    private Timer autoStartCustomerTimer = null;
+    
+    private void startAutoPressButtonTimer() {
+        //инициализируем таймер, если null
+        if (autoStartCustomerTimer == null) {            
+            autoStartCustomerTimer = new Timer(15 * 1000, (ActionEvent e) -> {
+                ((Timer)e.getSource()).stop();
+                buttonStart.doClick();
+            });
+        }
+        autoStartCustomerTimer.start();
+    }
+    
+    private void startNotificationTimer() {
+        //инициализируем таймер, если null
+        if (notificationTimer == null) {
+            notificationTimer = new Timer(45 * 1000, (ActionEvent e) -> {
+                
+                //останавливаем таймер
+                ((Timer)e.getSource()).stop();
+                
+                //таймер который автоматически начнёт
+                //обслуживание клиента через 15 секунд
+                startAutoPressButtonTimer();
+                
+                //уведомляем оператора об этом
+                JOptionPane optionPane = new JOptionPane("Прошло 45 секунд с момента вызова клиента, но обслуживание не начато.\n"
+                                                            + "Через 15 секунд автоматически начнётся обслуживнаие клиента.\n"
+                                                            + "Если клиент не явился, то нажмите кнопку «‎Отложить клиента по неявке»‎.",
+                                                         JOptionPane.WARNING_MESSAGE);
+                JDialog dialog = optionPane.createDialog("Внимание!");
+                dialog.setAlwaysOnTop(true);
+                dialog.setVisible(true);
+                dialog.dispose();
+            });
+        }
+        notificationTimer.start();
+        
     }
     
     private boolean fkill = false;
@@ -1305,6 +1366,9 @@ public final class FClient extends javax.swing.JFrame {
             // получаем новую обстановку
             // получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            
+            notificationTimer.stop();
+            
             // поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 2);
             end(start);
@@ -1334,6 +1398,9 @@ public final class FClient extends javax.swing.JFrame {
             // Получаем новую обстановку
             // Получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+            
+            
+            notificationTimer.stop();
             
             // Поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 3);
@@ -2432,7 +2499,6 @@ public final class FClient extends javax.swing.JFrame {
                 }
             }
         }
-        
         Uses.showSplash();
         try {
             //Определим, надо ли выводить кастомера на второй экран.
@@ -2601,11 +2667,6 @@ public final class FClient extends javax.swing.JFrame {
                 return;
             }
             
-            
-//                протестировать как будет сохраняться без этих двух полей
-//                и нужно на рабочем серваке сделать эти два поля не NOT NULL
-            
-            
             QCustomer tempCust = customer;
             
             String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
@@ -2649,6 +2710,9 @@ public final class FClient extends javax.swing.JFrame {
                 NetCommander.invitePostponeCustomer(netProperty, user.getId(), cust.getId());
                 // Показываем обстановку
                 setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+                
+                startNotificationTimer();
+                
                 /*if(!denyTimer.isRunning())
                     denyTimer.start();*/
                 // поддержка расширяемости плагинами
