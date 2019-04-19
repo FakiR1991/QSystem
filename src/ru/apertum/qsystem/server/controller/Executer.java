@@ -2546,7 +2546,7 @@ public final class Executer {
                 protected void doInTransactionWithoutResult(TransactionStatus status) {
                     try {
                         Spring.getInstance().getHt().delete(advCust);
-                        QLog.l().logger().debug("Удалили предварителньную запись о кастомере." + " " + ipAdress);
+                        QLog.l().logger().debug("Удалили предварителньную запись о кастомере. " + ipAdress);
                     } catch (Exception ex) {
                         status.setRollbackOnly();
                         throw new ServerException("Ошибка при удалении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()) + " " + ipAdress);
@@ -2604,7 +2604,7 @@ public final class Executer {
                         return rpc;
                     }
                 } else {
-                    QLog.l().logger().error("It is a bull shit! No user by id=\"" + cmdParams.userId + "\"" + " " + ipAdress);
+                    QLog.l().logger().error("It is a bull shit! No user by id=\"" + cmdParams.userId + "\" " + ipAdress);
                 }
             }
 

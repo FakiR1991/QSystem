@@ -229,13 +229,13 @@ public final class FClient extends javax.swing.JFrame {
                 buttonFinish.setEnabled(customer.getService().getEnable() == 1);
                 break;
             }*/
-            case STATE_FINISH: {
-               /* if(denyTimer.isRunning())
-                    denyTimer.stop();*/
-                break;
-            }
+//            case STATE_FINISH: {
+//               /* if(denyTimer.isRunning())
+//                    denyTimer.stop();*/
+//                break;
+//            }
             default: {
-                tray.showMessageTray("Сообщите разработчику", "Не известное состояние клиента \"" + customer.getState() + "\" для данного случая.", MessageType.WARNING);
+                tray.showMessageTray("Сообщите разработчику", "Недопустимое состояние клиента \"" + customer.getState() + "\" для данного случая.", MessageType.WARNING);
 //                JOptionPane.showMessageDialog(this, "Не известное состояние клиента \"" + customer.getState() + "\" для данного случая.");
 //                throw new ClientException("Не известное состояние клиента \"" + customer.getState() + "\" для данного случая.");
             }
@@ -1294,7 +1294,11 @@ public final class FClient extends javax.swing.JFrame {
             });
         }
         notificationTimer.start();
-        
+    }
+    
+    private void stopTimers() {
+        notificationTimer.stop();
+        autoStartCustomerTimer.stop();
     }
     
     private boolean fkill = false;
@@ -1367,7 +1371,9 @@ public final class FClient extends javax.swing.JFrame {
             // получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             
-            notificationTimer.stop();
+            //останавливаем таймеры которые автоматически
+            //запускают начало обслуживания клиента
+            stopTimers();
             
             // поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 2);
@@ -1399,8 +1405,9 @@ public final class FClient extends javax.swing.JFrame {
             // Получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             
-            
-            notificationTimer.stop();
+            //останавливаем таймеры которые автоматически
+            //запускают начало обслуживания клиента
+            stopTimers();
             
             // Поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 3);
