@@ -1297,8 +1297,12 @@ public final class FClient extends javax.swing.JFrame {
     }
     
     private void stopTimers() {
-        notificationTimer.stop();
-        autoStartCustomerTimer.stop();
+        if (notificationTimer != null) {
+            notificationTimer.stop();
+        }
+        if (autoStartCustomerTimer != null) {
+            autoStartCustomerTimer.stop();
+        }
     }
     
     private boolean fkill = false;
@@ -2559,6 +2563,8 @@ public final class FClient extends javax.swing.JFrame {
             fClient.buttonMoveToPostponed.setText("Отложить клиента после обслуживания");
             Uses.setLocation(fClient);
             fClient.setVisible(true);
+            
+            
             
         } catch (AWTException ex) {
             QLog.l().logger().error("Ошибка работы с tray: ", ex);
