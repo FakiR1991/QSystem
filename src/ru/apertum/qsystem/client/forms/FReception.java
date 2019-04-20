@@ -731,7 +731,16 @@ public class FReception extends javax.swing.JFrame {
                     if (greed.get(rowIndex).getShadow() == null) {
                         return "<html><span style='color:purple'>" + getLocaleMessage("no.work") + "</SPAN>";
                     } else if (greed.get(rowIndex).getShadow().getStartTime() == null) {
-                        final int mnt = Math.round((new Date().getTime() - greed.get(rowIndex).getShadow().getFinTime().getTime()) / 1000 / 60);
+                        QUser user = (QUser)greed.get(rowIndex);
+                        // берём либо дату завершения обслуживания крайнего клиента,
+                        // либо дату последнего перерыва, если это было после обслуживания
+                        Date lastActivityDate = user.getLastPauseDate() != null
+                                                    ? user.getLastPauseDate().after(user.getShadow().getFinTime())
+                                                          ? user.getLastPauseDate()
+                                                          : user.getShadow().getFinTime()
+                                                    : user.getShadow().getFinTime();                        
+                        
+                        final int mnt = Math.round((new Date().getTime() - lastActivityDate.getTime()) / 1000 / 60);
                         final boolean toolong = (mnt > standards.getDowntimeMax());
                         //если перерыв - выставлять перерыв столько-то минут. Если не в сети больше 10 минут, то писать офлайн,  вместо не работает
                         if(greed.get(rowIndex).isPause())

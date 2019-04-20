@@ -2961,8 +2961,13 @@ public final class Executer {
         @Override
         public RpcGetBool process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
-            QUserList.getInstance().getById(cmdParams.userId).setPause(cmdParams.requestBack);
-            return new RpcGetBool(QUserList.getInstance().getById(cmdParams.userId).isPause());
+            QUser user = QUserList.getInstance().getById(cmdParams.userId);
+            user.setPause(cmdParams.requestBack);
+            //если снимаем перерыв, то нужно запомнить время его окончания
+            if (!cmdParams.requestBack) {
+                user.setLastPauseDate(new Date());
+            }
+            return new RpcGetBool(user.isPause());
         }
     };
     

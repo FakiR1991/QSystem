@@ -85,6 +85,23 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
         int result = this.name.compareTo(o.name);
         return result;
     }
+    
+    // дата окончания последнего перерыва оператора
+    // используется для того, чтобы после снятия перерыва
+    // в FReception не отображалось, что оператор в статусе
+    // "Свободен" уже долгое время
+    @Expose
+    @Transient
+    private Date lastPauseDate;
+    public void setLastPauseDate(Date date) {
+        lastPauseDate = date;
+    }
+    
+    @Transient
+    public Date getLastPauseDate() {
+        return lastPauseDate;
+    }
+    
     /**
      * Если нужно для пользователя что-то сохранять в системных параметрах, то это надо сохранять в секцию для этой конкретного пользователя.
      *
