@@ -40,7 +40,7 @@ import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceLang;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.calendar.QCalendar;
-import ru.apertum.qsystem.server.model.schedule.QSchedule;
+import ru.apertum.qsystem.server.model.schedule.QSchedule2;
 
 /**
  * Created on 27.08.2009, 11:13:04
@@ -279,7 +279,7 @@ public class FServiceChangeDialod extends javax.swing.JDialog {
         } else {
             service.setStatus((comboBoxEnabled.getSelectedIndex() - 1) * (-1));
         }
-        service.setSchedule((QSchedule) comboBoxSchedule.getModel().getSelectedItem());
+        service.setSchedule((QSchedule2) comboBoxSchedule.getModel().getSelectedItem());
         service.setCalendar((QCalendar) comboBoxCalendar.getModel().getSelectedItem());
         service.setInput_required(checkBoxInputRequired.isSelected());
         service.setInput_caption(textFieldInputCaption.getText());

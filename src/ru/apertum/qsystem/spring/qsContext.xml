@@ -65,6 +65,7 @@
                 <value>ru.apertum.qsystem.server.model.response.QRespEvent</value>
                 <value>ru.apertum.qsystem.server.model.schedule.QSchedule</value>
 								<value>ru.apertum.qsystem.server.model.schedule.QSchedule2</value>
+								<value>ru.apertum.qsystem.server.model.schedule.QScheduleToServices</value>
                 <value>ru.apertum.qsystem.server.model.schedule.QSpecSchedule</value>
                 <value>ru.apertum.qsystem.server.model.schedule.QBreaks</value>
                 <value>ru.apertum.qsystem.server.model.schedule.QBreak</value>

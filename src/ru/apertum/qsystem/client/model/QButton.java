@@ -426,6 +426,11 @@ public class QButton extends JButton {
                             form.clockUnlockBack.start();
                             return;
                         }
+                        if (servState.getCode() == Uses.LOCK_FOR_BREAK) {
+                            form.lock(WelcomeParams.getInstance().patternInfoDialog.replace("dialog.message", servState.getMessage()));
+                            form.clockUnlockBack.start();
+                            return;
+                        }
                         if (servState.getCode() == Uses.LOCK_PER_DAY_INT) {
                             form.lock(WelcomeParams.getInstance().patternInfoDialog.replace("dialog.message", FWelcome.getLocaleMessage("qbutton.clients_enough")));
                             form.clockUnlockBack.start();

@@ -672,43 +672,43 @@ public class FAdmin extends javax.swing.JFrame {
     }
     
     private void showRelativeScheduleData(QSchedule2 schedule) {
-        String typeName = "";
-        switch(schedule.getType()) {
-            case 1:
-                typeName = "СПиАО";
-                break;
-            case 2:
-                typeName = "СЦ";
-                break;
-            default:
-                typeName = "...";
-                break;
-        }
-        
-        jLabelScheduleName.setText(schedule.getName());
-        jLabelUnitValue.setText(QUnitList.getInstance().getById(schedule.getUnitId()).getName());
-        jLabelTypeValue.setText(typeName);
-        jLabelMonValue.setText(schedule.getDay1Begin() != null || schedule.getDay1End() != null
-                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay1Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay1End())
-                                    : "...");
-        jLabelTueValue.setText(schedule.getDay2Begin() != null || schedule.getDay2End() != null
-                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay2Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay2End())
-                                    : "...");
-        jLabelWedValue.setText(schedule.getDay3Begin() != null || schedule.getDay3End() != null
-                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay3Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay3End())
-                                    : "...");
-        jLabelThuValue.setText(schedule.getDay4Begin() != null || schedule.getDay4End() != null
-                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay4Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay4End())
-                                    : "...");
-        jLabelFriValue.setText(schedule.getDay5Begin() != null || schedule.getDay5End() != null
-                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay5Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay5End())
-                                    : "...");
-        jLabelSatValue.setText(schedule.getDay6Begin() != null || schedule.getDay6End() != null
-                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay6Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay6End())
-                                    : "...");
-        jLabelSunValue.setText(schedule.getDay7Begin() != null || schedule.getDay7End() != null
-                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay7Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay7End())
-                                    : "...");
+//        String typeName = "";
+//        switch(schedule.getType()) {
+//            case 1:
+//                typeName = "СПиАО";
+//                break;
+//            case 2:
+//                typeName = "СЦ";
+//                break;
+//            default:
+//                typeName = "...";
+//                break;
+//        }
+//        
+//        jLabelScheduleName.setText(schedule.getName());
+//        jLabelUnitValue.setText(QUnitList.getInstance().getById(schedule.getUnitId()).getName());
+//        jLabelTypeValue.setText(typeName);
+//        jLabelMonValue.setText(schedule.getDay1Begin() != null || schedule.getDay1End() != null
+//                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay1Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay1End())
+//                                    : "...");
+//        jLabelTueValue.setText(schedule.getDay2Begin() != null || schedule.getDay2End() != null
+//                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay2Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay2End())
+//                                    : "...");
+//        jLabelWedValue.setText(schedule.getDay3Begin() != null || schedule.getDay3End() != null
+//                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay3Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay3End())
+//                                    : "...");
+//        jLabelThuValue.setText(schedule.getDay4Begin() != null || schedule.getDay4End() != null
+//                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay4Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay4End())
+//                                    : "...");
+//        jLabelFriValue.setText(schedule.getDay5Begin() != null || schedule.getDay5End() != null
+//                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay5Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay5End())
+//                                    : "...");
+//        jLabelSatValue.setText(schedule.getDay6Begin() != null || schedule.getDay6End() != null
+//                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay6Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay6End())
+//                                    : "...");
+//        jLabelSunValue.setText(schedule.getDay7Begin() != null || schedule.getDay7End() != null
+//                                    ? Uses.FORMAT_HH_MM.format(schedule.getDay7Begin()) + " - " + Uses.FORMAT_HH_MM.format(schedule.getDay7End())
+//                                    : "...");
     }
     
     private void loadSchedule() {
@@ -6958,29 +6958,29 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
     @Action
     public void addSchedule() {
         // Запросим название плана и если оно уникально, то примем
-        String scheduleName = getLocaleMessage("admin.add_work_plan_dialog.info");
-        boolean flag = true;
-        while (flag) {
-            scheduleName = (String) JOptionPane.showInputDialog(this, getLocaleMessage("admin.add_work_plan_dialog.message"), getLocaleMessage("admin.add_work_plan_dialog.title"), 3, null, null, scheduleName);
-            if (scheduleName == null) {
-                return;
-            }
-            if ("".equals(scheduleName)) {
-                JOptionPane.showConfirmDialog(this, getLocaleMessage("admin.add_work_plan_dialog.err1.message"), getLocaleMessage("admin.add_work_plan_dialog.err1.title"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-            } else if (scheduleName.indexOf('\"') != -1) {
-                JOptionPane.showConfirmDialog(this, getLocaleMessage("admin.add_work_plan_dialog.err2.message"), getLocaleMessage("admin.add_work_plan_dialog.err2.title"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-            } else if (scheduleName.length() > 150) {
-                JOptionPane.showConfirmDialog(this, getLocaleMessage("admin.add_work_plan_dialog.err3.message"), getLocaleMessage("admin.add_work_plan_dialog.err3.title"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
-            } else {
-                flag = false;
-            }
-        }
-        QLog.l().logger().debug("Добавляем отзыв \"" + scheduleName + "\"");
-        final QSchedule item = new QSchedule();
-        item.setName(scheduleName);
-        item.setType(0);
-        QScheduleList.getInstance().addElement(item);
-        listSchedule.setSelectedValue(item, true);
+//        String scheduleName = getLocaleMessage("admin.add_work_plan_dialog.info");
+//        boolean flag = true;
+//        while (flag) {
+//            scheduleName = (String) JOptionPane.showInputDialog(this, getLocaleMessage("admin.add_work_plan_dialog.message"), getLocaleMessage("admin.add_work_plan_dialog.title"), 3, null, null, scheduleName);
+//            if (scheduleName == null) {
+//                return;
+//            }
+//            if ("".equals(scheduleName)) {
+//                JOptionPane.showConfirmDialog(this, getLocaleMessage("admin.add_work_plan_dialog.err1.message"), getLocaleMessage("admin.add_work_plan_dialog.err1.title"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+//            } else if (scheduleName.indexOf('\"') != -1) {
+//                JOptionPane.showConfirmDialog(this, getLocaleMessage("admin.add_work_plan_dialog.err2.message"), getLocaleMessage("admin.add_work_plan_dialog.err2.title"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+//            } else if (scheduleName.length() > 150) {
+//                JOptionPane.showConfirmDialog(this, getLocaleMessage("admin.add_work_plan_dialog.err3.message"), getLocaleMessage("admin.add_work_plan_dialog.err3.title"), JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+//            } else {
+//                flag = false;
+//            }
+//        }
+//        QLog.l().logger().debug("Добавляем отзыв \"" + scheduleName + "\"");
+//        final QSchedule2 item = new QSchedule2();
+//        item.setName(scheduleName);
+//        item.setType(0);
+//        QScheduleList.getInstance().addElement(item);
+//        listSchedule.setSelectedValue(item, true);
     }
 
     @Action
@@ -6998,7 +6998,7 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
             final QScheduleList m = (QScheduleList) listSchedule.getModel();
             final int col = m.getSize();
 
-            final QSchedule item = (QSchedule) listSchedule.getSelectedValue();
+            final QSchedule2 item = (QSchedule2) listSchedule.getSelectedValue();
 
             QServiceTree.getInstance().getNodes().stream().filter((service) -> (item.equals(service.getSchedule()))).forEach((service) -> {
                 service.setSchedule(null);
@@ -7274,41 +7274,41 @@ private void buttonSendDataToSkyActionPerformed(java.awt.event.ActionEvent evt) 
             final QBreaks item = (QBreaks) listBreaks.getSelectedValue();
 
             // Уберем удаленные перерывы у расписаний
-            boolean f = false;
-            for (QSchedule schedule : QScheduleList.getInstance().getItems()) {
-                if (item.equals(schedule.getBreaks_1())) {
-                    schedule.setBreaks_1(null);
-                    f = true;
-                }
-                if (item.equals(schedule.getBreaks_2())) {
-                    schedule.setBreaks_2(null);
-                    f = true;
-                }
-                if (item.equals(schedule.getBreaks_3())) {
-                    schedule.setBreaks_3(null);
-                    f = true;
-                }
-                if (item.equals(schedule.getBreaks_4())) {
-                    schedule.setBreaks_4(null);
-                    f = true;
-                }
-                if (item.equals(schedule.getBreaks_5())) {
-                    schedule.setBreaks_5(null);
-                    f = true;
-                }
-                if (item.equals(schedule.getBreaks_6())) {
-                    schedule.setBreaks_6(null);
-                    f = true;
-                }
-                if (item.equals(schedule.getBreaks_7())) {
-                    schedule.setBreaks_7(null);
-                    f = true;
-                }
-
-            }
-            if (f) {
-                scheduleListChange();
-            }
+//            boolean f = false;
+//            for (QSchedule2 schedule : QScheduleList.getInstance().getItems()) {
+//                if (item.equals(schedule.getBreaks_1())) {
+//                    schedule.setBreaks_1(null);
+//                    f = true;
+//                }
+//                if (item.equals(schedule.getBreaks_2())) {
+//                    schedule.setBreaks_2(null);
+//                    f = true;
+//                }
+//                if (item.equals(schedule.getBreaks_3())) {
+//                    schedule.setBreaks_3(null);
+//                    f = true;
+//                }
+//                if (item.equals(schedule.getBreaks_4())) {
+//                    schedule.setBreaks_4(null);
+//                    f = true;
+//                }
+//                if (item.equals(schedule.getBreaks_5())) {
+//                    schedule.setBreaks_5(null);
+//                    f = true;
+//                }
+//                if (item.equals(schedule.getBreaks_6())) {
+//                    schedule.setBreaks_6(null);
+//                    f = true;
+//                }
+//                if (item.equals(schedule.getBreaks_7())) {
+//                    schedule.setBreaks_7(null);
+//                    f = true;
+//                }
+//
+//            }
+//            if (f) {
+//                scheduleListChange();
+//            }
 
             // Подотрать все прикрепленые интервалы не нужно. Они должны сами подтереться по констрейнту.
             // подотрем сам список

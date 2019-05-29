@@ -735,6 +735,8 @@ public final class FClient extends javax.swing.JFrame {
                     menuItemChangeStatusPostponed.setEnabled(true);
                 }
                 
+                
+                
                 //здесь должен перейти переход в новое состояние (4 или 6)
                 //и должно завершиться предыдущее состояние (5)
                 refreshSituation(true);

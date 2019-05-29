@@ -69,7 +69,7 @@ import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.calendar.QCalendar;
 import ru.apertum.qsystem.server.model.schedule.QBreak;
 import ru.apertum.qsystem.server.model.schedule.QBreaks;
-import ru.apertum.qsystem.server.model.schedule.QSchedule;
+import ru.apertum.qsystem.server.model.schedule.QSchedule2;
 
 /**
  * Модель данных для функционирования очереди включает в себя: - структуру хранения - методы доступа - методы манипулирования - логирование итераций Главный
@@ -868,59 +868,66 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      * @return оставшееся время работы по услуге / ограничение на время работы с одним клиетом
      */
     public long getPossibleTickets() {
-        if (getDayLimit() != 0) {
-            // подсчитаем ограничение на выдачу талонов
-            final GregorianCalendar gc = new GregorianCalendar();
-            final Date now = new Date();
-            gc.setTime(now);
-            long dif = getSchedule().getWorkInterval(gc.getTime()).finish.getTime() - now.getTime();
-
-            int ii = gc.get(GregorianCalendar.DAY_OF_WEEK) - 1;
-            if (ii < 1) {
-                ii = 7;
-            }
-            final QBreaks qb;
-            switch (ii) {
-                case 1:
-                    qb = getSchedule().getBreaks_1();
-                    break;
-                case 2:
-                    qb = getSchedule().getBreaks_2();
-                    break;
-                case 3:
-                    qb = getSchedule().getBreaks_3();
-                    break;
-                case 4:
-                    qb = getSchedule().getBreaks_4();
-                    break;
-                case 5:
-                    qb = getSchedule().getBreaks_5();
-                    break;
-                case 6:
-                    qb = getSchedule().getBreaks_6();
-                    break;
-                case 7:
-                    qb = getSchedule().getBreaks_7();
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-            if (qb != null) {// может вообще перерывов нет
-                for (QBreak br : qb.getBreaks()) {
-                    if (br.getTo_time().after(now)) {
-                        if (br.getFrom_time().before(now)) {
-                            dif = dif - (br.getTo_time().getTime() - now.getTime());
-                        } else {
-                            dif = dif - br.diff();
-                        }
-                    }
-                }
-            }
-            QLog.l().logger().trace("Осталось рабочего времени " + (dif / 1000 / 60) + " минут. Если на каждого " + getDayLimit() + " минут, то остается принять " + (dif / 1000 / 60 / getDayLimit()) + " посетителей.");
-            return dif / 1000 / 60 / getDayLimit();
-        } else {
+        
+        /**
+         * ТАК КАК У НАС ЛИМИТОВ НЕТУ, ТО КОММЕНТИРУЕМ ЭТОТ КУСОК КОДА
+         * ПРИ НЕОБХОДИМОСТИ ЛИМИТОВ ДАННЫЙ КОД НАДО БУДЕТ НЕМНОГО ИЗМЕНИТЬ,
+         * ТАК КАК ПЕРЕДЕЛЫВАЛАСЬ СИСТЕМА ПЕРЕРЫВОВ И ПЛАНА РАБОТЫ УСЛУГ
+         */
+        
+//        if (getDayLimit() != 0) {
+//            // подсчитаем ограничение на выдачу талонов
+//            final GregorianCalendar gc = new GregorianCalendar();
+//            final Date now = new Date();
+//            gc.setTime(now);
+//            long dif = getSchedule().getWorkInterval(gc.getTime()).finish.getTime() - now.getTime();
+//
+//            int ii = gc.get(GregorianCalendar.DAY_OF_WEEK) - 1;
+//            if (ii < 1) {
+//                ii = 7;
+//            }
+//            final QBreaks qb;
+//            switch (ii) {
+//                case 1:
+//                    qb = getSchedule().getBreaks_1();
+//                    break;
+//                case 2:
+//                    qb = getSchedule().getBreaks_2();
+//                    break;
+//                case 3:
+//                    qb = getSchedule().getBreaks_3();
+//                    break;
+//                case 4:
+//                    qb = getSchedule().getBreaks_4();
+//                    break;
+//                case 5:
+//                    qb = getSchedule().getBreaks_5();
+//                    break;
+//                case 6:
+//                    qb = getSchedule().getBreaks_6();
+//                    break;
+//                case 7:
+//                    qb = getSchedule().getBreaks_7();
+//                    break;
+//                default:
+//                    throw new AssertionError();
+//            }
+//            if (qb != null) {// может вообще перерывов нет
+//                for (QBreak br : qb.getBreaks()) {
+//                    if (br.getTo_time().after(now)) {
+//                        if (br.getFrom_time().before(now)) {
+//                            dif = dif - (br.getTo_time().getTime() - now.getTime());
+//                        } else {
+//                            dif = dif - br.diff();
+//                        }
+//                    }
+//                }
+//            }
+//            QLog.l().logger().trace("Осталось рабочего времени " + (dif / 1000 / 60) + " минут. Если на каждого " + getDayLimit() + " минут, то остается принять " + (dif / 1000 / 60 / getDayLimit()) + " посетителей.");
+//            return dif / 1000 / 60 / getDayLimit();
+//        } else {
             return Integer.MAX_VALUE;
-        }
+//        }
     }
 
     /**
@@ -1370,13 +1377,13 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "schedule_id")
-    private QSchedule schedule;
+    private QSchedule2 schedule;
 
-    public QSchedule getSchedule() {
+    public QSchedule2 getSchedule() {
         return schedule;
     }
 
-    public void setSchedule(QSchedule schedule) {
+    public void setSchedule(QSchedule2 schedule) {
         this.schedule = schedule;
     }
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})

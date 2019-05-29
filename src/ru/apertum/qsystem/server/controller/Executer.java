@@ -19,6 +19,7 @@ package ru.apertum.qsystem.server.controller;
 import com.agroprombank.services.QMSServiceSoapProxy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import org.springframework.transaction.TransactionStatus;
 import ru.apertum.qsystem.common.SoundPlayer;
@@ -113,6 +114,7 @@ import ru.apertum.qsystem.server.model.results.QResultList;
 import ru.apertum.qsystem.server.model.schedule.QSchedule;
 import ru.apertum.qsystem.server.model.schedule.QSchedule2;
 import ru.apertum.qsystem.server.model.schedule.QSchedule2List;
+import ru.apertum.qsystem.server.model.schedule.QScheduleToServicesList;
 
 /**
  * Пул очередей. Пул очередей - главная структура управления очередями. В системе существуют несколько очередей, например для оказания разных услуг. Пул
@@ -803,8 +805,13 @@ public final class Executer {
             //если префикс услуги пустой или буквенный, например, то type приравниваем null
             Integer type = isEmptyPrefix || isWrongPrefix ? null : servicePrefix;
             
-            //получаем расписание по unitId и type
-            QSchedule2 schedule = QSchedule2List.getInstance().getSchedule(cmdParams.unitId, type);
+//            QSchedule2 schedule = QSchedule2List.getInstance().getSchedule(cmdParams.unitId, type);
+
+            //получаем расписание по serviceId, unitId и type
+            QSchedule2 schedule = QScheduleToServicesList.getInstance().getSchedule(cmdParams.serviceId, cmdParams.unitId, type);
+            QSchedule2.Interval interval;
+            //сообщение для отказа по перерыву на обслуживание
+            String rejectedDueBreakMessage = "";
             
             // Если нет расписания, календаря или выходной то отказ по расписанию
             if (schedule == null
@@ -820,7 +827,7 @@ public final class Executer {
                 min = Uses.LOCK_FREE_INT;
             } else {
                 // Определим время начала и конца работы на этот день
-                final QSchedule2.Interval interval = schedule.getWorkInterval(day);
+                interval = schedule.getWorkInterval(day);
                 // Определили начало и конец рабочего дня на сегодня
                 // Если работаем в этот день то определим попадает ли "сейчас" в рабочий промежуток
                 final GregorianCalendar gc_day = new GregorianCalendar();
@@ -837,6 +844,26 @@ public final class Executer {
                     if (!(sh * 60 + sm <= h * 60 + m && h * 60 + m <= eh * 60 + em) && (!((sh == eh) && (sm == em)))) {
                         QLog.l().logger().warn("Если текущее время не попадает в рабочий интервал то отказ по расписанию. " + sh + "." + sm + " < " + h + "." + m + " < " + eh + "." + em + " " + ipAdress);
                         min = Uses.LOCK_FREE_INT;
+                    } else {
+                        if (interval.breakStart != null && interval.breakEnd != null) {
+                            gc_day.setTime(interval.breakStart);
+                            final int bsh = gc_day.get(GregorianCalendar.HOUR_OF_DAY);
+                            final int bsm = gc_day.get(GregorianCalendar.MINUTE);
+                            gc_day.setTime(interval.breakEnd);
+                            final int beh = gc_day.get(GregorianCalendar.HOUR_OF_DAY);
+                            final int bem = gc_day.get(GregorianCalendar.MINUTE);
+                            
+                            //если текущее время попадает на перерыв
+                            if (h * 60 + m >= bsh * 60 + bsm && h * 60 + m <= beh * 60 + bem) {
+                                QLog.l().logger().warn("Если перерыв на обслуживание данной услуги." + ipAdress);
+                                min = Uses.LOCK_FOR_BREAK;
+                                rejectedDueBreakMessage = "Данная услуга не предоставляется в период с " +
+                                                          String.format("%02d", bsh) + ":" +
+                                                          String.format("%02d", bsm) + " до " +
+                                                          String.format("%02d", beh) + ":" +
+                                                          String.format("%02d", bem);
+                            }
+                        }
                     }
                 } else {
                     QLog.l().logger().warn("Если в этот день не определено начало или конец то отказ по расписанию." + (interval.start == null ? "start == null" : "end == null") + " " + ipAdress);
@@ -847,6 +874,10 @@ public final class Executer {
             if (min == Uses.LOCK_FREE_INT) {
                 QLog.l().logger().warn("Услуга \"" + cmdParams.serviceId + "\" не обрабатывается исходя из рабочего расписания." + " " + ipAdress);
                 return new RpcGetServiceState(min, "");
+            }
+            if (min == Uses.LOCK_FOR_BREAK) {
+                QLog.l().logger().warn("Услуга \"" + cmdParams.serviceId + "\" не обрабатывается до окончания перерыва." + " " + ipAdress);
+                return new RpcGetServiceState(min, rejectedDueBreakMessage);
             }
             
             // бежим по юзерам и смотрим обрабатывают ли они услугу
@@ -2178,108 +2209,109 @@ public final class Executer {
         public RpcGetGridOfDay process(final CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             //Определим услугу
-            final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
-            final QSchedule sch1 = service.getCalendar() == null
-                    ? QCalendarList.getInstance().getById(1).getSpecSchedule(new Date(cmdParams.date))
-                    : (service.getCalendar().getSpecSchedule(new Date(cmdParams.date)));
-            final QSchedule sch = (sch1 == null ? service.getSchedule() : sch1);
-
-            final RpcGetGridOfDay.GridDayAndParams advCusts = new RpcGetGridOfDay.GridDayAndParams();
-            advCusts.setAdvanceLimit(service.getAdvanceLimit());
-            if (sch == null) {
-                return new RpcGetGridOfDay(advCusts);
-            }
-
-            final GregorianCalendar gc = new GregorianCalendar();
-            gc.setTime(new Date(cmdParams.date));
-            gc.set(GregorianCalendar.HOUR_OF_DAY, 0);
-            gc.set(GregorianCalendar.MINUTE, 0);
-            final Date startDay = gc.getTime();
-            gc.set(GregorianCalendar.HOUR_OF_DAY, 23);
-            gc.set(GregorianCalendar.MINUTE, 59);
-            final Date endDay = gc.getTime();
-
-            // Определим по календарю рабочий ли день.
-            // Календаря может быть два, общий с id=1 и персонально настроенный
-            // Если день определяется как выходной(присутствует в БД в таблице выходных дней), то переходим к следующему дню
-            if (!QCalendarList.getInstance().getById(1).checkFreeDay(startDay)
-                    && !(service.getCalendar() != null
-                    && service.getCalendar().checkFreeDay(startDay))) {
-
-                // Определим время начала и нонца работы на этот день
-                final QSchedule.Interval interval = sch.getWorkInterval(gc.getTime());
-
-                // Если работаем в этот день то определим часы на которые еще можно записаться
-                if (!(interval.start == null || interval.finish == null)) {
-                    // Сдвинем на интервал края дня т.к. это так же сдвинуто на пунктe регистрации
-                    // Такой сдвиг в трех местах. Тут при формировании свободных времен, при определении раскладки панелек на простыню выбора,
-                    // при проверки доступности когда всю неделю отрисовываем
-                    gc.setTime(interval.start);
-                    gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
-                    Date start = gc.getTime();
-                    gc.setTime(interval.finish);
-                    gc.add(GregorianCalendar.MINUTE, -service.getAdvanceTimePeriod());
-                    Date end = gc.getTime();
-
-                    QLog.l().logger().trace("Загрузим уже занятых позиций ранее записанными кастомерами от " + Uses.FORMAT_FOR_REP.format(startDay) + " до " + Uses.FORMAT_FOR_REP.format(endDay) + " " + ipAdress);
-                    // Загрузим уже занятых позиций ранее записанными кастомерами
-                    final List<QAdvanceCustomer> advCustomers = Spring.getInstance().getHt().find("FROM QAdvanceCustomer a WHERE advance_time >'" + Uses.FORMAT_FOR_REP.format(startDay) + "' and advance_time <= '" + Uses.FORMAT_FOR_REP.format(endDay) + "' and service_id = " + service.getId());
-
-                    // бежим по часам внутри дня
-                    while (start.before(end) || start.equals(end)) {
-                        // Проверка на перерыв. В перерывах нет возможности записываться, по этому это время не поедет в пункт регистрации
-                        gc.setTime(start);
-                        gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod() - 3);
-                        if (!sch.inBreak(start, gc.getTime())) { // время не попало в перерыв
-                            int cnt = 0;
-
-                            gc.setTime(start);
-                            gc.set(GregorianCalendar.SECOND, 0);
-                            gc.set(GregorianCalendar.MILLISECOND, 0);
-                            RpcGetGridOfDay.AdvTime atime = new RpcGetGridOfDay.AdvTime(gc.getTime()); //оно уже есть, добавим записанных и дополним свободными местами
-
-                            // пробигаем по кастомерам записанным
-                            for (QAdvanceCustomer advCustomer : advCustomers) {
-                                gc.setTime(start);
-                                final int s = gc.get(GregorianCalendar.HOUR_OF_DAY);
-                                final int s_m = gc.get(GregorianCalendar.MINUTE);
-                                gc.setTime(advCustomer.getAdvanceTime());
-                                final int e = gc.get(GregorianCalendar.HOUR_OF_DAY);
-                                final int e_m = gc.get(GregorianCalendar.MINUTE);
-                                // Если совпал день и час и минуты, то увеличим счетчик записавшихся на этот час и минуты
-                                // тут учитываем что реально время предварительного может быть не по сетке, к примеру загрузили извне.
-                                if (s * 60 + s_m <= e * 60 + e_m
-                                        && s * 60 + s_m + service.getAdvanceTimePeriod() > e * 60 + e_m) {
-                                    cnt++;
-                                    atime.addACustomer(advCustomer);
-                                    // Защита от того чтобы один и тодже клиент не записался предварительно в одну услугу на одну дату.
-                                    // данный предв.кастомер не должен быть таким же как и авторизовавшийся на этот час
-                                    if (cmdParams.customerId != null && cmdParams.customerId != -1
-                                            && advCustomer.getAuthorizationCustomer() != null
-                                            && advCustomer.getAuthorizationCustomer().getId() != null
-                                            && advCustomer.getAuthorizationCustomer().getId().equals(cmdParams.customerId)) {
-                                        cnt = 1999999999;
-                                        break;
-                                    }
-                                }
-                            }
-                            // если еще количество записавшихся не привысило ограничение по услуге, то добавил этот час как доступный для записи
-                            for (int i = cnt; i < service.getAdvanceLimit(); i++) {
-                                atime.addACustomer(new QAdvanceCustomer(0L));
-                            }
-                            advCusts.addTime(atime);
-                        } // не в перерыве и по этому пробивали сколько там уже стояло и не первалило ли через настройку ограничения
-
-                        // перейдем на следующий период
-                        gc.setTime(start);
-                        gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
-                        start = gc.getTime();
-                    }
-
-                }
-
-            }
-            return new RpcGetGridOfDay(advCusts);
+//            final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
+//            final QSchedule sch1 = service.getCalendar() == null
+//                    ? QCalendarList.getInstance().getById(1).getSpecSchedule(new Date(cmdParams.date))
+//                    : (service.getCalendar().getSpecSchedule(new Date(cmdParams.date)));
+//            final QSchedule sch = (sch1 == null ? service.getSchedule() : sch1);
+//
+//            final RpcGetGridOfDay.GridDayAndParams advCusts = new RpcGetGridOfDay.GridDayAndParams();
+//            advCusts.setAdvanceLimit(service.getAdvanceLimit());
+//            if (sch == null) {
+//                return new RpcGetGridOfDay(advCusts);
+//            }
+//
+//            final GregorianCalendar gc = new GregorianCalendar();
+//            gc.setTime(new Date(cmdParams.date));
+//            gc.set(GregorianCalendar.HOUR_OF_DAY, 0);
+//            gc.set(GregorianCalendar.MINUTE, 0);
+//            final Date startDay = gc.getTime();
+//            gc.set(GregorianCalendar.HOUR_OF_DAY, 23);
+//            gc.set(GregorianCalendar.MINUTE, 59);
+//            final Date endDay = gc.getTime();
+//
+//            // Определим по календарю рабочий ли день.
+//            // Календаря может быть два, общий с id=1 и персонально настроенный
+//            // Если день определяется как выходной(присутствует в БД в таблице выходных дней), то переходим к следующему дню
+//            if (!QCalendarList.getInstance().getById(1).checkFreeDay(startDay)
+//                    && !(service.getCalendar() != null
+//                    && service.getCalendar().checkFreeDay(startDay))) {
+//
+//                // Определим время начала и нонца работы на этот день
+//                final QSchedule.Interval interval = sch.getWorkInterval(gc.getTime());
+//
+//                // Если работаем в этот день то определим часы на которые еще можно записаться
+//                if (!(interval.start == null || interval.finish == null)) {
+//                    // Сдвинем на интервал края дня т.к. это так же сдвинуто на пунктe регистрации
+//                    // Такой сдвиг в трех местах. Тут при формировании свободных времен, при определении раскладки панелек на простыню выбора,
+//                    // при проверки доступности когда всю неделю отрисовываем
+//                    gc.setTime(interval.start);
+//                    gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
+//                    Date start = gc.getTime();
+//                    gc.setTime(interval.finish);
+//                    gc.add(GregorianCalendar.MINUTE, -service.getAdvanceTimePeriod());
+//                    Date end = gc.getTime();
+//
+//                    QLog.l().logger().trace("Загрузим уже занятых позиций ранее записанными кастомерами от " + Uses.FORMAT_FOR_REP.format(startDay) + " до " + Uses.FORMAT_FOR_REP.format(endDay) + " " + ipAdress);
+//                    // Загрузим уже занятых позиций ранее записанными кастомерами
+//                    final List<QAdvanceCustomer> advCustomers = Spring.getInstance().getHt().find("FROM QAdvanceCustomer a WHERE advance_time >'" + Uses.FORMAT_FOR_REP.format(startDay) + "' and advance_time <= '" + Uses.FORMAT_FOR_REP.format(endDay) + "' and service_id = " + service.getId());
+//
+//                    // бежим по часам внутри дня
+//                    while (start.before(end) || start.equals(end)) {
+//                        // Проверка на перерыв. В перерывах нет возможности записываться, по этому это время не поедет в пункт регистрации
+//                        gc.setTime(start);
+//                        gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod() - 3);
+//                        if (!sch.inBreak(start, gc.getTime())) { // время не попало в перерыв
+//                            int cnt = 0;
+//
+//                            gc.setTime(start);
+//                            gc.set(GregorianCalendar.SECOND, 0);
+//                            gc.set(GregorianCalendar.MILLISECOND, 0);
+//                            RpcGetGridOfDay.AdvTime atime = new RpcGetGridOfDay.AdvTime(gc.getTime()); //оно уже есть, добавим записанных и дополним свободными местами
+//
+//                            // пробигаем по кастомерам записанным
+//                            for (QAdvanceCustomer advCustomer : advCustomers) {
+//                                gc.setTime(start);
+//                                final int s = gc.get(GregorianCalendar.HOUR_OF_DAY);
+//                                final int s_m = gc.get(GregorianCalendar.MINUTE);
+//                                gc.setTime(advCustomer.getAdvanceTime());
+//                                final int e = gc.get(GregorianCalendar.HOUR_OF_DAY);
+//                                final int e_m = gc.get(GregorianCalendar.MINUTE);
+//                                // Если совпал день и час и минуты, то увеличим счетчик записавшихся на этот час и минуты
+//                                // тут учитываем что реально время предварительного может быть не по сетке, к примеру загрузили извне.
+//                                if (s * 60 + s_m <= e * 60 + e_m
+//                                        && s * 60 + s_m + service.getAdvanceTimePeriod() > e * 60 + e_m) {
+//                                    cnt++;
+//                                    atime.addACustomer(advCustomer);
+//                                    // Защита от того чтобы один и тодже клиент не записался предварительно в одну услугу на одну дату.
+//                                    // данный предв.кастомер не должен быть таким же как и авторизовавшийся на этот час
+//                                    if (cmdParams.customerId != null && cmdParams.customerId != -1
+//                                            && advCustomer.getAuthorizationCustomer() != null
+//                                            && advCustomer.getAuthorizationCustomer().getId() != null
+//                                            && advCustomer.getAuthorizationCustomer().getId().equals(cmdParams.customerId)) {
+//                                        cnt = 1999999999;
+//                                        break;
+//                                    }
+//                                }
+//                            }
+//                            // если еще количество записавшихся не привысило ограничение по услуге, то добавил этот час как доступный для записи
+//                            for (int i = cnt; i < service.getAdvanceLimit(); i++) {
+//                                atime.addACustomer(new QAdvanceCustomer(0L));
+//                            }
+//                            advCusts.addTime(atime);
+//                        } // не в перерыве и по этому пробивали сколько там уже стояло и не первалило ли через настройку ограничения
+//
+//                        // перейдем на следующий период
+//                        gc.setTime(start);
+//                        gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
+//                        start = gc.getTime();
+//                    }
+//
+//                }
+//
+//            }
+//            return new RpcGetGridOfDay(advCusts);
+            return new RpcGetGridOfDay();
         }
     };
     /**
@@ -2291,118 +2323,119 @@ public final class Executer {
         public RpcGetGridOfWeek process(final CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             //Определим услугу
-            final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
-            QSchedule sch = service.getSchedule();
-            if (sch == null) {
-                return new RpcGetGridOfWeek(new RpcGetGridOfWeek.GridAndParams("Требуемая услуга не имеет расписания."));
-            }
-
-            final Date startWeek = new Date(cmdParams.date);
-            final GregorianCalendar gc = new GregorianCalendar();
-            gc.setTime(startWeek);
-            gc.set(GregorianCalendar.DAY_OF_YEAR, gc.get(GregorianCalendar.DAY_OF_YEAR) + 7);
-            final Date endWeek = gc.getTime();
-
-            QLog.l().logger().trace("Загрузим уже занятых позиций ранее записанными кастомерами от " + Uses.FORMAT_FOR_REP.format(startWeek) + " до " + Uses.FORMAT_FOR_REP.format(endWeek) + " " + ipAdress);
-            // Загрузим уже занятых позиций ранее записанными кастомерами
-            final List<QAdvanceCustomer> advCustomers = Spring.getInstance().getHt().find("FROM QAdvanceCustomer a WHERE advance_time >'" + Uses.FORMAT_FOR_REP.format(startWeek) + "' and advance_time <= '" + Uses.FORMAT_FOR_REP.format(endWeek) + "' and service_id = " + service.getId());
-
-            final GridAndParams advCusts = new GridAndParams();
-            advCusts.setStartTime(ServerProps.getInstance().getProps().getStartTime());
-            advCusts.setFinishTime(ServerProps.getInstance().getProps().getFinishTime());
-            advCusts.setAdvanceLimit(service.getAdvanceLimit());
-            advCusts.setAdvanceTimePeriod(service.getAdvanceTimePeriod());
-            advCusts.setAdvanceLimitPeriod(service.getAdvanceLimitPeriod() == null ? 0 : service.getAdvanceLimitPeriod());
-            // сформируем список доступных времен
-            Date day = startWeek;
-            while (day.before(endWeek)) {
-                final GregorianCalendar gc_day = new GregorianCalendar();
-                gc_day.setTime(day);
-                // Определим по календарю рабочий ли день.
-                // Календаря может быть два, общий с id=1 и персонально настроенный
-                // Если день определяется как выходной(присутствует в БД в таблице выходных дней), то переходим к следующему дню
-                if (!QCalendarList.getInstance().getById(1).checkFreeDay(day)
-                        && !(service.getCalendar() != null
-                        && service.getCalendar().checkFreeDay(day))) {
-                    // Определим время начала и нонца работы на этот день/ расписания могут быть перекрыты в календаре
-                    final QSchedule sch1 = service.getCalendar() == null
-                            ? QCalendarList.getInstance().getById(1).getSpecSchedule(gc_day.getTime())
-                            : (service.getCalendar().getSpecSchedule(gc_day.getTime()));
-                    sch = (sch1 == null ? service.getSchedule() : sch1);
-                    final QSchedule.Interval interval = sch.getWorkInterval(gc_day.getTime());
-
-                    // Если работаем в этот день то определим часы на которые еще можно записаться
-                    if (!(interval.start == null || interval.finish == null)) {
-                        // Сдвинем на час края дня т.к. это так же сдвинуто на пунктe регистрации
-                        // Такой сдвиг в трех местах. Тут при формировании свободных времен, при определении раскладки панелек на простыню выбора,
-                        // при проверки доступности когда всю неделю отрисовываем
-                        gc.setTime(interval.start);
-                        gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
-                        Date start = gc.getTime();
-                        gc.setTime(interval.finish);
-                        gc.add(GregorianCalendar.MINUTE, -service.getAdvanceTimePeriod());
-                        final Date end = gc.getTime();
-
-                        // бежим по часам внутри дня
-                        while (start.before(end) || start.equals(end)) {
-
-                            // Проверка на перерыв. В перерывах нет возможности записываться, по этому это время не поедет в пункт регистрации
-                            gc.setTime(start);
-                            gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod() - 3);
-                            if (!sch.inBreak(start, gc.getTime())) { // время не попало в перерыв
-
-                                int cnt = 0;
-                                // пробигаем по кастомерам записанным
-                                for (QAdvanceCustomer advCustomer : advCustomers) {
-                                    gc.setTime(start);
-                                    final int s = gc.get(GregorianCalendar.HOUR_OF_DAY);
-                                    final int s_m = gc.get(GregorianCalendar.MINUTE);
-                                    gc.setTime(advCustomer.getAdvanceTime());
-                                    final int e = gc.get(GregorianCalendar.HOUR_OF_DAY);
-                                    final int e_m = gc.get(GregorianCalendar.MINUTE);
-                                    // Если совпал день и час и минуты, то увеличим счетчик записавшихся на этот час и минуты
-                                    // тут учитываем что реально время предварительного может быть не по сетке, к примеру загрузили извне.
-                                    if ((gc.get(GregorianCalendar.DAY_OF_YEAR) == gc_day.get(GregorianCalendar.DAY_OF_YEAR))
-                                            && (s * 60 + s_m <= e * 60 + e_m
-                                            && s * 60 + s_m + service.getAdvanceTimePeriod() > e * 60 + e_m)) {
-                                        cnt++;
-                                        // Защита от того чтобы один и тодже клиент не записался предварительно в одну услугу на одну дату.
-                                        // данный предв.кастомер не должен быть таким же как и авторизовавшийся на этот час
-                                        if (cmdParams.customerId != -1
-                                                && advCustomer.getAuthorizationCustomer() != null
-                                                && advCustomer.getAuthorizationCustomer().getId() != null
-                                                && advCustomer.getAuthorizationCustomer().getId().equals(cmdParams.customerId)) {
-                                            cnt = 1999999999;
-                                            break;
-                                        }
-                                    }
-                                }
-                                // если еще количество записавшихся не привысило ограничение по услуге, то добавил этот час как доступный для записи
-                                if (cnt < service.getAdvanceLimit()) {
-                                    gc.setTime(day);
-                                    final GregorianCalendar gc2 = new GregorianCalendar();
-                                    gc2.setTime(start);
-                                    gc.set(GregorianCalendar.HOUR_OF_DAY, gc2.get(GregorianCalendar.HOUR_OF_DAY));
-                                    gc.set(GregorianCalendar.MINUTE, gc2.get(GregorianCalendar.MINUTE));
-                                    gc.set(GregorianCalendar.SECOND, 0);
-                                    gc.set(GregorianCalendar.MILLISECOND, 0);
-                                    advCusts.addTime(gc.getTime());
-                                }
-                            } // не в перерыве и по этому пробивали сколько там уже стояло и не первалило ли через настройку ограничения
-
-                            // перейдем на следующий час
-                            gc.setTime(start);
-                            gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
-                            start = gc.getTime();
-                        }
-
-                    }
-                } // проверка на нерабочий день календаря
-                // переход на следующий день
-                gc_day.add(GregorianCalendar.DAY_OF_YEAR, 1);
-                day = gc_day.getTime();
-            }
-            return new RpcGetGridOfWeek(advCusts);
+//            final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
+//            QSchedule sch = service.getSchedule();
+//            if (sch == null) {
+//                return new RpcGetGridOfWeek(new RpcGetGridOfWeek.GridAndParams("Требуемая услуга не имеет расписания."));
+//            }
+//
+//            final Date startWeek = new Date(cmdParams.date);
+//            final GregorianCalendar gc = new GregorianCalendar();
+//            gc.setTime(startWeek);
+//            gc.set(GregorianCalendar.DAY_OF_YEAR, gc.get(GregorianCalendar.DAY_OF_YEAR) + 7);
+//            final Date endWeek = gc.getTime();
+//
+//            QLog.l().logger().trace("Загрузим уже занятых позиций ранее записанными кастомерами от " + Uses.FORMAT_FOR_REP.format(startWeek) + " до " + Uses.FORMAT_FOR_REP.format(endWeek) + " " + ipAdress);
+//            // Загрузим уже занятых позиций ранее записанными кастомерами
+//            final List<QAdvanceCustomer> advCustomers = Spring.getInstance().getHt().find("FROM QAdvanceCustomer a WHERE advance_time >'" + Uses.FORMAT_FOR_REP.format(startWeek) + "' and advance_time <= '" + Uses.FORMAT_FOR_REP.format(endWeek) + "' and service_id = " + service.getId());
+//
+//            final GridAndParams advCusts = new GridAndParams();
+//            advCusts.setStartTime(ServerProps.getInstance().getProps().getStartTime());
+//            advCusts.setFinishTime(ServerProps.getInstance().getProps().getFinishTime());
+//            advCusts.setAdvanceLimit(service.getAdvanceLimit());
+//            advCusts.setAdvanceTimePeriod(service.getAdvanceTimePeriod());
+//            advCusts.setAdvanceLimitPeriod(service.getAdvanceLimitPeriod() == null ? 0 : service.getAdvanceLimitPeriod());
+//            // сформируем список доступных времен
+//            Date day = startWeek;
+//            while (day.before(endWeek)) {
+//                final GregorianCalendar gc_day = new GregorianCalendar();
+//                gc_day.setTime(day);
+//                // Определим по календарю рабочий ли день.
+//                // Календаря может быть два, общий с id=1 и персонально настроенный
+//                // Если день определяется как выходной(присутствует в БД в таблице выходных дней), то переходим к следующему дню
+//                if (!QCalendarList.getInstance().getById(1).checkFreeDay(day)
+//                        && !(service.getCalendar() != null
+//                        && service.getCalendar().checkFreeDay(day))) {
+//                    // Определим время начала и нонца работы на этот день/ расписания могут быть перекрыты в календаре
+//                    final QSchedule sch1 = service.getCalendar() == null
+//                            ? QCalendarList.getInstance().getById(1).getSpecSchedule(gc_day.getTime())
+//                            : (service.getCalendar().getSpecSchedule(gc_day.getTime()));
+//                    sch = (sch1 == null ? service.getSchedule() : sch1);
+//                    final QSchedule.Interval interval = sch.getWorkInterval(gc_day.getTime());
+//
+//                    // Если работаем в этот день то определим часы на которые еще можно записаться
+//                    if (!(interval.start == null || interval.finish == null)) {
+//                        // Сдвинем на час края дня т.к. это так же сдвинуто на пунктe регистрации
+//                        // Такой сдвиг в трех местах. Тут при формировании свободных времен, при определении раскладки панелек на простыню выбора,
+//                        // при проверки доступности когда всю неделю отрисовываем
+//                        gc.setTime(interval.start);
+//                        gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
+//                        Date start = gc.getTime();
+//                        gc.setTime(interval.finish);
+//                        gc.add(GregorianCalendar.MINUTE, -service.getAdvanceTimePeriod());
+//                        final Date end = gc.getTime();
+//
+//                        // бежим по часам внутри дня
+//                        while (start.before(end) || start.equals(end)) {
+//
+//                            // Проверка на перерыв. В перерывах нет возможности записываться, по этому это время не поедет в пункт регистрации
+//                            gc.setTime(start);
+//                            gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod() - 3);
+//                            if (!sch.inBreak(start, gc.getTime())) { // время не попало в перерыв
+//
+//                                int cnt = 0;
+//                                // пробигаем по кастомерам записанным
+//                                for (QAdvanceCustomer advCustomer : advCustomers) {
+//                                    gc.setTime(start);
+//                                    final int s = gc.get(GregorianCalendar.HOUR_OF_DAY);
+//                                    final int s_m = gc.get(GregorianCalendar.MINUTE);
+//                                    gc.setTime(advCustomer.getAdvanceTime());
+//                                    final int e = gc.get(GregorianCalendar.HOUR_OF_DAY);
+//                                    final int e_m = gc.get(GregorianCalendar.MINUTE);
+//                                    // Если совпал день и час и минуты, то увеличим счетчик записавшихся на этот час и минуты
+//                                    // тут учитываем что реально время предварительного может быть не по сетке, к примеру загрузили извне.
+//                                    if ((gc.get(GregorianCalendar.DAY_OF_YEAR) == gc_day.get(GregorianCalendar.DAY_OF_YEAR))
+//                                            && (s * 60 + s_m <= e * 60 + e_m
+//                                            && s * 60 + s_m + service.getAdvanceTimePeriod() > e * 60 + e_m)) {
+//                                        cnt++;
+//                                        // Защита от того чтобы один и тодже клиент не записался предварительно в одну услугу на одну дату.
+//                                        // данный предв.кастомер не должен быть таким же как и авторизовавшийся на этот час
+//                                        if (cmdParams.customerId != -1
+//                                                && advCustomer.getAuthorizationCustomer() != null
+//                                                && advCustomer.getAuthorizationCustomer().getId() != null
+//                                                && advCustomer.getAuthorizationCustomer().getId().equals(cmdParams.customerId)) {
+//                                            cnt = 1999999999;
+//                                            break;
+//                                        }
+//                                    }
+//                                }
+//                                // если еще количество записавшихся не привысило ограничение по услуге, то добавил этот час как доступный для записи
+//                                if (cnt < service.getAdvanceLimit()) {
+//                                    gc.setTime(day);
+//                                    final GregorianCalendar gc2 = new GregorianCalendar();
+//                                    gc2.setTime(start);
+//                                    gc.set(GregorianCalendar.HOUR_OF_DAY, gc2.get(GregorianCalendar.HOUR_OF_DAY));
+//                                    gc.set(GregorianCalendar.MINUTE, gc2.get(GregorianCalendar.MINUTE));
+//                                    gc.set(GregorianCalendar.SECOND, 0);
+//                                    gc.set(GregorianCalendar.MILLISECOND, 0);
+//                                    advCusts.addTime(gc.getTime());
+//                                }
+//                            } // не в перерыве и по этому пробивали сколько там уже стояло и не первалило ли через настройку ограничения
+//
+//                            // перейдем на следующий час
+//                            gc.setTime(start);
+//                            gc.add(GregorianCalendar.MINUTE, service.getAdvanceTimePeriod());
+//                            start = gc.getTime();
+//                        }
+//
+//                    }
+//                } // проверка на нерабочий день календаря
+//                // переход на следующий день
+//                gc_day.add(GregorianCalendar.DAY_OF_YEAR, 1);
+//                day = gc_day.getTime();
+//            }
+//            return new RpcGetGridOfWeek(advCusts);
+            return new RpcGetGridOfWeek();
         }
     };
 

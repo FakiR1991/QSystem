@@ -364,7 +364,7 @@ task runWelcome (dependsOn: 'classes', type: JavaExec) {
         args '-wm'
         args 'touch'
         args '-uid'
-        args '6'
+        args '5'
         //args '+-wm,--welcome-mode <touch,info,med,btn,kbd>'
         /*args '+demo'
         args '+clangs'

@@ -51,17 +51,13 @@ public class QSchedule2List extends ATListModel<QSchedule2> implements ComboBoxM
     
     /**
      * Получить расписание по типу услуги и ИД отделения
-     * @param unitId - идентификатор отделения
-     * @param type - СПиАО или СЦ
-     * @return Возвращает расписание для выбранного отделения и типа услуги. Если не найдено, то возвращает null.
+     * @param scheduleId ИД плана работы который нужно вернуть
+     * @return Возвращает расписание по ИД. Если не найдено, то возвращает null.
      */
-    public QSchedule2 getSchedule(Integer unitId, Integer type) {
-        if (unitId == null || type == null) {
-            return null;
-        }
+    public QSchedule2 getSchedule(Long scheduleId) {
         for (Object object : getItems()) {
             QSchedule2 sch = (QSchedule2)object;
-            if (Objects.equals(sch.getUnitId(), unitId) && Objects.equals(sch.getType(), type)) {
+            if (Objects.equals(sch.getId(), scheduleId)) {
                 return sch;
             }
         }

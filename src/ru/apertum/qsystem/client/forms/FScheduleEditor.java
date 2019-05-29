@@ -63,23 +63,23 @@ public class FScheduleEditor extends javax.swing.JDialog {
     }
     
     private void populateFields() {
-        jTextFieldScheduleName.setText(schedule.getName());
-        jComboBoxUnitValue.setSelectedItem(QUnitList.getInstance().getById(schedule.getUnitId()));
-        jComboBoxTypeValue.setSelectedIndex(schedule.getType() - 1);
-        jTextFieldMonFrom.setText(schedule.getDay1Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay1Begin()) : null);
-        jTextFieldMonTo.setText(schedule.getDay1End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay1End()) : null);
-        jTextFieldTueFrom.setText(schedule.getDay2Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay2Begin()) : null);
-        jTextFieldTueTo.setText(schedule.getDay2End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay2End()) : null);
-        jTextFieldWedFrom.setText(schedule.getDay3Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay3Begin()) : null);
-        jTextFieldWedTo.setText(schedule.getDay3End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay3End()) : null);
-        jTextFieldThuFrom.setText(schedule.getDay4Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay4Begin()) : null);
-        jTextFieldThuTo.setText(schedule.getDay4End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay4End()) : null);
-        jTextFieldFriFrom.setText(schedule.getDay5Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay5Begin()) : null);
-        jTextFieldFriTo.setText(schedule.getDay5End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay5End()) : null);
-        jTextFieldSatFrom.setText(schedule.getDay6Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay6Begin()) : null);
-        jTextFieldSatTo.setText(schedule.getDay6End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay6End()) : null);
-        jTextFieldSunFrom.setText(schedule.getDay7Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay7Begin()) : null);
-        jTextFieldSunTo.setText(schedule.getDay7End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay7End()) : null);
+//        jTextFieldScheduleName.setText(schedule.getName());
+//        jComboBoxUnitValue.setSelectedItem(QUnitList.getInstance().getById(schedule.getUnitId()));
+//        jComboBoxTypeValue.setSelectedIndex(schedule.getType() - 1);
+//        jTextFieldMonFrom.setText(schedule.getDay1Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay1Begin()) : null);
+//        jTextFieldMonTo.setText(schedule.getDay1End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay1End()) : null);
+//        jTextFieldTueFrom.setText(schedule.getDay2Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay2Begin()) : null);
+//        jTextFieldTueTo.setText(schedule.getDay2End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay2End()) : null);
+//        jTextFieldWedFrom.setText(schedule.getDay3Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay3Begin()) : null);
+//        jTextFieldWedTo.setText(schedule.getDay3End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay3End()) : null);
+//        jTextFieldThuFrom.setText(schedule.getDay4Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay4Begin()) : null);
+//        jTextFieldThuTo.setText(schedule.getDay4End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay4End()) : null);
+//        jTextFieldFriFrom.setText(schedule.getDay5Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay5Begin()) : null);
+//        jTextFieldFriTo.setText(schedule.getDay5End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay5End()) : null);
+//        jTextFieldSatFrom.setText(schedule.getDay6Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay6Begin()) : null);
+//        jTextFieldSatTo.setText(schedule.getDay6End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay6End()) : null);
+//        jTextFieldSunFrom.setText(schedule.getDay7Begin() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay7Begin()) : null);
+//        jTextFieldSunTo.setText(schedule.getDay7End() != null ? Uses.FORMAT_HH_MM.format(schedule.getDay7End()) : null);
     }
 
     /**
@@ -275,36 +275,36 @@ public class FScheduleEditor extends javax.swing.JDialog {
     }//GEN-LAST:event_formWindowOpened
 
     private void jButtonOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonOkActionPerformed
-        if (mode == Uses.Mode.INSERT) {
-            schedule = new QSchedule2();
-        }
-        schedule.setName(jTextFieldScheduleName.getText());
-        schedule.setUnitId(((QUnit)jComboBoxUnitValue.getSelectedItem()).getId().intValue());
-        //в combobox-е СПиАО имеет индекс 0, а СЦ - 1
-        //так как СПиАО в электронной очереди имеет значение 1, а СЦ - 2,
-        //то нужно увеличить на единицу, чтобы получить праивльное значение
-        schedule.setType(jComboBoxTypeValue.getSelectedIndex() + 1);
-        try {
-            schedule.setDay1Begin(Uses.FORMAT_HH_MM.parse(jTextFieldMonFrom.getText()));
-            schedule.setDay1End(Uses.FORMAT_HH_MM.parse(jTextFieldMonTo.getText()));
-            schedule.setDay2Begin(Uses.FORMAT_HH_MM.parse(jTextFieldTueFrom.getText()));
-            schedule.setDay2End(Uses.FORMAT_HH_MM.parse(jTextFieldTueTo.getText()));
-            schedule.setDay3Begin(Uses.FORMAT_HH_MM.parse(jTextFieldWedFrom.getText()));
-            schedule.setDay3End(Uses.FORMAT_HH_MM.parse(jTextFieldWedTo.getText()));
-            schedule.setDay4Begin(Uses.FORMAT_HH_MM.parse(jTextFieldThuFrom.getText()));
-            schedule.setDay4End(Uses.FORMAT_HH_MM.parse(jTextFieldThuTo.getText()));
-            schedule.setDay5Begin(Uses.FORMAT_HH_MM.parse(jTextFieldFriFrom.getText()));
-            schedule.setDay5End(Uses.FORMAT_HH_MM.parse(jTextFieldFriTo.getText()));
-            schedule.setDay6Begin(Uses.FORMAT_HH_MM.parse(jTextFieldSatFrom.getText()));
-            schedule.setDay6End(Uses.FORMAT_HH_MM.parse(jTextFieldSatTo.getText()));
-            schedule.setDay7Begin(Uses.FORMAT_HH_MM.parse(jTextFieldSunFrom.getText()));
-            schedule.setDay7End(Uses.FORMAT_HH_MM.parse(jTextFieldSunTo.getText()));
-        } catch(Exception ex) {
-            JOptionPane.showMessageDialog(this, "Неправильный формат времени или не заполнены все значения интервалов.");
-            return;
-        }
-        isOkClicked = true;
-        this.setVisible(false);
+//        if (mode == Uses.Mode.INSERT) {
+//            schedule = new QSchedule2();
+//        }
+//        schedule.setName(jTextFieldScheduleName.getText());
+//        schedule.setUnitId(((QUnit)jComboBoxUnitValue.getSelectedItem()).getId().intValue());
+//        //в combobox-е СПиАО имеет индекс 0, а СЦ - 1
+//        //так как СПиАО в электронной очереди имеет значение 1, а СЦ - 2,
+//        //то нужно увеличить на единицу, чтобы получить праивльное значение
+//        schedule.setType(jComboBoxTypeValue.getSelectedIndex() + 1);
+//        try {
+//            schedule.setDay1Begin(Uses.FORMAT_HH_MM.parse(jTextFieldMonFrom.getText()));
+//            schedule.setDay1End(Uses.FORMAT_HH_MM.parse(jTextFieldMonTo.getText()));
+//            schedule.setDay2Begin(Uses.FORMAT_HH_MM.parse(jTextFieldTueFrom.getText()));
+//            schedule.setDay2End(Uses.FORMAT_HH_MM.parse(jTextFieldTueTo.getText()));
+//            schedule.setDay3Begin(Uses.FORMAT_HH_MM.parse(jTextFieldWedFrom.getText()));
+//            schedule.setDay3End(Uses.FORMAT_HH_MM.parse(jTextFieldWedTo.getText()));
+//            schedule.setDay4Begin(Uses.FORMAT_HH_MM.parse(jTextFieldThuFrom.getText()));
+//            schedule.setDay4End(Uses.FORMAT_HH_MM.parse(jTextFieldThuTo.getText()));
+//            schedule.setDay5Begin(Uses.FORMAT_HH_MM.parse(jTextFieldFriFrom.getText()));
+//            schedule.setDay5End(Uses.FORMAT_HH_MM.parse(jTextFieldFriTo.getText()));
+//            schedule.setDay6Begin(Uses.FORMAT_HH_MM.parse(jTextFieldSatFrom.getText()));
+//            schedule.setDay6End(Uses.FORMAT_HH_MM.parse(jTextFieldSatTo.getText()));
+//            schedule.setDay7Begin(Uses.FORMAT_HH_MM.parse(jTextFieldSunFrom.getText()));
+//            schedule.setDay7End(Uses.FORMAT_HH_MM.parse(jTextFieldSunTo.getText()));
+//        } catch(Exception ex) {
+//            JOptionPane.showMessageDialog(this, "Неправильный формат времени или не заполнены все значения интервалов.");
+//            return;
+//        }
+//        isOkClicked = true;
+//        this.setVisible(false);
     }//GEN-LAST:event_jButtonOkActionPerformed
 
     private void jButtonCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCancelActionPerformed
