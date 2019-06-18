@@ -56,6 +56,7 @@ public class WelcomeParams {
      * Константы хранения параметров в файле.
      */
     private static final String POINT = "point";
+    private static final String NAME = "name";
     private static final String PAPER_WIDHT = "paper_widht";
     private static final String LEFT_MARGIN = "left_margin";
     private static final String TOP_MARGIN = "top_margin";
@@ -133,12 +134,14 @@ public class WelcomeParams {
     //#EN Approximate amount of tickets in a roll
     private static final String PAPER_SIZE_ALARM = "paper_size_alarm";
     private static final String PAPER_ALARM_STEP = "paper_alarm_step";
+    private static final String PAPER_ALARM_LIMIT = "paper_alarm_limit";
 
     private WelcomeParams() {
         loadSettings();
     }
     public boolean print = true; // Печатаем на принтере или нет
     public int point; // указание для какого пункта регистрации услуга, 0-для всех, х-для киоска х.
+    public String name; // название терминала понятное простым менеджерам
     public int paperWidht; // ширина талона в пикселах
     public int leftMargin; // отступ слева
     public int topMargin; // отступ сверху
@@ -217,7 +220,8 @@ public class WelcomeParams {
     public int input_font_size = 64; // - размер шрифта при вводе юзерской инфы
 
     public int paper_size_alarm = 700; //  Примерный объем талонов в рулоне
-    public int paper_alarm_step = 30; //  Примерный объем талонов в рулоне
+    public int paper_alarm_step = 100; //  Шаг с которым будут отсылаться уведомления
+    public int paper_alarm_limit = 650; //  Критический остаток бумаги при котором будет отсылаться уведомление
 
     /**
      * Загрузим настройки.
@@ -240,11 +244,13 @@ public class WelcomeParams {
         } catch (IOException ex) {
             throw new ClientException("\u041f\u0440\u043e\u0431\u043b\u0435\u043c\u044b \u0441 \u0447\u0442\u0435\u043d\u0438\u0435\u043c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432. " + ex);
         }
-        paper_size_alarm = settings.getProperty(PAPER_SIZE_ALARM, "").trim().isEmpty() ? 700 : Integer.parseInt(settings.getProperty(PAPER_SIZE_ALARM, "700")); // - размер шрифта при вводе юзерской инфы
-        paper_alarm_step = settings.getProperty(PAPER_ALARM_STEP, "").trim().isEmpty() ? 30 : Integer.parseInt(settings.getProperty(PAPER_ALARM_STEP, "30")); // - размер шрифта при вводе юзерской инфы
+        paper_size_alarm = settings.getProperty(PAPER_SIZE_ALARM, "").trim().isEmpty() ? 700 : Integer.parseInt(settings.getProperty(PAPER_SIZE_ALARM, "700"));
+        paper_alarm_step = settings.getProperty(PAPER_ALARM_STEP, "").trim().isEmpty() ? 10 : Integer.parseInt(settings.getProperty(PAPER_ALARM_STEP, "10"));
+        paper_alarm_limit = settings.getProperty(PAPER_ALARM_LIMIT, "").trim().isEmpty() ? 650 : Integer.parseInt(settings.getProperty(PAPER_ALARM_LIMIT, "650"));
 
         print = "1".equals(settings.getProperty(PRINT, "1")) || "true".equals(settings.getProperty(PRINT, "true"));
         point = settings.containsKey(POINT) ? Integer.parseInt(settings.getProperty(POINT)) : 1; // указание для какого пункта регистрации услуга, 0-для всех, х-для киоска х.
+        name = settings.containsKey(NAME) ? settings.getProperty(NAME) : "<НАЗВАНИЕ ТЕРМИНАЛА НЕ УКАЗАНО>";
         paperWidht = Integer.parseInt(settings.getProperty(PAPER_WIDHT, "250")); // ширина талона в пикселах
         leftMargin = Integer.parseInt(settings.getProperty(LEFT_MARGIN)); // отступ слева
         topMargin = Integer.parseInt(settings.getProperty(TOP_MARGIN)); //  отступ сверху

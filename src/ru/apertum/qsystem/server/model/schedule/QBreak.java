@@ -37,6 +37,7 @@ import ru.apertum.qsystem.server.model.IidGetter;
  */
 @Entity
 @Table(name = "break")
+@Deprecated
 public class QBreak implements IidGetter, Serializable {
 
     public QBreak(Date from_time, Date to_time, QBreaks breaks) {

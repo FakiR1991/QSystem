@@ -27,6 +27,7 @@ import ru.apertum.qsystem.server.model.ATListModel;
  *
  * @author Evgeniy Egorov
  */
+@Deprecated
 public class QScheduleList extends ATListModel<QSchedule2> implements ComboBoxModel {
 
     private QScheduleList() {

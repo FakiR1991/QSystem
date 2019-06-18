@@ -41,6 +41,7 @@ import ru.apertum.qsystem.server.model.calendar.QCalendar;
  */
 @Entity
 @Table(name = "spec_schedule")
+@Deprecated
 public class QSpecSchedule implements IidGetter, Serializable {
 
     public QSpecSchedule() {

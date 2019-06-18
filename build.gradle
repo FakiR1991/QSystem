@@ -197,6 +197,8 @@ task runAdmin (dependsOn: 'classes', type: JavaExec) {
         args '-ide'
         args '--debug'
         args '-uep'
+        args '-test'
+        args '1'
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}
@@ -211,6 +213,8 @@ task debugAdmin (dependsOn: 'classes', type: JavaExec) {
         args '-ide'
         args '--debug'
         args '-uep'
+        args '-test'
+        args '1'
         systemProperty 'simple.message', 'Hello '
     }
     doLast {}
@@ -364,7 +368,7 @@ task runWelcome (dependsOn: 'classes', type: JavaExec) {
         args '-wm'
         args 'touch'
         args '-uid'
-        args '5'
+        args '6'
         //args '+-wm,--welcome-mode <touch,info,med,btn,kbd>'
         /*args '+demo'
         args '+clangs'

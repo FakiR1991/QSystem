@@ -38,6 +38,7 @@ import ru.apertum.qsystem.server.model.IidGetter;
  */
 @Entity
 @Table(name = "schedule")
+@Deprecated
 public class QSchedule implements IidGetter, Serializable {
 
     public QSchedule() {

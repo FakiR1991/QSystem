@@ -49,6 +49,7 @@ import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.CustomerState;
+import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.cmd.CmdParams;
 import ru.apertum.qsystem.common.cmd.AJsonRPC20;
@@ -82,6 +83,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetMovedToPaymentList;
 import ru.apertum.qsystem.common.cmd.RpcGetProperties;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
 import ru.apertum.qsystem.common.cmd.RpcGetServiceState;
+import ru.apertum.qsystem.common.cmd.RpcGetTerminalsList;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcGetUnitsList;
 import ru.apertum.qsystem.common.model.QCustomer.Comparators;
@@ -98,6 +100,8 @@ import ru.apertum.qsystem.server.model.QPlanService;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
+import ru.apertum.qsystem.server.model.QTerminal;
+import ru.apertum.qsystem.server.model.QTerminalList;
 import ru.apertum.qsystem.server.model.QUnitList;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
@@ -946,24 +950,32 @@ public final class Executer {
             
             //если передан pointType равный 1 или 2, тогда возвращаем список фильтруя по переданному значения,
             //иначе просто сравниваем чтобы совпадал unitId, т.е. пользователей с любым pointType
-            switch (cmdParams.pointType) {
-                case Uses.POINT_TYPE_ABO:
-                case Uses.POINT_TYPE_SC:
-                    for (QUser user : QUserList.getInstance().getItems()) {
-                        if (Objects.equals(user.getPointType(), cmdParams.pointType)
-                            && Objects.equals(user.getUnitId(), cmdParams.unitId)) {
-                            users.add(user);
-                        }
+            if (cmdParams.pointType == null) {
+                for (QUser user : QUserList.getInstance().getItems()) {
+                    if (Objects.equals(user.getUnitId(), cmdParams.unitId)) {
+                        users.add(user);
                     }
-                    break;
-                
-                default:
-                    for (QUser user : QUserList.getInstance().getItems()) {
-                        if (Objects.equals(user.getUnitId(), cmdParams.unitId)) {
-                            users.add(user);
+                }
+            } else {
+                switch (cmdParams.pointType) {
+                    case Uses.POINT_TYPE_ABO:
+                    case Uses.POINT_TYPE_SC:
+                        for (QUser user : QUserList.getInstance().getItems()) {
+                            if (Objects.equals(user.getPointType(), cmdParams.pointType)
+                                && Objects.equals(user.getUnitId(), cmdParams.unitId)) {
+                                users.add(user);
+                            }
                         }
-                    }
-                    break;
+                        break;
+
+                    default:
+                        for (QUser user : QUserList.getInstance().getItems()) {
+                            if (Objects.equals(user.getUnitId(), cmdParams.unitId)) {
+                                users.add(user);
+                            }
+                        }
+                        break;
+                }
             }
             
             return new RpcGetUsersList(users);
@@ -1211,6 +1223,25 @@ public final class Executer {
             ticketsList.sort(Comparators.number);
             
             return new RpcGetMovedToPaymentList(ticketsList);
+        }
+    };
+    
+    /**
+     * Получить список всех терминалов
+     */
+    final Task getTerminalsList = new Task(Uses.TASK_GET_TERMINALS_LIST) {
+
+        @Override
+        public synchronized RpcGetTerminalsList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            LinkedList<QTerminal> terminalsList = new LinkedList<>();
+            
+            QTerminalList.getInstance().getItems().stream().filter(term -> Objects.equals(term.getUnitId(), cmdParams.unitId)).forEach(term -> {
+                terminalsList.add(term);
+            });
+            
+            return new RpcGetTerminalsList(terminalsList);
         }
     };
     

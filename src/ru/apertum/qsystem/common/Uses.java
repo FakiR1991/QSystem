@@ -284,6 +284,7 @@ public final class Uses {
     public static final String TASK_GET_POSTPONED_POOL = "Получить состояние пула отложенных";
     public static final String TASK_GET_MOVED_TO_PAYMENT_LIST = "Получить список ушедших на оплату кастомеров";
     public static final String TASK_GET_TICKETS_LIST = "Получить список талонов";
+    public static final String TASK_GET_TERMINALS_LIST = "Получить список терминалов";
     public static final String TASK_GET_BAN_LIST = "Получить список забаненых";
     public static final String TASK_INVITE_POSTPONED = "Вызвать отложенного из пула отложенных";
     public static final String TASK_GET_SELF_SERVICES_CHECK = "Получить состояние очередей с проверкой";

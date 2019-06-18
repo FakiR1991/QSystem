@@ -72,6 +72,7 @@ import ru.apertum.qsystem.common.cmd.RpcGetServiceState.ServiceState;
 import ru.apertum.qsystem.common.cmd.RpcGetSrt;
 import ru.apertum.qsystem.common.cmd.RpcGetUsersList;
 import ru.apertum.qsystem.common.cmd.RpcGetStandards;
+import ru.apertum.qsystem.common.cmd.RpcGetTerminalsList;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcGetTicketHistory.TicketHistory;
 import ru.apertum.qsystem.common.cmd.RpcGetUnitsList;
@@ -91,6 +92,7 @@ import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QStandards;
+import ru.apertum.qsystem.server.model.QTerminal;
 import ru.apertum.qsystem.server.model.QUnit;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.UsersStatistic;
@@ -1867,6 +1869,37 @@ public class NetCommander {
         final RpcGetMovedToPaymentList rpc;
         try {
             rpc = gson.fromJson(res, RpcGetMovedToPaymentList.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Получить список терминалов
+     *
+     * @param netProperty
+     * @param unitId ИД зала
+     * @return список терминалов для указанного unitId
+     */
+    public static LinkedList<QTerminal> getTerminalsList(INetProperty netProperty, Integer unitId) {
+        QLog.l().logger().info("Команда на получение списка терминалов .");
+        // загрузим ответ
+        final String res;
+        CmdParams params = new CmdParams();
+        params.unitId = unitId;
+        
+        try {
+            res = send(netProperty, Uses.TASK_GET_TERMINALS_LIST, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetTerminalsList rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetTerminalsList.class);
         } catch (JsonSyntaxException ex) {
             throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
         } finally {

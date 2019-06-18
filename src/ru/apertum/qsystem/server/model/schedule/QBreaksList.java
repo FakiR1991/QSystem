@@ -28,6 +28,7 @@ import ru.apertum.qsystem.server.model.ATListModel;
  *
  * @author Evgeniy Egorov
  */
+@Deprecated
 public class QBreaksList extends ATListModel<QBreaks> implements ComboBoxModel {
 
     private QBreaksList() {

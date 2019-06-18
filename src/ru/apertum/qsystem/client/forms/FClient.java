@@ -421,9 +421,15 @@ public final class FClient extends javax.swing.JFrame {
             }
             if (data.startsWith("message#") && (data.startsWith("message#ALL##") || isMyMessage(data))) {
                 final String mess = data.substring(data.indexOf("##") + 2);
-                tray.showMessageTray(getLocaleMessage("messages.tray.information"), mess, MessageType.INFO);
-
-                labelMessage.setText(labelMessage.getText() + "<b><span style='color:black'>" + Uses.FORMAT_HH_MM.format(new Date()) + " " + getLocaleMessage("messages.tray.message") + ":</span></b><br><span style='color:blue'>" + mess.replaceAll("\n", "<br>") + "</span><br>");
+                
+//                tray.showMessageTray(getLocaleMessage("messages.tray.information"), mess, MessageType.INFO);
+//                labelMessage.setText(labelMessage.getText() + "<b><span style='color:black'>" + Uses.FORMAT_HH_MM.format(new Date()) + " " + getLocaleMessage("messages.tray.message") + ":</span></b><br><span style='color:blue'>" + mess.replaceAll("\n", "<br>") + "</span><br>");
+                
+                JOptionPane optionPane = new JOptionPane(mess, JOptionPane.WARNING_MESSAGE);
+                JDialog dialog = optionPane.createDialog("Внимание!");
+                dialog.setAlwaysOnTop(true);
+                dialog.setVisible(true);
+                dialog.dispose();
             }
         }
 

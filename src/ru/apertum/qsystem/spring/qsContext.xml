@@ -76,6 +76,7 @@
 								<value>ru.apertum.qsystem.server.model.QNotificationsInfo</value>
 								<value>ru.apertum.qsystem.common.model.QEmailSendingSettings</value>
 								<value>ru.apertum.qsystem.server.model.QComputer</value>
+								<value>ru.apertum.qsystem.server.model.QTerminal</value>
 								<value>ru.apertum.qsystem.server.model.QUnit</value>
             </list>
         </property>

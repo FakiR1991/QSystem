@@ -34,6 +34,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
@@ -77,6 +79,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
+import static ru.apertum.qsystem.client.forms.FAdmin.getLocaleMessage;
 import ru.apertum.qsystem.client.model.JTreeComboBox;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.CustomerState;
@@ -110,6 +113,7 @@ import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceLang;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QStandards;
+import ru.apertum.qsystem.server.model.QTerminal;
 import ru.apertum.qsystem.server.model.QUnit;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
@@ -177,6 +181,7 @@ public class FReception extends javax.swing.JFrame {
     private void initManuallyAddedComponents() {
         initMovedToBankTab();
         initTicketsManagementTab();
+        initTerminalsTab();
     }
     
     private void changePriority() {
@@ -234,6 +239,90 @@ public class FReception extends javax.swing.JFrame {
         } catch (Exception th) {
             throw new ClientException(new Exception(th));
         }
+    }
+    
+    private void resetPaperUsage() {
+        if (JOptionPane.showConfirmDialog(this,
+                                          "Вы действительно хотите обнулись счётчик использованной бумаги в выбранном терминале?",
+                                          "Сброс счётчика бумаги",
+                                          JOptionPane.YES_NO_OPTION) == 1) {
+            return;
+        }
+
+        QTerminal terminal = (QTerminal)jListTerminals.getSelectedValue();
+        final String result;
+        try {
+            result = NetCommander.getWelcomeState(netPropWelcome(netProperty.getClientPort(), terminal.getIp()), null, true);
+        } catch (Exception ex) {
+            QLog.l().logger().error("Терминал не ответил на запрос о состоянии или произошла ошибка. \"" + ex.getMessage() + "\"");
+            JOptionPane.showMessageDialog(fReception,
+                                          "Терминал не ответил на запрос о состоянии или произошла ошибка. \"" + ex.getMessage() + "\"",
+                                          "Ошибка",
+                                          JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JOptionPane.showMessageDialog(fReception, result, "Информация", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    protected INetProperty netPropWelcome(Integer port, String ip) {
+        return new INetProperty() {
+
+            @Override
+            public Integer getPort() {
+                return port;
+            }
+
+            @Override
+            public InetAddress getAddress() {
+                InetAddress adr = null;
+                try {
+                    adr = InetAddress.getByName(ip);
+                } catch (UnknownHostException ex) {
+                    throw new ClientException("Error! " + ex);
+                }
+                return adr;
+            }
+        };
+    }
+    
+    private void initTerminalsTab() {
+        jPanelTerminals = new javax.swing.JPanel();
+        jScrollTerminals = new javax.swing.JScrollPane();
+        jListTerminals = new javax.swing.JList<>();
+        jButtonResetPaperUsage = new javax.swing.JButton();
+        
+        jListTerminals.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        jListTerminals.setName("jListTerminals");
+        jPanelTerminals.setName("jPanelTerminals");
+        
+        jScrollTerminals.setViewportView(jListTerminals);
+        
+        jButtonResetPaperUsage.setText("Обнулить счётчик бумаги");
+        jButtonResetPaperUsage.addActionListener((ActionEvent evt) -> {
+            resetPaperUsage();
+        });
+
+        javax.swing.GroupLayout jPanelTerminalsLayout = new javax.swing.GroupLayout(jPanelTerminals);
+        jPanelTerminals.setLayout(jPanelTerminalsLayout);
+        jPanelTerminalsLayout.setHorizontalGroup(
+            jPanelTerminalsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollTerminals)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTerminalsLayout.createSequentialGroup()
+                .addContainerGap(640, Short.MAX_VALUE)
+                .addComponent(jButtonResetPaperUsage))
+        );
+        jPanelTerminalsLayout.setVerticalGroup(
+            jPanelTerminalsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanelTerminalsLayout.createSequentialGroup()
+                .addComponent(jScrollTerminals, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
+                .addGroup(jPanelTerminalsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonResetPaperUsage))
+                .addContainerGap())
+        );
+
+        tabsPane.addTab("Терминалы", jPanelTerminals);
     }
     
     private void initTicketsManagementTab() {
@@ -416,6 +505,7 @@ public class FReception extends javax.swing.JFrame {
     private void loadRelativeData() {
         loadMovedToPaymentList();
         loadTickets();
+        loadTerminalsList();
     }
     
     private void loadTickets() {
@@ -427,6 +517,17 @@ public class FReception extends javax.swing.JFrame {
         }
         
         jListTickets.setModel(lm);
+    }
+    
+    private void loadTerminalsList() {
+        DefaultListModel<QTerminal> lm = new DefaultListModel<>();
+        LinkedList<QTerminal> terminals = NetCommander.getTerminalsList(netProperty, unit.getId().intValue());
+        
+        for (QTerminal terminal : terminals) {
+            lm.addElement(terminal);
+        }
+        
+        jListTerminals.setModel(lm);
     }
     
     private void loadMovedToPaymentList() {
@@ -2826,6 +2927,11 @@ public class FReception extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollMovedToPayment;
     private javax.swing.JList jListMovedToPayment;
     private javax.swing.JButton jButtonRefreshMovedToPaymentList;
+    
+    private javax.swing.JPanel jPanelTerminals;
+    private javax.swing.JScrollPane jScrollTerminals;
+    private javax.swing.JList jListTerminals;
+    private javax.swing.JButton jButtonResetPaperUsage;
     
     private javax.swing.JPanel jPanelTickets;
     private javax.swing.JScrollPane jScrollTickets;

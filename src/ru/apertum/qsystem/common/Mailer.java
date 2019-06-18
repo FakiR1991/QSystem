@@ -47,9 +47,8 @@ public class Mailer {
 
     public static void sendReporterMailAtFon(String subject, String content, String addrs_to, final String attachment) {
         final Thread t = new Thread(() -> {
-            final File attach = new File(attachment);
             try {
-                sendReporterMail(subject, content, addrs_to, attach.exists() ? attach : null);
+                sendReporterMail(subject, content, addrs_to, null);
             } catch (MessagingException | UnsupportedEncodingException ex) {
                 throw new ServerException("Рассылка не произошла.", ex);
             }
@@ -77,6 +76,10 @@ public class Mailer {
         msg.setRecipients(Message.RecipientType.TO, adresses.toArray(new InternetAddress[0]));
         msg.setHeader("Content-Type", "text/html;charset=\"UTF-8\"");
         msg.setSubject(subject == null ? props.getProperty("mail.subject") : subject, "UTF-8");
+        
+        String from = props.getProperty("mail.smtp.from");
+        final InternetAddress addressFrom = new InternetAddress(from);
+        msg.setFrom(addressFrom);
 
         final BodyPart messageBodyPart = new MimeBodyPart();
 

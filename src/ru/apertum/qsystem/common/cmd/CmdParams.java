@@ -138,6 +138,9 @@ public class CmdParams {
     @SerializedName("unit_id")
     public Integer unitId;
     @Expose
+    @SerializedName("id")
+    public Long id;
+    @Expose
     @SerializedName("adress_rs")
     public Integer adressRs;
     @Expose

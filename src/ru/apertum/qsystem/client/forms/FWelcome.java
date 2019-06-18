@@ -121,6 +121,7 @@ import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
+import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.infosystem.QInfoItem;
 import ru.apertum.qsystem.server.model.response.QRespItem;
 import ru.apertum.qsystem.server.model.response.QResponseTree;
@@ -278,6 +279,15 @@ public class FWelcome extends javax.swing.JFrame {
                 //разблокировать, выключить, провести инициализация заново.
                 // В любом другом случае будет выслано состояние.
                 String upp = ".  " + increaseTicketCount(0) + " " + getLocaleMessage("tickets_were_printed");
+                //сбросить счётчик напечатанных талонов
+                if (rpc.getParams().dropTicketsCounter) {
+                    boolean result = resetPrintedTicketsCount(null, null);
+                    if (result) {
+                        upp += ". Счётчик талонов успешно сброшен.";
+                    } else {
+                        upp += ". ОШИБКА СБРОСА СЧЁТЧИКА ТАЛОНОВ!";
+                    }
+                }
                 if (Uses.WELCOME_LOCK.equals(rpc.getMethod())) {
                     lock(LOCK_MESSAGE);
                 }
@@ -1147,6 +1157,7 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     public final static String TEMP_FILE_PROPS = "temp/wlcm.properties";
+    private static String s = "message#";
 
     private static synchronized int increaseTicketCount(int d) {
         File f = new File("temp");
@@ -1178,18 +1189,90 @@ public class FWelcome extends javax.swing.JFrame {
             System.err.println(ex);
             throw new RuntimeException(ex);
         }
-        // разошлем весточку о том что бумага заканчивается
         int st = (i - WelcomeParams.getInstance().paper_size_alarm) % WelcomeParams.getInstance().paper_alarm_step;
-        if (0 <= st && st < d) {
+
+        //разошлем весточку о том что бумага заканчиваетсяo
+        //если достигли критического остатка бумаги
+        //по достижении критической отметки уведомления будут отсылаться с шагом paper_alarm_step
+        if (i >= WelcomeParams.getInstance().paper_alarm_limit && st == 0) {
+            QLog.l().logger().debug("Расходование бумаги в терминале.\nНапечатано талонов " + i +
+                                    " из ~" + WelcomeParams.getInstance().paper_size_alarm +
+                                    "\n\"" + WelcomeParams.getInstance().name + "\"");
             final String m = Mailer.fetchConfig().getProperty("paper_alarm_mailing", "0");
             if ("1".equals(m) || "true".equalsIgnoreCase(m)) {
-                Mailer.sendReporterMailAtFon(Mailer.fetchConfig().getProperty("mail.paper_alarm_subject", "QSystem. Printing paper run out!"),
-                        "QSystem. Paper running out / израсходование бумаги. " + i + " tickets were printed.",
-                        Mailer.fetchConfig().getProperty("mail.smtp.paper_alarm_to"),
-                        null);
+                String[] mails = Mailer.fetchConfig().getProperty("mail.smtp.paper_alarm_to").split(",");
+                for (String mail : mails) {
+                    Mailer.sendReporterMailAtFon(
+                            Mailer.fetchConfig().getProperty("mail.paper_alarm_subject", "QSystem"),
+                            "Использовано " + i + " из " + WelcomeParams.getInstance().paper_size_alarm + ". " + WelcomeParams.getInstance().name,
+                            mail,
+                            null
+                    );
+                }
+            }
+//            try {
+//                //уведомление всем операторам нужного отделения
+//                LinkedList<QUser> listUsers = NetCommander.getUsers(netProperty, QConfig.cfg().getUnitId(), null);
+//                s = "message#";
+//                listUsers.stream().forEach((o) -> {
+//                    s += "@" + ((QUser)o).getId().toString() + "@";
+//                });
+//                s += "##Расходование бумаги в терминале.\nНапечатано талонов " + i +
+//                     " из ~" + WelcomeParams.getInstance().paper_size_alarm +
+//                     "\n\"" + WelcomeParams.getInstance().name + "\"";
+//                
+//                Uses.sendUDPBroadcast(s, QConfig.cfg().getClientPort());
+//            } catch(Exception e) {
+//                QLog.l().logger().error("Ошибка во время попытки сделать оповещение операторам о том, что заканчивается бумага в терминале.", e);
+//            }
+            
+            //если количество напечатанных талонов достигло максимального количества,
+            //то сбрасываем счётчик и сохраняем в файле настроек
+            if (i >= WelcomeParams.getInstance().paper_size_alarm) {
+                resetPrintedTicketsCount(p, f);
             }
         }
         return i;
+    }
+    
+    private static boolean resetPrintedTicketsCount(Properties p, File f) {
+        if (p == null || f == null) {
+            f = new File("temp");
+            if (!f.exists()) {
+                f.mkdir();
+            }
+
+            f = new File(TEMP_FILE_PROPS);
+            if (!f.exists()) {
+                try {
+                    f.createNewFile();
+                } catch (IOException ex) {
+                    System.err.println(ex);
+                    QLog.l().logger().error("Ошибка при создании файла настроек wlcm.properties", ex);
+                    return false;
+                }
+            }
+            p = new Properties();
+            try {
+                p.load(new FileInputStream(f));
+            } catch (IOException ex) {
+                System.err.println(ex);
+                QLog.l().logger().error("Ошибка при загрузке файла настроек wlcm.properties", ex);
+                return false;
+            }
+        }
+        
+        p.setProperty("tickets_cnt", String.valueOf(0));
+
+        try {
+            p.store(new FileOutputStream(f), "QSystem Welcome temp properties");
+        } catch (IOException ex) {
+            System.err.println(ex);
+            QLog.l().logger().error("Ошибка при сохранении настроек в файл wlcm.properties", ex);
+            return false;
+        }
+        
+        return true;
     }
 
     private static int write(Graphics2D g2, String text, int line, int x, double kx, double ky, int initY) {
