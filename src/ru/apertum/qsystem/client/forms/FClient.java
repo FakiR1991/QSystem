@@ -594,6 +594,7 @@ public final class FClient extends javax.swing.JFrame {
             }
         });
         initComponents();
+        initManuallyAddedComponents();
         textAreaComments.setForeground(Color.RED);
         textAreaComments.setFont(new Font("Times New Roman", Font.BOLD, 16));
         listPostponed.addMouseListener( new MouseAdapter() {
@@ -1732,6 +1733,22 @@ public final class FClient extends javax.swing.JFrame {
         FAbout.showAbout(this, true);
     }
 
+    private void initManuallyAddedComponents () {
+        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance().getContext().getActionMap(FClient.class, this);
+        
+        terminalsMenu = new javax.swing.JMenu();
+        terminalsMenu.setText("Терминалы"); // NOI18N
+        terminalsMenu.setName("terminalsMenu"); // NOI18N
+
+        menuItemPaperUsage = new javax.swing.JMenuItem();
+        menuItemPaperUsage.setAction(actionMap.get("managePaperUsage")); // NOI18N
+        menuItemPaperUsage.setText("Использование бумаги"); // NOI18N
+        menuItemPaperUsage.setName("menuItemPaperUsage"); // NOI18N
+        terminalsMenu.add(menuItemPaperUsage);
+
+        menuBar.add(terminalsMenu);
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -2766,6 +2783,15 @@ public final class FClient extends javax.swing.JFrame {
     public void manageFlexPriority() {
         FServicePriority.show(netProperty, this, getUserPlan(), user.getId());
     }
+    
+    @Action
+    public void managePaperUsage() {
+        FPaperUsage.show(netProperty, this, QConfig.cfg().getUnitId());
+    }
+    
+    private javax.swing.JMenu terminalsMenu;
+    private javax.swing.JMenuItem menuItemPaperUsage;
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem aboutMenuItem;
     public javax.swing.JButton btnPushToTalk;

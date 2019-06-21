@@ -281,7 +281,7 @@ public class FWelcome extends javax.swing.JFrame {
                 //С рабочего места администратора должна быть возможность заблокировать пункт постановки в очередь, 
                 //разблокировать, выключить, провести инициализация заново.
                 // В любом другом случае будет выслано состояние.
-                String upp = ".  " + increaseTicketCount(0) + " см. бумаги было использовано.";
+                String upp = ".  " + increaseTicketCount(0) + " см. бумаги было использовано";
                 //сбросить счётчик напечатанных талонов
                 if (rpc.getParams().dropTicketsCounter) {
                     boolean result = resetPrintedTicketsCount(null, null);
@@ -1185,7 +1185,7 @@ public class FWelcome extends javax.swing.JFrame {
         }
         
         if (d <= 0) {
-            return Integer.parseInt(p.getProperty("tickets_cnt", "0").trim());
+            return Double.parseDouble(p.getProperty("tickets_cnt", "0").trim());
         }
         
         //количество использованной бумаги
