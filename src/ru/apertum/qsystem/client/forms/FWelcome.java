@@ -1204,8 +1204,8 @@ public class FWelcome extends javax.swing.JFrame {
 
         //если достигли критического остатка бумаги
         if (i >= WelcomeParams.getInstance().paper_alarm_limit) {
-            //если осталось меньше 50 см бумаги
-            if (alarmsCount <= 0 || (st <= 50 && alarmsCount < 2)) {
+            //если осталось меньше 70 см бумаги
+            if (alarmsCount <= 0 || (st <= WelcomeParams.getInstance().paper_last_alarm && alarmsCount < 2)) {
                 QLog.l().logger().debug("Расходование бумаги в терминале.\nИспользовано см бумаги " + i +
                                         " из ~" + WelcomeParams.getInstance().paper_size_alarm +
                                         "\n\"" + WelcomeParams.getInstance().name + "\"");
@@ -1238,9 +1238,12 @@ public class FWelcome extends javax.swing.JFrame {
             }
             //если количество напечатанных талонов достигло максимального количества,
             //то сбрасываем счётчик и сохраняем в файле настроек
-            if (i >= WelcomeParams.getInstance().paper_size_alarm) {
-                resetPrintedTicketsCount(p, f);
-            }
+            //P.S. - автоматически не сбрасываем, так как добавил функционал сброса
+            //в ПО для операторов, они в любое время смогут обнулить счётчик вручную
+            //сразу после замены рулона бумаги
+//            if (i >= WelcomeParams.getInstance().paper_size_alarm) {
+//                resetPrintedTicketsCount(p, f);
+//            }
         }
         return i;
     }

@@ -27,9 +27,11 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,6 +48,7 @@ import ru.apertum.qsystem.client.forms.FInfoDialogWeb;
 import ru.apertum.qsystem.client.forms.FInputDialog;
 import ru.apertum.qsystem.client.forms.FPreInfoDialog;
 import ru.apertum.qsystem.client.forms.FWelcome;
+import static ru.apertum.qsystem.client.forms.FWelcome.TEMP_FILE_PROPS;
 import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
@@ -436,6 +439,14 @@ public class QButton extends JButton {
                             form.clockUnlockBack.start();
                             return;
                         }
+                        if (!checkPaper()) {
+                            String msg = "Уважаемый клиент, получить талон временно невозможно из-за отсутствия бумаги для печати талона. "
+                                    + "Пожалуйста, подождите несколько минут, пока персонал заменит бумагу или обратитесь к любому специалисту "
+                                    + "с информацией об отсутствии бумаги в терминале. Спасибо. Приносим извинения за временные неудобства.";
+                            form.lock(WelcomeParams.getInstance().patternInfoDialog.replace("dialog.message", msg));
+                            form.clockUnlockBack.start();
+                            return;
+                        }
                         if (WelcomeParams.getInstance().askLimit < 1 || servState.getCode() >= WelcomeParams.getInstance().askLimit) {
                             // Выведем диалог о том будет чел сотять или пошлет нахер всю контору.
                             if (!FConfirmationStart2.getMayContinue(form, servState.getCode())) {
@@ -550,6 +561,33 @@ public class QButton extends JButton {
         });//addActionListener
 
     }
+    
+    //проверим осталась ли бумага для печати талонов
+    private boolean checkPaper() {
+        File f = new File("temp");
+        if (!f.exists()) {
+            f.mkdir();
+        }
+
+        f = new File(TEMP_FILE_PROPS);
+        if (!f.exists()) {
+            try {
+                f.createNewFile();
+            } catch (IOException ex) {
+                System.err.println(ex);
+            }
+        }
+        final Properties p = new Properties();
+        try {
+            p.load(new FileInputStream(f));
+        } catch (IOException ex) {
+            System.err.println(ex);
+            throw new RuntimeException(ex);
+        }
+        //если текущий расход бумаги + среднестатистический размер талона <= максимальная длина рулона бумани
+        return Double.parseDouble(p.getProperty("tickets_cnt", "0").trim()) + 10.5d <= WelcomeParams.getInstance().paper_size_alarm;
+    }
+    
     private Image background;
 
     @Override

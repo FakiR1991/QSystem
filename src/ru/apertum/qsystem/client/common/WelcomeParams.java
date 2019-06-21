@@ -133,7 +133,7 @@ public class WelcomeParams {
     //#RU Примерный объем талонов в рулоне
     //#EN Approximate amount of tickets in a roll
     private static final String PAPER_SIZE_ALARM = "paper_size_alarm";
-    private static final String PAPER_ALARM_STEP = "paper_alarm_step";
+    private static final String PAPER_LAST_ALARM = "paper_last_alarm";
     private static final String PAPER_ALARM_LIMIT = "paper_alarm_limit";
 
     private WelcomeParams() {
@@ -220,9 +220,9 @@ public class WelcomeParams {
     public String spec_keyboard = ""; // - специальная клавиатура при вводе юзерской инфы
     public int input_font_size = 64; // - размер шрифта при вводе юзерской инфы
 
-    public int paper_size_alarm = 700; //  Примерный объем талонов в рулоне
-    public int paper_alarm_step = 100; //  Шаг с которым будут отсылаться уведомления
-    public int paper_alarm_limit = 650; //  Критический остаток бумаги при котором будет отсылаться уведомление
+    public int paper_size_alarm = 7990; //  Примерный объем талонов в рулоне
+    public int paper_last_alarm = 70; //  Какой должен быть остаток бумаги в терминале чтобы сработало последнее оповещение о том, что менять бумагу пора
+    public int paper_alarm_limit = 7750; //  Критический остаток бумаги при котором будет отсылаться уведомление
 
     /**
      * Загрузим настройки.
@@ -245,9 +245,9 @@ public class WelcomeParams {
         } catch (IOException ex) {
             throw new ClientException("\u041f\u0440\u043e\u0431\u043b\u0435\u043c\u044b \u0441 \u0447\u0442\u0435\u043d\u0438\u0435\u043c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432. " + ex);
         }
-        paper_size_alarm = settings.getProperty(PAPER_SIZE_ALARM, "").trim().isEmpty() ? 700 : Integer.parseInt(settings.getProperty(PAPER_SIZE_ALARM, "700"));
-        paper_alarm_step = settings.getProperty(PAPER_ALARM_STEP, "").trim().isEmpty() ? 10 : Integer.parseInt(settings.getProperty(PAPER_ALARM_STEP, "10"));
-        paper_alarm_limit = settings.getProperty(PAPER_ALARM_LIMIT, "").trim().isEmpty() ? 650 : Integer.parseInt(settings.getProperty(PAPER_ALARM_LIMIT, "650"));
+        paper_size_alarm = settings.getProperty(PAPER_SIZE_ALARM, "").trim().isEmpty() ? 700 : Integer.parseInt(settings.getProperty(PAPER_SIZE_ALARM, "7990"));
+        paper_last_alarm = settings.getProperty(PAPER_LAST_ALARM, "").trim().isEmpty() ? 10 : Integer.parseInt(settings.getProperty(PAPER_LAST_ALARM, "70"));
+        paper_alarm_limit = settings.getProperty(PAPER_ALARM_LIMIT, "").trim().isEmpty() ? 650 : Integer.parseInt(settings.getProperty(PAPER_ALARM_LIMIT, "7750"));
 
         print = "1".equals(settings.getProperty(PRINT, "1")) || "true".equals(settings.getProperty(PRINT, "true"));
         point = settings.containsKey(POINT) ? Integer.parseInt(settings.getProperty(POINT)) : 1; // указание для какого пункта регистрации услуга, 0-для всех, х-для киоска х.

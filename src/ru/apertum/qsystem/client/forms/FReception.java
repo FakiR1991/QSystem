@@ -252,7 +252,32 @@ public class FReception extends javax.swing.JFrame {
         QTerminal terminal = (QTerminal)jListTerminals.getSelectedValue();
         final String result;
         try {
-            result = NetCommander.getWelcomeState(netPropWelcome(netProperty.getClientPort(), terminal.getIp()), null, true);
+            result = NetCommander.getWelcomeState(
+                    netPropWelcome(netProperty.getClientPort(), terminal.getIp()),
+                    null,
+                    true
+            );
+        } catch (Exception ex) {
+            QLog.l().logger().error("Терминал не ответил на запрос о состоянии или произошла ошибка. \"" + ex.getMessage() + "\"");
+            JOptionPane.showMessageDialog(fReception,
+                                          "Терминал не ответил на запрос о состоянии или произошла ошибка. \"" + ex.getMessage() + "\"",
+                                          "Ошибка",
+                                          JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JOptionPane.showMessageDialog(fReception, result, "Информация", JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void showPaperUsage() {
+        QTerminal terminal = (QTerminal)jListTerminals.getSelectedValue();
+        final String result;
+        try {
+            result = NetCommander.getWelcomeState(
+                    netPropWelcome(netProperty.getClientPort(), terminal.getIp()),
+                    null,
+                    false
+            );
         } catch (Exception ex) {
             QLog.l().logger().error("Терминал не ответил на запрос о состоянии или произошла ошибка. \"" + ex.getMessage() + "\"");
             JOptionPane.showMessageDialog(fReception,
@@ -291,6 +316,7 @@ public class FReception extends javax.swing.JFrame {
         jScrollTerminals = new javax.swing.JScrollPane();
         jListTerminals = new javax.swing.JList<>();
         jButtonResetPaperUsage = new javax.swing.JButton();
+        jButtonShowPaperUsage = new javax.swing.JButton();
         
         jListTerminals.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jListTerminals.setName("jListTerminals");
@@ -302,6 +328,11 @@ public class FReception extends javax.swing.JFrame {
         jButtonResetPaperUsage.addActionListener((ActionEvent evt) -> {
             resetPaperUsage();
         });
+        
+        jButtonShowPaperUsage.setText("Расходование бумаги");
+        jButtonShowPaperUsage.addActionListener((ActionEvent evt) -> {
+            showPaperUsage();
+        });
 
         javax.swing.GroupLayout jPanelTerminalsLayout = new javax.swing.GroupLayout(jPanelTerminals);
         jPanelTerminals.setLayout(jPanelTerminalsLayout);
@@ -310,7 +341,10 @@ public class FReception extends javax.swing.JFrame {
             .addComponent(jScrollTerminals)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelTerminalsLayout.createSequentialGroup()
                 .addContainerGap(640, Short.MAX_VALUE)
-                .addComponent(jButtonResetPaperUsage))
+                .addComponent(jButtonResetPaperUsage)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonShowPaperUsage)
+                .addContainerGap())
         );
         jPanelTerminalsLayout.setVerticalGroup(
             jPanelTerminalsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -318,7 +352,8 @@ public class FReception extends javax.swing.JFrame {
                 .addComponent(jScrollTerminals, javax.swing.GroupLayout.PREFERRED_SIZE, 528, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
                 .addGroup(jPanelTerminalsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButtonResetPaperUsage))
+                    .addComponent(jButtonResetPaperUsage)
+                    .addComponent(jButtonShowPaperUsage))
                 .addContainerGap())
         );
 
@@ -2932,6 +2967,7 @@ public class FReception extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollTerminals;
     private javax.swing.JList jListTerminals;
     private javax.swing.JButton jButtonResetPaperUsage;
+    private javax.swing.JButton jButtonShowPaperUsage;
     
     private javax.swing.JPanel jPanelTickets;
     private javax.swing.JScrollPane jScrollTickets;
