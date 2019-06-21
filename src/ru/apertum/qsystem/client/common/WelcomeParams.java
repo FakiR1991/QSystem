@@ -200,6 +200,7 @@ public class WelcomeParams {
     public String appleImg; // apple store логотип
     public int googleLeft = 1; // отступ слева логотипа google play (значение по умолчанию)
     public int appleLeft = 104; // отступ слева логотипа apple store (значение по умолчанию)
+    public int logoHeigth = 34; //высота логотипов
 
     public Font btnFont = null;
     public Font btnAdvFont = null;

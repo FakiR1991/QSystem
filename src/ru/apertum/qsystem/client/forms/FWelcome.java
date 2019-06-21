@@ -57,11 +57,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -278,7 +281,7 @@ public class FWelcome extends javax.swing.JFrame {
                 //С рабочего места администратора должна быть возможность заблокировать пункт постановки в очередь, 
                 //разблокировать, выключить, провести инициализация заново.
                 // В любом другом случае будет выслано состояние.
-                String upp = ".  " + increaseTicketCount(0) + " " + getLocaleMessage("tickets_were_printed");
+                String upp = ".  " + increaseTicketCount(0) + " см. бумаги было использовано.";
                 //сбросить счётчик напечатанных талонов
                 if (rpc.getParams().dropTicketsCounter) {
                     boolean result = resetPrintedTicketsCount(null, null);
@@ -1159,7 +1162,7 @@ public class FWelcome extends javax.swing.JFrame {
     public final static String TEMP_FILE_PROPS = "temp/wlcm.properties";
     private static String s = "message#";
 
-    private static synchronized int increaseTicketCount(int d) {
+    private static synchronized double increaseTicketCount(int d) {
         File f = new File("temp");
         if (!f.exists()) {
             f.mkdir();
@@ -1180,52 +1183,59 @@ public class FWelcome extends javax.swing.JFrame {
             System.err.println(ex);
             throw new RuntimeException(ex);
         }
-        int i = Math.max(Integer.parseInt(p.getProperty("tickets_cnt", "0").trim()) + d, 0);
+        
+        if (d <= 0) {
+            return Integer.parseInt(p.getProperty("tickets_cnt", "0").trim());
+        }
+        
+        //количество использованной бумаги
+        double i = Math.max(Double.parseDouble(p.getProperty("tickets_cnt", "0").trim()) + lastTicketHeight, 0);
+        //сколько уведомлений уже было отправлено
+        int alarmsCount = Integer.parseInt(p.getProperty("alarms_cnt", "0"));
         p.setProperty("tickets_cnt", String.valueOf(i));
-
         try {
             p.store(new FileOutputStream(f), "QSystem Welcome temp properties");
         } catch (IOException ex) {
             System.err.println(ex);
             throw new RuntimeException(ex);
         }
-        int st = (i - WelcomeParams.getInstance().paper_size_alarm) % WelcomeParams.getInstance().paper_alarm_step;
+        //остаток бумаги в см
+        double st = WelcomeParams.getInstance().paper_size_alarm - i;
 
-        //разошлем весточку о том что бумага заканчиваетсяo
         //если достигли критического остатка бумаги
-        //по достижении критической отметки уведомления будут отсылаться с шагом paper_alarm_step
-        if (i >= WelcomeParams.getInstance().paper_alarm_limit && st == 0) {
-            QLog.l().logger().debug("Расходование бумаги в терминале.\nНапечатано талонов " + i +
-                                    " из ~" + WelcomeParams.getInstance().paper_size_alarm +
-                                    "\n\"" + WelcomeParams.getInstance().name + "\"");
-            final String m = Mailer.fetchConfig().getProperty("paper_alarm_mailing", "0");
-            if ("1".equals(m) || "true".equalsIgnoreCase(m)) {
-                String[] mails = Mailer.fetchConfig().getProperty("mail.smtp.paper_alarm_to").split(",");
-                for (String mail : mails) {
-                    Mailer.sendReporterMailAtFon(
-                            Mailer.fetchConfig().getProperty("mail.paper_alarm_subject", "QSystem"),
-                            "Использовано " + i + " из " + WelcomeParams.getInstance().paper_size_alarm + ". " + WelcomeParams.getInstance().name,
-                            mail,
-                            null
-                    );
+        if (i >= WelcomeParams.getInstance().paper_alarm_limit) {
+            //если осталось меньше 50 см бумаги
+            if (alarmsCount <= 0 || (st <= 50 && alarmsCount < 2)) {
+                QLog.l().logger().debug("Расходование бумаги в терминале.\nИспользовано см бумаги " + i +
+                                        " из ~" + WelcomeParams.getInstance().paper_size_alarm +
+                                        "\n\"" + WelcomeParams.getInstance().name + "\"");
+
+                //увеличиваем количество осуществленных оповещений
+                p.setProperty("alarms_cnt", String.valueOf(++alarmsCount));
+                try {
+                    p.store(new FileOutputStream(f), "QSystem Welcome temp properties");
+                } catch (IOException ex) {
+                    System.err.println(ex);
+                    throw new RuntimeException(ex);
+                }
+
+                try {
+                    final String m = Mailer.fetchConfig().getProperty("paper_alarm_mailing", "0");
+                    if ("1".equals(m) || "true".equalsIgnoreCase(m)) {
+                        String[] mails = Mailer.fetchConfig().getProperty("mail.smtp.paper_alarm_to." + QConfig.cfg().getUnitId()).split(",");
+                        for (String mail : mails) {
+                            Mailer.sendReporterMailAtFon(
+                                    Mailer.fetchConfig().getProperty("mail.paper_alarm_subject", "QSystem"),
+                                    "Использовано " + i + " из " + WelcomeParams.getInstance().paper_size_alarm + ". " + WelcomeParams.getInstance().name,
+                                    mail,
+                                    null
+                            );
+                        }
+                    }
+                } catch (Exception e) {
+                    QLog.l().logger().error("Ошибка отправки уведомления о расходе бумаги", e);
                 }
             }
-//            try {
-//                //уведомление всем операторам нужного отделения
-//                LinkedList<QUser> listUsers = NetCommander.getUsers(netProperty, QConfig.cfg().getUnitId(), null);
-//                s = "message#";
-//                listUsers.stream().forEach((o) -> {
-//                    s += "@" + ((QUser)o).getId().toString() + "@";
-//                });
-//                s += "##Расходование бумаги в терминале.\nНапечатано талонов " + i +
-//                     " из ~" + WelcomeParams.getInstance().paper_size_alarm +
-//                     "\n\"" + WelcomeParams.getInstance().name + "\"";
-//                
-//                Uses.sendUDPBroadcast(s, QConfig.cfg().getClientPort());
-//            } catch(Exception e) {
-//                QLog.l().logger().error("Ошибка во время попытки сделать оповещение операторам о том, что заканчивается бумага в терминале.", e);
-//            }
-            
             //если количество напечатанных талонов достигло максимального количества,
             //то сбрасываем счётчик и сохраняем в файле настроек
             if (i >= WelcomeParams.getInstance().paper_size_alarm) {
@@ -1263,6 +1273,7 @@ public class FWelcome extends javax.swing.JFrame {
         }
         
         p.setProperty("tickets_cnt", String.valueOf(0));
+        p.setProperty("alarms_cnt", String.valueOf(0));
 
         try {
             p.store(new FileOutputStream(f), "QSystem Welcome temp properties");
@@ -1430,7 +1441,9 @@ public class FWelcome extends javax.swing.JFrame {
     }
 
     public static synchronized void printTicket(final QCustomer customer) {
-        increaseTicketCount(1);
+        //сначала напечатаем, а потом увеличим счётчик, перенёс внизу вызов метода
+//        increaseTicketCount(1);
+
         // поддержка расширяемости плагинами
         boolean flag = false;
         for (final IPrintTicket event : ServiceLoader.load(IPrintTicket.class)) {
@@ -1657,9 +1670,17 @@ public class FWelcome extends javax.swing.JFrame {
                     write(g2, ".", ++line + WelcomeParams.getInstance().bottomGap, 0, 1, 1, initY);
                 }
                 
+                Integer ticketPx = (initY + line * WelcomeParams.getInstance().lineHeigth + 3)
+                                 + (WelcomeParams.getInstance().bottomGap * WelcomeParams.getInstance().lineHeigth)
+                                 + (WelcomeParams.getInstance().logoHeigth)
+                                 + WelcomeParams.getInstance().lineHeigth;
+                
+                //1.3 и 0.922 это верхний и нижний отступ 
+                lastTicketHeight = new BigDecimal((ticketPx * 2.54 / 96) + 1.3 + 0.922).setScale(1, RoundingMode.DOWN).doubleValue();
+                
                 return Printable.PAGE_EXISTS;
             }
-        };
+        };        
         final PrinterJob job = PrinterJob.getPrinterJob();
         if (WelcomeParams.getInstance().printService != null) {
             try {
@@ -1675,7 +1696,15 @@ public class FWelcome extends javax.swing.JFrame {
         } catch (PrinterException ex) {
             QLog.l().logger().error("Ошибка печати: ", ex);
         }
+        try {
+            increaseTicketCount(1);
+        } catch (Exception e) {
+            QLog.l().logger().error("Ошибка в методе increaseTicketCount: ", e);
+        }
     }
+    
+    //высота талона в см
+    private static Double lastTicketHeight = 0d;
 
     public static void printTicketAdvance(QAdvanceCustomer advCustomer, String caption) {
         FWelcome.caption = ".".equals(caption) ? "" : caption;

@@ -2794,7 +2794,7 @@ public final class Executer {
             if (cmdParams.adressRs != null && cmdParams.adressRs.compareTo(0) != 0) {
                 user.setAdressRS(cmdParams.adressRs);
             }
-            user.setIp(ipAdress);
+            user.setIp(QConfig.cfg().isTestServer() ? "10.5.0.79" : ipAdress);
             
             //сохраняем в базе дынных переданные параметры
             updateUserInDB(user,
