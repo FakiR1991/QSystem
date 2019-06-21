@@ -1226,7 +1226,7 @@ public class FWelcome extends javax.swing.JFrame {
                         for (String mail : mails) {
                             Mailer.sendReporterMailAtFon(
                                     Mailer.fetchConfig().getProperty("mail.paper_alarm_subject", "QSystem"),
-                                    "Использовано " + i + " из " + WelcomeParams.getInstance().paper_size_alarm + ". " + WelcomeParams.getInstance().name,
+                                    "Использовано " + i + " см. бумаги из " + WelcomeParams.getInstance().paper_size_alarm + ". " + WelcomeParams.getInstance().name,
                                     mail,
                                     null
                             );

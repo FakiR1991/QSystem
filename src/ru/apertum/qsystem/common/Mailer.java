@@ -80,39 +80,40 @@ public class Mailer {
         String from = props.getProperty("mail.smtp.from");
         final InternetAddress addressFrom = new InternetAddress(from);
         msg.setFrom(addressFrom);
+        msg.setText(content);
 
-        final BodyPart messageBodyPart = new MimeBodyPart();
-
-        File f = new File(props.getProperty("mail.content"));
-        if (f.exists()) {
-            final Scanner s;
-            try {
-                s = new Scanner(f);
-            } catch (FileNotFoundException ex) {
-                throw new RuntimeException(ex);
-            }
-            final StringBuilder sb = new StringBuilder();
-            while (s.hasNext()) {
-                sb.append(s.next());
-            }
-            messageBodyPart.setContent(content == null ? sb.toString() : content, "text/html; charset=\"UTF-8\"");
-            sb.setLength(0);
-        } else {
-            messageBodyPart.setContent(content == null ? props.getProperty("mail.content") : content, "text/plain; charset=\"UTF-8\"");
-        }
-
-        final Multipart multipart = new MimeMultipart();
-        multipart.addBodyPart(messageBodyPart);
-
-        if (attachment != null) {
-            final MimeBodyPart attachmentBodyPart = new MimeBodyPart();
-            final DataSource source = new FileDataSource(attachment);
-            attachmentBodyPart.setDataHandler(new DataHandler(source));
-            attachmentBodyPart.setFileName(MimeUtility.encodeText(source.getName()));
-            multipart.addBodyPart(attachmentBodyPart);
-        }
-
-        msg.setContent(multipart);
+//        final BodyPart messageBodyPart = new MimeBodyPart();
+//
+//        File f = new File(props.getProperty("mail.content"));
+//        if (f.exists()) {
+//            final Scanner s;
+//            try {
+//                s = new Scanner(f);
+//            } catch (FileNotFoundException ex) {
+//                throw new RuntimeException(ex);
+//            }
+//            final StringBuilder sb = new StringBuilder();
+//            while (s.hasNext()) {
+//                sb.append(s.next());
+//            }
+//            messageBodyPart.setContent(content == null ? sb.toString() : content, "text/html; charset=\"UTF-8\"");
+//            sb.setLength(0);
+//        } else {
+//            messageBodyPart.setContent(content == null ? props.getProperty("mail.content") : content, "text/plain; charset=\"UTF-8\"");
+//        }
+//
+//        final Multipart multipart = new MimeMultipart();
+//        multipart.addBodyPart(messageBodyPart);
+//
+//        if (attachment != null) {
+//            final MimeBodyPart attachmentBodyPart = new MimeBodyPart();
+//            final DataSource source = new FileDataSource(attachment);
+//            attachmentBodyPart.setDataHandler(new DataHandler(source));
+//            attachmentBodyPart.setFileName(MimeUtility.encodeText(source.getName()));
+//            multipart.addBodyPart(attachmentBodyPart);
+//        }
+//
+//        msg.setContent(multipart);
 
         Transport.send(msg);
     }
