@@ -1189,7 +1189,8 @@ public class FWelcome extends javax.swing.JFrame {
         }
         
         //количество использованной бумаги
-        double i = Math.max(Double.parseDouble(p.getProperty("tickets_cnt", "0").trim()) + lastTicketHeight, 0);
+        double itemp = Math.max(Double.parseDouble(p.getProperty("tickets_cnt", "0").trim()) + lastTicketHeight, 0);
+        double i = new BigDecimal(itemp).setScale(1, RoundingMode.DOWN).doubleValue();
         //сколько уведомлений уже было отправлено
         int alarmsCount = Integer.parseInt(p.getProperty("alarms_cnt", "0"));
         p.setProperty("tickets_cnt", String.valueOf(i));
