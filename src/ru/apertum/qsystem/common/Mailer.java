@@ -18,19 +18,14 @@ package ru.apertum.qsystem.common;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
 import javax.mail.*;
 import javax.mail.internet.*;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.Scanner;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 
 /**
@@ -74,7 +69,7 @@ public class Mailer {
         }
 
         msg.setRecipients(Message.RecipientType.TO, adresses.toArray(new InternetAddress[0]));
-        msg.setHeader("Content-Type", "text/html;charset=\"UTF-8\"");
+        msg.setHeader("Content-Type", "text/html; charset=\"UTF-8\"");
         msg.setSubject(subject == null ? props.getProperty("mail.subject") : subject, "UTF-8");
         
         String from = props.getProperty("mail.smtp.from");

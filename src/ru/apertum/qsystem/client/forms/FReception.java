@@ -28,6 +28,8 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -58,6 +60,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.table.AbstractTableModel;
@@ -443,8 +447,9 @@ public class FReception extends javax.swing.JFrame {
         
         jScrollTickets.setViewportView(jListTickets);
 
+        String ticketsPanelName = "jPanelTickets";
         jListTickets.setName("jListTickets");
-        jPanelTickets.setName("jPanelTickets");
+        jPanelTickets.setName(ticketsPanelName);
 
         javax.swing.GroupLayout jPanelTicketsLayout = new javax.swing.GroupLayout(jPanelTickets);
         jPanelTickets.setLayout(jPanelTicketsLayout);
@@ -473,6 +478,18 @@ public class FReception extends javax.swing.JFrame {
         );
 
         tabsPane.addTab("Талоны", jPanelTickets);
+        
+        tabsPane.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                javax.swing.JTabbedPane j = (javax.swing.JTabbedPane)e.getSource();
+                javax.swing.JPanel jPanel = (javax.swing.JPanel)j.getSelectedComponent();
+                //если активна панель "Талоны", то обновляем список талонов
+                if (ticketsPanelName.equalsIgnoreCase(jPanel.getName())) {
+                    loadTickets();
+                }
+            }
+        });
     }
     
     //меняем статус талона на "STATE_WORK"
