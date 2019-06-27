@@ -1614,7 +1614,7 @@ public class FReception extends javax.swing.JFrame {
                         .addContainerGap())))
         );
 
-        tabsPane.addTab(resourceMap.getString("panelPrereg.TabConstraints.tabTitle"), panelPrereg); // NOI18N
+//      tabsPane.addTab(resourceMap.getString("panelPrereg.TabConstraints.tabTitle"), panelPrereg); // NOI18N
 
         jPanel8.setName("jPanel8"); // NOI18N
 
@@ -1870,7 +1870,7 @@ public class FReception extends javax.swing.JFrame {
             .addGap(0, 598, Short.MAX_VALUE)
         );
 
-        tabsPane.addTab(resourceMap.getString("panelComplexServ.TabConstraints.tabTitle"), panelComplexServ); // NOI18N
+//      tabsPane.addTab(resourceMap.getString("panelComplexServ.TabConstraints.tabTitle"), panelComplexServ); // NOI18N
 
         MenuBar.setName("MenuBar"); // NOI18N
 
@@ -2538,13 +2538,13 @@ public class FReception extends javax.swing.JFrame {
             return false;
         }
 
-        panelComplexServ.removeAll();
-        panelComplexServ.setLayout(new GridLayout(1, 1));
-        // в темповый файл
-        final File file;
-        (new File(Uses.TEMP_FOLDER)).mkdir();
-        file = new File(Uses.TEMP_FOLDER + File.separator + Uses.TEMP_COMPLEX_FILE);
-        panelComplexServ.add(new PComplexService((ATreeModel) (treeServices.getModel()), file, netProperty));
+//        panelComplexServ.removeAll();
+//        panelComplexServ.setLayout(new GridLayout(1, 1));
+//        // в темповый файл
+//        final File file;
+//        (new File(Uses.TEMP_FOLDER)).mkdir();
+//        file = new File(Uses.TEMP_FOLDER + File.separator + Uses.TEMP_COMPLEX_FILE);
+//        panelComplexServ.add(new PComplexService((ATreeModel) (treeServices.getModel()), file, netProperty));
 
         final LinkedList<ServiceInfo> srvs;
         try {
