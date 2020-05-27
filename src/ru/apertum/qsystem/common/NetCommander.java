@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 import javax.swing.tree.TreeNode;
 import static org.apache.http.HttpHeaders.USER_AGENT;
 import org.dom4j.DocumentException;
@@ -147,21 +148,24 @@ public class NetCommander {
                 }
                 QLog.l().logger().trace("Socket was created.");
                 final PrintWriter writer;
-                final Scanner in;
+//                final Scanner in;
                 try {
                     writer = new PrintWriter(socket.getOutputStream());
                     writer.print(URLEncoder.encode(message, "utf-8"));
                     QLog.l().logger().trace("Sending...");
                     writer.flush();
                     QLog.l().logger().trace("Reading...");
-                    StringBuilder sb = new StringBuilder();
-                    in = new Scanner(socket.getInputStream());
-                    while (in.hasNextLine()) {
-                        sb = sb.append(in.nextLine()).append("\n");
-                    }
-                    data = URLDecoder.decode(sb.toString(), "utf-8");
+                    //Scanner вызывал проблему зависания FReception, пришлось использовать другой способ получения данных потока
+                    String result = new BufferedReader(new InputStreamReader(socket.getInputStream())).lines().collect(Collectors.joining("\n"));
+//                    StringBuilder sb = new StringBuilder();
+//                    in = new Scanner(socket.getInputStream());
+//                    while (in.hasNextLine()) {
+//                        sb = sb.append(in.nextLine()).append("\n");
+//                    }
+//                    data = URLDecoder.decode(sb.toString(), "utf-8");
+                    data = URLDecoder.decode(result, "utf-8");
                     writer.close();
-                    in.close();
+//                    in.close();
                 } finally {
                     socket.close();
                 }

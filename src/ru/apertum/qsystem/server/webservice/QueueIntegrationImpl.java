@@ -83,7 +83,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
                 //в таком случае просто возвращаем 
                 return customer.getId().toString();
             }
-
+            
             //выполняем проверки и получаем пользователя из списка ушедших на оплату
             customer = getCustomerByRequestId(requestId);
 

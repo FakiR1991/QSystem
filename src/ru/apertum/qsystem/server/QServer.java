@@ -55,6 +55,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.apertum.qsystem.About;
 import ru.apertum.qsystem.client.Locales;
+import ru.apertum.qsystem.client.common.WelcomeParams;
 import ru.apertum.qsystem.client.forms.FAbout;
 import ru.apertum.qsystem.common.CodepagePrintStream;
 import ru.apertum.qsystem.common.CustomerState;
@@ -310,6 +311,11 @@ public class QServer extends Thread {
         final AnnotationSessionFactoryBean as = (AnnotationSessionFactoryBean) Spring.getInstance().getFactory().getBean("conf");
         System.out.println("Server QSystem started.\n");
         QLog.l().logger().info("Сервер системы 'Очередь' запущен. DB name='" + as.getName() + "' url=" + as.getUrl());
+        
+        if (!QConfig.cfg().isTestServer()) {
+            sendMessage("QSystem - start", "Сервер успешно запущен");
+        }
+        
         int pos = 0;
         boolean exit = false;
         // слушаем порт
@@ -385,7 +391,24 @@ public class QServer extends Thread {
         //deleteTempFile();
         Thread.sleep(1500);
         QLog.l().logger().info("Сервер штатно завершил работу. Время работы: " + Uses.roundAs(((double) (System.currentTimeMillis() - start)) / 1000 / 60, 2) + " мин.");
+        
+        if (!QConfig.cfg().isTestServer()) {
+            sendMessage("QSystem - stop", "Сервер штатно завершил работу");
+        }
+        
         System.exit(0);
+    }
+    
+    private static void sendMessage(String subject, String message) {
+        String[] mails = Mailer.fetchConfig().getProperty("mail.smtp.start_stop").split(",");
+        for (String mail : mails) {
+            Mailer.sendReporterMailAtFon(
+                    subject,
+                    message,
+                    mail,
+                    null
+            );
+        }
     }
     
     private static String serviceAddress;

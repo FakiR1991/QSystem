@@ -440,7 +440,8 @@ task debugReception (dependsOn: 'classes', type: JavaExec) {
         args '-ide'
         args '--debug'
         args '-s'
-        args '127.0.0.1'
+        args '10.5.18.10'
+        /*args '127.0.0.1'*/
         args '-cport'
         args '3129'
         args '-sport'

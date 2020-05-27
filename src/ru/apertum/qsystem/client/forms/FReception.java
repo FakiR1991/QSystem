@@ -176,10 +176,12 @@ public class FReception extends javax.swing.JFrame {
 
         init();
         
-        Timer t = new Timer(1000 * 60, (ActionEvent e) -> {
-            load();
-        });
-        t.start();
+//        Timer t = new Timer(1000 * 60, (ActionEvent e) -> {
+//            java.awt.EventQueue.invokeLater(() -> {
+//                load();
+//            });
+//        });
+//        t.start();
     }
     
     private void initManuallyAddedComponents() {
@@ -2437,7 +2439,10 @@ public class FReception extends javax.swing.JFrame {
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) { }
             fReception = new FReception(netProperty);
             Uses.setLocation(fReception);
-            res = fReception.load();
+//            res = fReception.load();
+            java.awt.EventQueue.invokeLater(() -> {
+                fReception.load();
+            });
         } catch (Exception ex) {
             Uses.closeSplash();
             throw new ClientException(ex);
@@ -2457,26 +2462,38 @@ public class FReception extends javax.swing.JFrame {
         }
 
         Uses.closeSplash();
-        if (res) {
-            java.awt.EventQueue.invokeLater(() -> {
-                try {
-                    fReception.setVisible(true);
-                } catch (Exception ex) {
-                    Uses.closeSplash();
-                    throw new ClientException(ex);
-                } finally {
-                    Uses.closeSplash();
-                }
-            });
-        } else {
-            System.exit(13);
-        }
+        java.awt.EventQueue.invokeLater(() -> {
+            try {
+                fReception.setVisible(true);
+            } catch (Exception ex) {
+                Uses.closeSplash();
+                throw new ClientException(ex);
+            } finally {
+                Uses.closeSplash();
+            }
+        });
+//        if (res) {
+//            java.awt.EventQueue.invokeLater(() -> {
+//                try {
+//                    fReception.setVisible(true);
+//                } catch (Exception ex) {
+//                    Uses.closeSplash();
+//                    throw new ClientException(ex);
+//                } finally {
+//                    Uses.closeSplash();
+//                }
+//            });
+//        } else {
+//            System.exit(13);
+//        }
     }
     private QStandards standards;
     
     private void startRefreshServerStateTimer() {
         Timer timerOut = new Timer(60 * 1000, (ActionEvent e) -> {
-            load();
+            java.awt.EventQueue.invokeLater(() -> {
+                load();
+            });
         });
         timerOut.start();
     }
@@ -2932,7 +2949,9 @@ public class FReception extends javax.swing.JFrame {
 
     @Action
     public void refreshMainData() {
-        load();
+        java.awt.EventQueue.invokeLater(() -> {
+            load();
+        });
     }
 
     @Action
