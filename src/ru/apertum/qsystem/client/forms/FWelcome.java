@@ -16,12 +16,10 @@
  */
 package ru.apertum.qsystem.client.forms;
 
-import com.google.zxing.WriterException;
-import java.awt.event.ActionEvent;
-import ru.apertum.qsystem.client.common.WelcomeParams;
 import com.google.gson.Gson;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import gnu.io.SerialPortEvent;
@@ -39,6 +37,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Robot;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -64,7 +63,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -92,21 +90,23 @@ import net.sourceforge.barbecue.BarcodeFactory;
 import net.sourceforge.barbecue.output.OutputException;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
+import org.netbeans.lib.awtextra.AbsoluteLayout;
 import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.common.BackDoor;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
 import ru.apertum.qsystem.client.common.WelcomeBGparams;
-import ru.apertum.qsystem.common.NetCommander;
+import ru.apertum.qsystem.client.common.WelcomeParams;
 import ru.apertum.qsystem.client.model.QButton;
 import ru.apertum.qsystem.client.model.QPanel;
 import ru.apertum.qsystem.common.BrowserFX;
 import ru.apertum.qsystem.common.GsonPool;
 import ru.apertum.qsystem.common.Mailer;
+import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.QConfig;
 import static ru.apertum.qsystem.common.QConfig.KEY_WELCOME_KBD;
-import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.cmd.CmdParams;
 import ru.apertum.qsystem.common.cmd.JsonRPC20;
 import ru.apertum.qsystem.common.cmd.RpcGetAllServices;
@@ -124,7 +124,6 @@ import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
-import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.infosystem.QInfoItem;
 import ru.apertum.qsystem.server.model.response.QRespItem;
 import ru.apertum.qsystem.server.model.response.QResponseTree;
@@ -742,7 +741,6 @@ public class FWelcome extends javax.swing.JFrame {
             }
         }
     }
-
     
     static void initNumbers()
     {
@@ -755,15 +753,37 @@ public class FWelcome extends javax.swing.JFrame {
         numbersPanel2 = new JPanel();
         //  g2.setFont(new Font(g2.getFont().getName(), g2.getFont().getStyle(), 7));
    
-        number0.setBounds(0, 60, 900, 100);
-        number0.setText("<html>1198 - единый номер информационной и<br>технической поддержки абонентов IDC по всем<br>услугам связи</html>");
-        number0.setForeground(Color.decode("#3b6bb3"));
-        number1.setBounds(0,160, 700, 100);
-        number1.setText("<html>888 - Автоматическая Система<br>Самообслуживания Абонентов [АССА]</html>");
-        number1.setForeground(Color.decode("#3b6bb3"));
-        number2.setText("<html>195 - Информация о состоянии лицевого счета<br>местной телефонной сети</html>");
-        number2.setForeground(Color.decode("#3b6bb3"));
-        number2.setBounds(0,60,900,70);
+        int childCount = 0;
+        childCount = current.getChildren().stream().filter(
+                (service) -> (
+                                !(isAdvanceRegim() && service.getAdvanceLimit() == 0) &&
+                                service.getStatus() != -1 &&
+                                (WelcomeParams.getInstance().point == 0 || (service.getPoint().equals("0") || Arrays.asList(service.getPoint().split("\\,")).contains(String.valueOf(WelcomeParams.getInstance().point))))
+                             )
+        ).map((_item) -> 1).reduce(childCount, Integer::sum);
+        
+        //если кнопок меньше двух
+        if (childCount < 2) {
+            number0.setBounds(0, 15, 900, 290);
+            number0.setText("<html>1198 - единый номер информационной и<br>технической поддержки абонентов IDC по всем<br>услугам связи<br><br>888 - Автоматическая Система<br>Самообслуживания Абонентов [АССА]<br><br>195 - Информация о состоянии лицевого счета<br>местной телефонной сети</html>");
+            number0.setForeground(Color.decode("#3b6bb3"));
+            number1.setBounds(0, 160, 700, 100);
+            number1.setText("");
+            number1.setForeground(Color.decode("#3b6bb3"));
+            number2.setBounds(0, 60, 900, 70);
+            number2.setText("");
+            number2.setForeground(Color.decode("#3b6bb3"));
+        } else {
+            number0.setBounds(0, 60, 900, 100);
+            number0.setText("<html>1198 - единый номер информационной и<br>технической поддержки абонентов IDC по всем<br>услугам связи</html>");
+            number0.setForeground(Color.decode("#3b6bb3"));
+            number1.setBounds(0, 160, 700, 100);
+            number1.setText("<html>888 - Автоматическая Система<br>Самообслуживания Абонентов [АССА]</html>");
+            number1.setForeground(Color.decode("#3b6bb3"));
+            number2.setBounds(0, 60, 900, 70);
+            number2.setText("<html>195 - Информация о состоянии лицевого счета<br>местной телефонной сети</html>");
+            number2.setForeground(Color.decode("#3b6bb3"));
+        }
         
         
         number0.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
@@ -780,8 +800,8 @@ public class FWelcome extends javax.swing.JFrame {
        // numbersPanel2.add(number6);
         numbersPanel1.setBackground(Color.decode("#cce6ff"));
         numbersPanel2.setBackground(Color.decode("#cce6ff"));
-        numbersPanel1.setLayout(null);
-        numbersPanel2.setLayout(null);
+        numbersPanel1.setLayout(new AbsoluteLayout());
+        numbersPanel2.setLayout(new AbsoluteLayout());
     }
     
     static JPanel getServiceNamePanel(String name)

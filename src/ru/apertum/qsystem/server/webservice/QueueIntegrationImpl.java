@@ -69,7 +69,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
                          "\n pointIdTo=" + pointIdTo + 
                          "\n additionInfo=" + additionInfo;
         
-        QLog.l().logger().info("Принимаем клиента от АПБ");
+        QLog.l().logger().info("Т. № " + ticketId + ". Принимаем клиента от АПБ. " + new Date().toString());
         QLog.l().logger().info(logInfo);
         
         QCustomer customer = null;
@@ -79,6 +79,9 @@ public class QueueIntegrationImpl implements QueueIntegration {
             //такое может случиться если АПБ дёрнул мой сервис, я создал по его параметрам клиента,
             //но по таймауту, например, АПБ получил ошибку и позже дёрнул меня с теми же самыми параметрами
             customer = checkTicketInQueue(ticketId, requestId, unitId);
+            
+            QLog.l().logger().info("Т. № " + ticketId + ". Проверили есть ли талон в очереди. " + new Date().toString());
+            
             if (customer != null) {
                 //в таком случае просто возвращаем 
                 return customer.getId().toString();
@@ -86,16 +89,21 @@ public class QueueIntegrationImpl implements QueueIntegration {
             
             //выполняем проверки и получаем пользователя из списка ушедших на оплату
             customer = getCustomerByRequestId(requestId);
+            
+            QLog.l().logger().info("Т. № " + ticketId + ". Получили клиента из списка ушедших на оплату. " + new Date().toString());
 
             boolean initFromApb = false;
 
             //если кустомера не нашли в списке ушедших на оплату, значит нужно
             //создать нового и поставить в очередь на дефолтную услугу
             if (customer == null) {
-                QLog.l().logger().warn("Не найден кастомер в списке ушедших на оплату: requestId=" + requestId +
-                                       ". Значит клиент инициирован Агропромбанком. Нужно создать нового клиента и поставить в очередь.");
-
+                QLog.l().logger().warn("Т. № " + ticketId + ". Не найден кастомер в списке ушедших на оплату: requestId=" + requestId +
+                                       ". Значит клиент инициирован Агропромбанком. Нужно создать нового клиента и поставить в очередь. " + new Date().toString());
+                
                 customer = initCustomerFromBank(unitId, requestId, ticketId, priorityId, pointIdFrom);
+                
+                QLog.l().logger().info("Т. № " + ticketId + ". Создали нового клиента. " + new Date().toString());
+                
                 initFromApb = true;
             }
 
@@ -115,14 +123,20 @@ public class QueueIntegrationImpl implements QueueIntegration {
             //увеличиваем приоритет только если кастомер не инициирован АПБ
             if (!initFromApb && customer.getPriority().get() < Uses.PRIORITY_HI) {
                 customer.setPriority(customer.getPriority().get() + 1);
+                
+                QLog.l().logger().info("Т. № " + ticketId + ". Установили приоритет. " + new Date().toString());
             }
 
             //добавим нового пользователя в очередь
             final QService service = QServiceTree.getInstance().getById(customer.getService().getId());
             service.addCustomer(customer);
+            
+            QLog.l().logger().info("Т. № " + ticketId + ". Добавили клиента в очередь на нужную услугу. " + new Date().toString());
 
             //удалим из списка ушедших на оплату
             removeCustomerFromList(customer);
+            
+            QLog.l().logger().info("Т. № " + ticketId + ". Удалили клиента из списка ушедших на оплату. " + new Date().toString());
 
             //если кустомер вернулся после оплаты
             //состояние - "жду после оплаты"
@@ -131,23 +145,31 @@ public class QueueIntegrationImpl implements QueueIntegration {
                 //только что встал типо; просто время нахождения в отложенных не считается как ожидание очереди, иначе в statistic ожидание огромное
                 customer.setStandTime(new Date());
                 customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
+                
+                QLog.l().logger().info("Т. № " + ticketId + ". Поменяли статус талона на \"Ожидаю после оплаты\". " + new Date().toString());
             }
             //если кустомер был инициирован АПБ и создан только что
             else {
                 customer.setState(CustomerState.STATE_WAIT);
+                
+                QLog.l().logger().info("Т. № " + ticketId + ". Поменяли статус талона на \"Ожидаю\". " + new Date().toString());
             }
 
             //меняем статус талона в БД
             changeTicketStatusInDatabase(customer);
+            
+            QLog.l().logger().info("Т. № " + ticketId + ". Изменили статус талона в Oracle БД. " + new Date().toString());
 
             try {
                 // сохраняем состояния очередей.
                 QServer.savePool();
+                
+                QLog.l().logger().info("Т. № " + ticketId + ". Сохранили пул талонов сервера. " + new Date().toString());
             } catch (Exception ex) {
-                QLog.l().logger().error("Ошибка сохранения состояния очередей", ex);
+                QLog.l().logger().error("Т. № " + ticketId + ". Ошибка сохранения состояния очередей. " + new Date().toString(), ex);
             }
         } catch (Exception ex) {
-            QLog.l().logger().trace("Ошибка приёма клиента из АПБ:\n" + ex.getMessage(), ex);
+            QLog.l().logger().trace("Т. № " + ticketId + ". Ошибка приёма клиента из АПБ. " + new Date().toString() + ":\n", ex);
             throw new ServerException("Ошибка приёма клиента из АПБ:\n" + ex.getMessage());
         }
         
@@ -158,8 +180,8 @@ public class QueueIntegrationImpl implements QueueIntegration {
         String connectionString = "jdbc:oracle:thin:@(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1-vip.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node2-vip.int.idknet.com)(PORT = 1521)) (FAILOVER = yes) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = SHARED) (SERVICE_NAME = amar_s1) (FAILOVER_MODE = (TYPE = SELECT) (METHOD = BASIC) (RETRIES = 180) (DELAY = 5))))";
         String strUserID = "qsystem";
         String strPassword = "nyZd6je6R";
-        ArrayList<TempTicket> tickets = new ArrayList<TempTicket>();
-        Connection myConnection = null;
+        ArrayList<TempTicket> tickets = new ArrayList<>();
+        Connection myConnection;
         try {
             myConnection = DriverManager.getConnection(connectionString, strUserID, strPassword);
             Statement sqlStatement = myConnection.createStatement();
@@ -176,29 +198,25 @@ public class QueueIntegrationImpl implements QueueIntegration {
                         tickets.add(new TempTicket(((ResultSet)value).getInt("ID_TICKET"),
                                                    ((ResultSet)value).getString("CODE"),
                                                    ((ResultSet)value).getInt("ID_TICKET_STATE")));
-                    }   
+                    }
                 }
             }
 
-            if (customer.getState() == CustomerState.STATE_PAYMENT) {
-                List<TempTicket> temp = tickets.stream().filter(t -> t.code.equals(customer.getNumber())).collect(Collectors.toList());
-                QLog.l().logger().debug(customer.getNumber());
-                if (temp.size() > 0) {
-                    if (temp.get(0).state == 1) {
-                        String call = ("{call bs.qsys.set_ticket_state(?, ?)}");
-                        try (CallableStatement stmt = myConnection.prepareCall(call)) {
-                            stmt.setInt(1, temp.get(0).id);
-                            //2 - для удаления из таблицы
-                            stmt.setInt(2, 2);
-                            stmt.execute();
-                        } catch (Exception exeption) {
+            List<TempTicket> temp = tickets.stream().filter(t -> t.code.equals(customer.getNumber())).collect(Collectors.toList());
+            QLog.l().logger().debug(customer.getNumber());
+            if (temp.size() > 0) {
+                if (temp.get(0).state == 1) {
+                    String call = ("{call bs.qsys.set_ticket_state(?, ?)}");
+                    try (CallableStatement stmt = myConnection.prepareCall(call)) {
+                        stmt.setInt(1, temp.get(0).id);
+                        //2 - для удаления из таблицы
+                        stmt.setInt(2, 2);
+                        stmt.execute();
+                    } catch (Exception exeption) {
 //                            throw new ServerException("Ошибка смены статуса талона в базе данных! customerId=" + customer.getId(), exeption);
-                            QLog.l().logger().error("Ошибка смены статуса талона в базе данных! customerId=" + customer.getId(), exeption);
-                        } finally {
-                            if (myConnection != null) {
-                                myConnection.close();
-                            }
-                        }
+                        QLog.l().logger().error("Ошибка смены статуса талона в базе данных! customerId=" + customer.getId(), exeption);
+                    } finally {
+                        myConnection.close();
                     }
                 }
             }
