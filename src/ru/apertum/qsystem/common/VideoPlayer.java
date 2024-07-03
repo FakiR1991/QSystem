@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -39,6 +40,10 @@ import javafx.scene.media.MediaView;
 import javafx.scene.paint.Color;
 import javax.swing.JPanel;
 import ru.apertum.qsystem.common.exceptions.ClientException;
+import uk.co.caprica.vlcj.binding.LibVlc;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 
 /**
  * Может проигрывать фидеофайлы *.mpg, *.jpg. Для этого используется установленная предварительно на компьютере среда JMF. По умолчанию показ ролика бесконечно
@@ -49,9 +54,67 @@ import ru.apertum.qsystem.common.exceptions.ClientException;
 public class VideoPlayer extends JPanel {
 
     private MediaView medView = null;
+    private EmbeddedMediaPlayerComponent mediaPlayerComponent;
 
     public VideoPlayer() {
         init();
+        
+        boolean found = new NativeDiscovery().discover();
+        System.out.println(found);
+        System.out.println(LibVlc.libvlc_get_version());
+
+        mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
+        mediaPlayerComponent.mediaPlayer().events().addMediaPlayerEventListener(mpEventAdapter);
+        add(mediaPlayerComponent, BorderLayout.CENTER);
+    }
+    
+    private int currentVideoIndex = 0;
+    private ArrayList<String> videos = new ArrayList<>();
+    private MediaPlayerEventAdapter mpEventAdapter = new MediaPlayerEventAdapter() {
+        @Override
+        public void finished(uk.co.caprica.vlcj.player.base.MediaPlayer mediaPlayer) {
+            mediaPlayer.submit(() -> {
+                currentVideoIndex++;
+                if (currentVideoIndex >= videos.size()) {
+                    currentVideoIndex = 0;
+                }
+                mediaPlayer.media().play(videos.get(currentVideoIndex));
+            });
+        }
+    };
+    
+    public void playMedia() {
+        if (!new File(videoResourcePath).exists()) {
+            return;
+        }
+        
+        QLog.l().logger().error("ПУТЬ К ВИДЕО: " + videoResourcePath);
+        
+        if (new File(videoResourcePath).isDirectory()) {
+            QLog.l().logger().error("ЭТО ПАПКА");
+            
+            // ролики в папке
+            final String[] vfs = new File(videoResourcePath).list();
+            videos.clear();
+            for (String s : vfs) {
+                String directory = new File(videoResourcePath).toPath().toAbsolutePath().toString();
+                String fileName = s;
+                String fullPath = directory + File.separator + fileName;
+                videos.add(fullPath);
+                
+                QLog.l().logger().error(fullPath);
+            }
+        } else {
+            QLog.l().logger().error("ЭТО ОТДЕЛЬНЫЙ РОЛИК");
+            
+            // ролик одним файлом
+            videos.clear();
+            videos.add(new File(videoResourcePath).toPath().toAbsolutePath().toString());
+            
+            QLog.l().logger().error(new File(videoResourcePath).toPath().toAbsolutePath().toString());
+        }
+        
+        mediaPlayerComponent.mediaPlayer().media().play(videos.get(currentVideoIndex));
     }
 
     private void init() {
@@ -60,7 +123,7 @@ public class VideoPlayer extends JPanel {
         setOpaque(false);
         GridLayout gl = new GridLayout(1, 1);
         setLayout(gl);
-        add(javafxPanel, BorderLayout.CENTER);
+//        add(javafxPanel, BorderLayout.CENTER);
 
         Platform.runLater(new Runnable() {
 
@@ -81,17 +144,19 @@ public class VideoPlayer extends JPanel {
 
                     @Override
                     public void componentResized(ComponentEvent e) {
-                        if (view.getMediaPlayer() != null && view.getMediaPlayer().getMedia() != null) {
+                        if (mediaPlayerComponent != null || (view.getMediaPlayer() != null && view.getMediaPlayer().getMedia() != null) ) {
                             Platform.runLater(() -> {
-                                double sx = (double) javafxPanel.getWidth() / (double) view.getMediaPlayer().getMedia().widthProperty().getValue();
-                                double dxy = sx;
-                                if (view.getMediaPlayer().getMedia().heightProperty().getValue() * sx > javafxPanel.getHeight()) {
-                                    dxy = (double) javafxPanel.getHeight() / (double) view.getMediaPlayer().getMedia().heightProperty().getValue();
-                                }
-                                view.setScaleX(dxy);
-                                view.setScaleY(dxy);
-                                view.setX((javafxPanel.getWidth() - view.getMediaPlayer().getMedia().widthProperty().getValue()) / 2);
-                                view.setY((javafxPanel.getHeight() - view.getMediaPlayer().getMedia().heightProperty().getValue()) / 2);
+                                setVideoSize(false);
+                                
+//                                double sx = (double) javafxPanel.getWidth() / (double) view.getMediaPlayer().getMedia().widthProperty().getValue();
+//                                double dxy = sx;
+//                                if (view.getMediaPlayer().getMedia().heightProperty().getValue() * sx > javafxPanel.getHeight()) {
+//                                    dxy = (double) javafxPanel.getHeight() / (double) view.getMediaPlayer().getMedia().heightProperty().getValue();
+//                                }
+//                                view.setScaleX(dxy);
+//                                view.setScaleY(dxy);
+//                                view.setX((javafxPanel.getWidth() - view.getMediaPlayer().getMedia().widthProperty().getValue()) / 2);
+//                                view.setY((javafxPanel.getHeight() - view.getMediaPlayer().getMedia().heightProperty().getValue()) / 2);
                             });
                         }
                     }
@@ -180,6 +245,10 @@ public class VideoPlayer extends JPanel {
         videoFiles.clear();
         this.videoResourcePath = videoResourcePath;
         return true;
+    }
+    
+    public void setVideoPath(String path) {
+        this.videoResourcePath = path;
     }
 
     private final static HashMap<String, MediaPlayer> VIDS = new HashMap<>();

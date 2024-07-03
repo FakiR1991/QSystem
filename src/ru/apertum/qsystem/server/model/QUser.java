@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import javax.persistence.Id;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -30,6 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -440,6 +440,15 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
         }
         throw new ServerException("Не найдена обрабатываемая услуга по ID \"" + serviceId + "\" у услуги c ID = " + id);
     }
+    
+    public boolean isServiceInPlan(long serviceId) {
+        for (QPlanService qPlanService : planServices) {
+            if (serviceId == qPlanService.getService().getId()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Найти сервис из списка обслуживаемых юзером.
@@ -620,6 +629,33 @@ public class QUser implements IidGetter, Serializable, Comparable<QUser> {
     public void setPause(Boolean pause) {
         this.pause = pause;
     }
+    
+    @Expose
+    @SerializedName("tech_work")
+    private boolean techWork = false;
+
+    @Transient
+    public boolean isTechWork() {
+        return techWork;
+    }
+
+    public void setTechWork(boolean techWork) {
+        this.techWork = techWork;
+    }
+    
+    @Expose
+    @SerializedName("continue_servicing")
+    private boolean continueServicing = false;
+
+    @Transient
+    public boolean isContinueServicing() {
+        return continueServicing;
+    }
+
+    public void setContinueServicing(boolean continueServicing) {
+        this.continueServicing = continueServicing;
+    }
+    
     @Expose
     @SerializedName("shadow")
     private Shadow shadow = null;

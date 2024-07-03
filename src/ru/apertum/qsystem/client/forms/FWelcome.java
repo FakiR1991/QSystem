@@ -1222,7 +1222,7 @@ public class FWelcome extends javax.swing.JFrame {
         }
         //остаток бумаги в см
         double st = WelcomeParams.getInstance().paper_size_alarm - i;
-
+        
         //если достигли критического остатка бумаги
         if (i >= WelcomeParams.getInstance().paper_alarm_limit) {
             //если осталось меньше 70 см бумаги

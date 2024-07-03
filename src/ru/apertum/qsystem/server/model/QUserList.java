@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
 import ru.apertum.qsystem.server.Spring;
 
@@ -46,6 +45,7 @@ public class QUserList extends ATListModel<QUser> {
         });
         
         Collections.sort(users);
+        
         return users;
     }
     

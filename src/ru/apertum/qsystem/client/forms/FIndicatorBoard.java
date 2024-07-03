@@ -42,23 +42,6 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
-/*
- import javafx.animation.PathTransition;
- import javafx.animation.Timeline;
- import javafx.application.Platform;
- import javafx.embed.swing.JFXPanel;
- import javafx.scene.Group;
- import javafx.scene.Scene;
- import javafx.scene.effect.Glow;
- import javafx.scene.shape.LineTo;
- import javafx.scene.shape.MoveTo;
- import javafx.scene.shape.Path;
- import javafx.scene.shape.Shape;
- import javafx.scene.text.Text;
- import javafx.scene.text.TextBuilder;
- import javafx.util.Duration;
- import javax.swing.border.BevelBorder;
- */
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -72,9 +55,9 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.model.QPanel;
 import ru.apertum.qsystem.common.BrowserFX;
 import ru.apertum.qsystem.common.QConfig;
+import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.RunningLabel;
 import ru.apertum.qsystem.common.Uses;
-import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.model.ATalkingClock;
 
 /**
@@ -263,8 +246,52 @@ public class FIndicatorBoard extends javax.swing.JFrame {
         }
 
         if (!isDebug) {
-            setUndecorated(true);
-            setType(Type.UTILITY);
+            //при запуске окна рекламный ролик запускается сплющенным (не вызывается событие для ресайза области выделенной под ролик),
+            //ролик расплющивает если свернуть окно и развернуть обратно, но это работает только в режиме дебага,
+            //как вызвать событие ресайза в рабочем режиме - не знаю, поэтому был создан позолоченный костыль, который
+            //хуярит окно, затем делает нужные настройки формы, что каким-то магическим образом запускает ролик не сплющенным по высоте
+            new java.util.Timer().schedule( 
+                    new java.util.TimerTask() {
+                        @Override
+                        public void run() {
+                            setVisible(false);
+                            
+                            new java.util.Timer().schedule( 
+                                    new java.util.TimerTask() {
+                                        @Override
+                                        public void run() {
+                                            dispose();
+                                            setUndecorated(true);
+                                            setType(Type.UTILITY);
+                                            setVisible(true);
+                                            panelRight.playMedia();
+                                        }
+                                    }, 
+                                    150
+                            );
+                        }
+                    }, 
+                    250
+            );
+            
+//            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+//            scheduler.scheduleAtFixedRate(() -> {
+//                setVisible(false);
+//                
+//                new java.util.Timer().schedule( 
+//                        new java.util.TimerTask() {
+//                            @Override
+//                            public void run() {
+//                                dispose();
+//                                setUndecorated(true);
+//                                setType(Type.UTILITY);
+//                                setVisible(true);
+//                                panelRight.playMedia();
+//                            }
+//                        }, 
+//                        150
+//                );
+//            }, 250, 4*60*60*1000, TimeUnit.MILLISECONDS);
         }
         initComponents();
         panelCommon.setBackground(bgColor);
@@ -277,6 +304,8 @@ public class FIndicatorBoard extends javax.swing.JFrame {
             callDialog = null;
         }
         QLog.l().logger().trace("Прочитали настройки для окна информации.");
+        
+        loadDividerLocation();
     }
 
     public void toPosition(boolean isDebug, int x, int y) {
@@ -311,7 +340,7 @@ public class FIndicatorBoard extends javax.swing.JFrame {
                 }
             });
         } else {
-            setSize(1280, 720);
+            setSize(1920, 1080);
         }
     }
 
@@ -448,9 +477,12 @@ public class FIndicatorBoard extends javax.swing.JFrame {
             final String filePathVid = Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_VIDEO_FILE).get(0).attributeValue(Uses.TAG_BOARD_VALUE);
             File fv = new File(filePathVid);
             if (fv.exists()) {
+                
                 label.setVisible(false);
-                panel.setVideoFileName(filePathVid);
-                panel.startVideo();
+                QLog.l().logger().debug("ВРУБИЛИ ВИДОС: " + filePathVid);
+                
+                panel.setVideoPath(filePathVid);
+//                panel.startVideo();
             } else // если не видео, то простая дата или таблица ближайших
             {
                 if ("1".equals(Uses.elementsByAttr(params, Uses.TAG_BOARD_NAME, Uses.TAG_BOARD_SIMPLE_DATE).get(0).attributeValue(Uses.TAG_BOARD_VALUE))) {

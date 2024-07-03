@@ -16,7 +16,6 @@
  */
 package ru.apertum.qsystem.common;
 
-import ru.apertum.qsystem.common.exceptions.ServerException;
 import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -30,17 +29,20 @@ import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
@@ -74,6 +76,7 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.forms.FClient;
 import ru.apertum.qsystem.client.forms.FServicePriority;
+import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.server.ServerProps;
 
 /**
@@ -87,10 +90,27 @@ public final class Uses {
     //тип рабочего места - СЦ (сервисный центр)
     public static final int POINT_TYPE_SC = 2;
     
+    public static final long SERVICE_ABO_ID = 1623262601371L;
+    public static final long SERVICE_SC_ID = 1623262612931L;
+    
+    //идентификаторы в системе Евстратенко (Oracle)
+    public static final int FREE_RESERVE = 0;
+    public static final int TICKET_RESERVED = 1;
+    public static final int TICKET_IN_QUEUE = 3;
+    public static final int TICKET_INVITED = 4;
+    public static final int TICKET_FINISHED = 5;
+    public static final int TICKET_CANCELLED = 6;
+    public static final int TICKET_DELETED = 9;
+    
     //идентификаторы залов совместных с АПБ
     public static final int UNIT_TIRASPOL_KARL_MARX = 5; //г. Тирасполь, ул. Карла Маркса
     public static final int UNIT_BENDERY_LAZO = 6; //г. Бендеры, ул. Лазо
     public static final int UNIT_RYBNICA = 7; //г. Рыбница
+    public static final int UNIT_TIRASPOL_UNOST = 8; //г. Тирасполь, ул. Юности 1
+    public static final int UNIT_KAMENKA_LENINA = 9; //г. Каменка, ул. Ленина 3
+    public static final int UNIT_DUBOSSARY = 10; //г. Дубоссары, ул. Дзержинского
+    public static final int UNIT_GRIGORIOPOL = 11; //г. Григориополь, ул. Дзержинского
+    public static final int UNIT_SLOBODZEYA = 12; //г. Слободзея, ул. Фрунзе 20
     
     // ключи системных параметров
     public static final String KEY_ROLL = "ticket_roll";
@@ -261,6 +281,7 @@ public final class Uses {
     public static final int IDLE_STAT = 4;
     public static final int PAUSE_STAT = 5;
     public static final int IDLE_STAT_2 = 6;
+    public static final int CONTINUE_SERVICING = 7;
     // Наименования заданий
     public static final String TASK_FOR_ALL_SITE = "Для всех сайтов домена";
     public static final String TASK_STAND_IN = "Поставить в очередь";
@@ -270,6 +291,7 @@ public final class Uses {
     public static final String TASK_ADVANCE_CHECK_AND_STAND = "Поставить предварительно записанного";
     public static final String TASK_REMOVE_ADVANCE_CUSTOMER = "Удалить предварительно записанного";
     public static final String TASK_REDIRECT_CUSTOMER = "Переадресовать клиента к другой услуге";
+    public static final String TASK_RETURN_CUSTOMER_FROM_POSTPONE = "Вернуть клиента в очередь из отложенных";
     public static final String TASK_GET_SERVICES = "Получить перечень услуг";
     public static final String TASK_ABOUT_SERVICE = "Получить описание услуги";
     public static final String TASK_GET_SERVICE_CONSISANCY = "Получить очередь услуги";
@@ -322,6 +344,7 @@ public final class Uses {
     public static final String TASK_SET_CUSTOMER_PRIORITY = "Изменить приоритет";
     public static final String TASK_SET_CUSTOMER_STATE_CHANGE = "Изменить статус талона на В РАБОТЕ";
     public static final String TASK_SET_USER_PARAMS = "Установить указанному юзеру переданные параметры";
+    public static final String TASK_SET_SERVICING_DURATION = "Сохранить время обслуживания";
     public static final String TASK_CHECK_CUSTOMER_NUMBER = "Проверить номер";
     public static final String TASK_CHANGE_FLEX_PRIORITY = "Изменить гибкий приоритет";
     public static final String TASK_CHANGE_RUNNING_TEXT_ON_BOARD = "Изменить бегущий текст на табло";
@@ -329,6 +352,8 @@ public final class Uses {
     public static final String TASK_SERVICE_COMPLETION = "Сохранение списка услуг выбранных оператором";
     public static final String TASK_GET_STANDARDS = "Получить нормативы";
     public static final String TASK_SET_BUSSY = "Перерыв оператора";
+    public static final String TASK_SET_TECH_WORK = "Тех. обслуживание";
+    public static final String TASK_SET_CONTINUE_SERVICING = "Продолжение обслуживания";
     public static final String TASK_SAVE_USER_STAT = "Сохранить статистику юзера";
 //    public static final String TASK_SAVE_USER_STAT_2 = "Сохранить статистику юзера 2";
     public static final String TASK_GET_SERVER_TIME = "Получить время сервера";
@@ -509,6 +534,50 @@ public final class Uses {
      * Вопрос о живости
      */
     public static final String HOW_DO_YOU_DO = "do you live?";
+    
+    private static String callSoapService(String soapRequest) {
+        try {
+            String url = "http://10.5.219.24:8080/QSysPreRegAPI/PreRegAPI";
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type","text/xml; charset=utf-8"); 
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(soapRequest);
+            wr.flush();
+            wr.close();
+            String responseStatus = con.getResponseMessage();
+            System.out.println(responseStatus);
+            BufferedReader in = new BufferedReader(new InputStreamReader(
+            con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            return response.toString();
+        }
+        catch (IOException e) {
+            return e.getMessage();
+        }   
+    }
+    
+    public static void setTicketState(int ticketId, int state) {
+        //это реквест сформированный с помощью SoapUI
+        String xml = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"http://services.prereg.qsystem.com/\">" +
+                "<soapenv:Header/>" +
+                "<soapenv:Body>" +
+                   "<ser:setTicketState>" +
+                      "<ticketId>" + ticketId + "</ticketId>" +
+                      "<state>" + state + "</state>" +
+                   "</ser:setTicketState>" +
+                "</soapenv:Body>" +
+                "</soapenv:Envelope>";
+        String response = callSoapService(xml);
+    }
 
     /**
      * Рекурентный формирователь для public static ArrayList elements(Element root, String tagName).

@@ -64,7 +64,7 @@ public class OrangeMainboardImpl implements IIndicatorBoard {
         LinkedList<String> nests = new LinkedList<>();
         for (QService service : QServiceTree.getInstance().getNodes()) {
             if (service.isLeaf()) {
-                QCustomer customer_next = service.peekCustomer(user);
+                QCustomer customer_next = service.peekOnlyMineCustomer(user);
                 if (customer_next != null) {
                     nests.add(customer_next.getFullNumber());
                 }

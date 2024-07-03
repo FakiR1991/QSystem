@@ -34,7 +34,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.Id;
 import java.util.PriorityQueue;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -44,6 +43,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -67,8 +67,6 @@ import ru.apertum.qsystem.extra.ICustomerChangePosition;
 import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.calendar.QCalendar;
-import ru.apertum.qsystem.server.model.schedule.QBreak;
-import ru.apertum.qsystem.server.model.schedule.QBreaks;
 import ru.apertum.qsystem.server.model.schedule.QSchedule2;
 
 /**
@@ -93,6 +91,8 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
     public static final Long ROOT_SERVICES_SC = 1503466512673L;
     //услуга "Консультация CDMA"
     public static final Long SERVICE_CONSULTATION_CDMA = 1503473953581L;
+    //услуга "Абон. зал"
+    public static final Long DEFAULT_SERVICE_FOR_APB_CUSTOMERS = 1623262601371L;
 
     /**
      * множество кастомеров, вставших в очередь к этой услуге
@@ -101,7 +101,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
 //    private final PriorityQueue<QCustomer> customers = new PriorityQueue<>();
     private final HashMap<Integer, PriorityQueue<QCustomer>> customers = new HashMap<>();
 
-    private PriorityQueue<QCustomer> getCustomers(Integer unitId) {
+    public PriorityQueue<QCustomer> getCustomers(Integer unitId) {
         if (!customers.containsKey(unitId)) {
             customers.put(unitId, new PriorityQueue<>());
         }
@@ -1012,7 +1012,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         if (!getCustomers(customer.getUnitId()).add(customer)) {
             throw new ServerException("Невозможно добавить нового кастомера в хранилище кастомеров.");
         }
-
+        
         // поддержка расширяемости плагинами/ определим куда влез клиент
         QCustomer before = null;
         QCustomer after = null;
@@ -1048,6 +1048,16 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         
         clients.get(customer.getUnitId()).clear();
         clients.get(customer.getUnitId()).addAll(getCustomers(customer.getUnitId()));
+        
+        //когда клиент становится в очередь
+        //назначаем ему оператора только если он уже не назначен
+//        if (customer.getIsMine() == null) {
+//            try {
+//                QServer.setCustomerToFreeUser(customer);
+//            } catch (Exception e) {
+//                QLog.l().logger().error("Не удалось назначить оператора клиенту с id " + customer.getId(), e);
+//            }
+//        }
     }
 
     /**
@@ -1106,14 +1116,26 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
      * @param user Пользователь для которого выбираем клиента
      * @return первого в очереди кастомера
      */
-    public QCustomer peekCustomer(QUser user) {
+    public QCustomer peekOnlyMineCustomer(QUser user) {
         PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers(user.getUnitId()));
         while (tmpQueue.size() > 0) {
             QCustomer tmpCust = tmpQueue.poll();
             if ( tmpCust != null
                     &&
-                 ( tmpCust.getIsMine() == null || Objects.equals(tmpCust.getIsMine(), user.getId()) )
+                 ( tmpCust.getIsMine() != null && Objects.equals(tmpCust.getIsMine(), user.getId()) )
                )
+            {
+                return tmpCust;
+            }
+        }
+        return null;
+    }
+    
+    public QCustomer peekCustomer(QUser user) {
+        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(getCustomers(user.getUnitId()));
+        while (tmpQueue.size() > 0) {
+            QCustomer tmpCust = tmpQueue.poll();
+            if ( tmpCust != null && tmpCust.getIsMine() == null )
             {
                 return tmpCust;
             }
@@ -1262,7 +1284,9 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
 
     public QCustomer gnawOutCustomerByNumber(String number, Integer unitId) {
         for (QCustomer customer : getCustomers(unitId)) {
-            if (number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
+            long waitingDuration = (new Date().getTime() - customer.getStandTime().getTime()) / 1000;
+            
+            if (waitingDuration > 10 && number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
                 removeCustomer(customer); // убрать из очереди
                 return customer;
             }

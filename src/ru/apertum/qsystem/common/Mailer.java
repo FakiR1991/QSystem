@@ -21,11 +21,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import javax.mail.*;
-import javax.mail.internet.*;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Properties;
+import javax.mail.*;
+import javax.mail.internet.*;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 
 /**

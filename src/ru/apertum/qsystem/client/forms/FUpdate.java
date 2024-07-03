@@ -33,19 +33,28 @@ public class FUpdate extends javax.swing.JDialog {
     //1 - клиент, 2 - ресепшн
     private int type = 1;
     private String completeUpdateMessage = "Возникла ошибка во время обновления приложения.";
+    private String autoUpdateServerIp = "progupdate";
 
-    public FUpdate(Frame parent, boolean modal) {
+    public FUpdate(Frame parent, boolean modal, String autoUpdateServerIp) {
         super(parent, modal);
         this.parent = parent;
         this.modal = modal;
+        if (autoUpdateServerIp != null) {
+            this.autoUpdateServerIp = autoUpdateServerIp;
+        }
+        
         initComponents();
     }
     
-    public FUpdate(Frame parent, boolean modal, int type) {
+    public FUpdate(Frame parent, boolean modal, int type, String autoUpdateServerIp) {
         super(parent, modal);
         this.parent = parent;
         this.modal = modal;
         this.type = type;
+        if (autoUpdateServerIp != null) {
+            this.autoUpdateServerIp = autoUpdateServerIp;
+        }
+        
         initComponents();
     }
     
@@ -167,7 +176,6 @@ public class FUpdate extends javax.swing.JDialog {
     }
     
     private void runUpdate() throws Exception {
-        
         //имя архива с обновлением
         String archiveName = "";
         //пусть к папке запущенного ПО
@@ -188,15 +196,18 @@ public class FUpdate extends javax.swing.JDialog {
             case 1:
                 archiveName = "QSystem.zip";
                 tempZipFilePath = tempFolderPath + File.separator + archiveName;
-                autoUpdatePath = "file://10.5.0.2/ProgsUpdate/QSystem-autoupdate/";
+                autoUpdatePath = "file://" + autoUpdateServerIp + "/ProgsUpdate/QSystem-autoupdate/";
+                
                 break;
                 
             case 2:
                 archiveName = "FReception.zip";
                 tempZipFilePath = tempFolderPath + File.separator + archiveName;
-                autoUpdatePath = "file://10.5.0.2/ProgsUpdate/QSystem-autoupdate/FReception/";
+                autoUpdatePath = "file://" + autoUpdateServerIp + "/ProgsUpdate/QSystem-autoupdate/FReception/";
                 break;
         }
+        
+        QLog.l().logger().error("URL UPDATE: " + autoUpdatePath);
         
         URL link = null;
         InputStream is = null;

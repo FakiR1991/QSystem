@@ -19,9 +19,11 @@ package ru.apertum.qsystem.common.cmd;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.util.LinkedList;
+import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser.Shadow;
+import ru.apertum.qsystem.server.model.QUserList;
 
 /**
  *
@@ -161,17 +163,21 @@ public class RpcGetSelfSituation extends JsonRPC20 {
         @SerializedName("isMine")
         public final Long isMine;
         @Expose
+        @SerializedName("userName")
+        public final String userName;
+        @Expose
         @SerializedName("serviceId")
         public final Long serviceId;
         @Expose
         @SerializedName("unitId")
         public final Integer unitId;
 
-        public StPair(String number, String data, Integer waiting, Long isMine, Long serviceId, Integer unitId) {
+        public StPair(String number, String data, Integer waiting, Long isMine, String userName, Long serviceId, Integer unitId) {
             this.number = number;
             this.data = data;
             this.waiting = waiting;
             this.isMine = isMine;
+            this.userName = userName;
             this.serviceId = serviceId;
             this.unitId = unitId;
         }
@@ -181,6 +187,7 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.data = null;
             this.waiting = null;
             this.isMine = null;
+            this.userName = null;
             this.serviceId = null;
             this.unitId = null;
         }
@@ -211,7 +218,20 @@ public class RpcGetSelfSituation extends JsonRPC20 {
             this.line = new LinkedList<>();
             for (QCustomer cu : service.getClients(unitId)) {// не переделывать на лямбду.
                 final String fn = String.format("%03d", cu.getNumber());
-                final StPair sp = new StPair(fn, cu.getPostponedStatus(), cu.getWaitingMinutes(), cu.getIsMine(), cu.getService().getId(), cu.getUnitId());
+                String userName;
+                try {
+                    userName = cu.getIsMine() == null ? null : QUserList.getInstance().getById(cu.getIsMine()).getName();
+                } catch (ServerException e) {
+                    userName = "<НЕТ ФИО>";
+                }
+                final StPair sp = new StPair(
+                        fn,
+                        cu.getPostponedStatus(),
+                        cu.getWaitingMinutes(),
+                        cu.getIsMine(),
+                        userName,
+                        cu.getService().getId(), cu.getUnitId()
+                );
                 line.addLast(sp);
             }
         }

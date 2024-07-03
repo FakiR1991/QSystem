@@ -121,8 +121,9 @@ public class QueueIntegrationImpl implements QueueIntegration {
 
             //если приоритет меньше высокого, то увеличиваем его (до VIP не увеличиваем)
             //увеличиваем приоритет только если кастомер не инициирован АПБ
-            if (!initFromApb && customer.getPriority().get() < Uses.PRIORITY_HI) {
-                customer.setPriority(customer.getPriority().get() + 1);
+            //if (!initFromApb && customer.getPriority().get() < Uses.PRIORITY_HI) {
+            if (!initFromApb) {
+                customer.setPriority(Uses.PRIORITY_VIP);
                 
                 QLog.l().logger().info("Т. № " + ticketId + ". Установили приоритет. " + new Date().toString());
             }
@@ -276,7 +277,8 @@ public class QueueIntegrationImpl implements QueueIntegration {
                                            int externalPriority,
                                            int pointIdFrom) {
         
-        final QService service = QServiceTree.getInstance().getById(QService.SERVICE_CONSULTATION_CDMA);
+        final long serviceId = QService.DEFAULT_SERVICE_FOR_APB_CUSTOMERS;
+        final QService service = QServiceTree.getInstance().getById(serviceId);
         final QCustomer customer;
         int priority = externalPriorityToInternal(externalPriority);
         // синхронизируем работу с клиентом
@@ -308,7 +310,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
         } finally {
             CLIENT_TASK_LOCK.unlock();
         }
-        QLog.l().logger().trace("С приоритетом " + priority + " К услуге \"" + QService.SERVICE_CONSULTATION_CDMA +
+        QLog.l().logger().trace("С приоритетом " + priority + " К услуге \"" + serviceId +
                                 "\" -> " + service.getPrefix() + '\'' + service.getName() + '\'');
         
         return customer;

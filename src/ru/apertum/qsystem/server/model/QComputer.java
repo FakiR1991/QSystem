@@ -58,14 +58,29 @@ public class QComputer implements IidGetter, Serializable {
     public String toString() {
         String prefix = "";
         switch(getUnitId()) {
+            case Uses.UNIT_TIRASPOL_UNOST:
+                prefix = "[ТИРАСПОЛЬ, УЛ. ЮНОСТИ]";
+                break;
             case Uses.UNIT_TIRASPOL_KARL_MARX:
-                prefix = "[ТИРАСПОЛЬ]";
+                prefix = "[ТИРАСПОЛЬ, УЛ. КАРЛА МАРКСА]";
                 break;
             case Uses.UNIT_BENDERY_LAZO:
-                prefix = "[БЕНДЕРЫ]";
+                prefix = "[БЕНДЕРЫ, УЛ. ЛАЗО]";
                 break;
             case Uses.UNIT_RYBNICA:
-                prefix = "[РЫБНИЦА]";
+                prefix = "[РЫБНИЦА, УЛ. ПОБЕДЫ]";
+                break;
+            case Uses.UNIT_KAMENKA_LENINA:
+                prefix = "[КАМЕНКА, УЛ. ЛЕНИНА]";
+                break;
+            case Uses.UNIT_DUBOSSARY:
+                prefix = "[ДУБОССАРЫ, УЛ. Дзержинского]";
+                break;
+            case Uses.UNIT_GRIGORIOPOL:
+                prefix = "[ГРИГОРИОПОЛЬ, УЛ. Дзержинского]";
+                break;
+            case Uses.UNIT_SLOBODZEYA:
+                prefix = "[СЛОБОДЗЕЯ, УЛ. ФРУНЗЕ]";
                 break;
             default:
                 prefix = "[НЕИЗВЕСТНОЕ ОТДЕЛЕНИЕ]";

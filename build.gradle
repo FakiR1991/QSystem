@@ -58,7 +58,6 @@ dependencies {
     // TODO: Add dependencies here ...
     // You can read more about how to add dependency here:
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
-    testCompile group: 'junit', name: 'junit', version: '4.10' 
     compile fileTree(dir: 'lib', include: '**/*.jar')
     
     compile( group: 'oracle', name: 'ojdbc6', version: ''){ transitive = false }
@@ -126,7 +125,8 @@ dependencies {
     compile( group: 'net.sf.jasperreports', name: 'jasperreports-fonts', version: '4.0.0'){ transitive = false }
 
     compile( group: 'com.google.code.gson', name: 'gson', version: '2.3'){ transitive = false }
-        
+    
+    compile( group: 'uk.co.caprica', name: 'vlcj', version: '4.7.1'){ transitive = true }
         
     compile( group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.0.4.v20130625'){ transitive = false }
     compile( group: 'org.eclipse.jetty', name: 'jetty-util', version: '9.0.4.v20130625'){ transitive = false }
@@ -206,7 +206,6 @@ task runAdmin (dependsOn: 'classes', type: JavaExec) {
     
 task debugAdmin (dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.client.forms.FAdmin'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.client.forms.FAdmin'
@@ -238,7 +237,6 @@ task runServer (dependsOn: 'classes', type: JavaExec) {
     
 task debugServer (dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.server.QServer'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.server.QServer'
@@ -270,15 +268,15 @@ task runClient (dependsOn: 'classes', type: JavaExec) {
         args '+cfgfx'
         args 'config/clientboardfx.properties'
         args '-point'
-        args '16'
+        args '1'
         args '-uid'
-        args '6'
+        args '69'
         args '-ptype'
         args '1'
         args '-ars'
-        args '32'
+        args '69'
         args '-d'
-        args '++terminal'
+        args '-terminal'
         args '-np'
         systemProperty 'simple.message', 'Hello '
     }
@@ -287,7 +285,6 @@ task runClient (dependsOn: 'classes', type: JavaExec) {
     
 task debugClient (dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.client.forms.FClient'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.client.forms.FClient'
@@ -305,11 +302,11 @@ task debugClient (dependsOn: 'classes', type: JavaExec) {
         args '-point'
         args '16'
         args '-uid'
-        args '6'
+        args '69'
         args '-ptype'
         args '1'
         args '-ars'
-        args '99'
+        args '69'
         args '-d'
         args '++terminal'
         args '-np'
@@ -368,7 +365,7 @@ task runWelcome (dependsOn: 'classes', type: JavaExec) {
         args '-wm'
         args 'touch'
         args '-uid'
-        args '6'
+        args '69'
         //args '+-wm,--welcome-mode <touch,info,med,btn,kbd>'
         /*args '+demo'
         args '+clangs'
@@ -381,7 +378,6 @@ task runWelcome (dependsOn: 'classes', type: JavaExec) {
     
 task debugWelcome (dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.client.forms.FWelcome'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.client.forms.FWelcome'
@@ -396,7 +392,7 @@ task debugWelcome (dependsOn: 'classes', type: JavaExec) {
         args '-wm'
         args 'touch'
         args '-uid'
-        args '6'
+        args '69'
         /*args '+info'
         args '+buttons'
         args '+demo'
@@ -433,15 +429,14 @@ task runReception (dependsOn: 'classes', type: JavaExec) {
     
 task debugReception (dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.client.forms.FReception'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.client.forms.FReception'
         args '-ide'
         args '--debug'
         args '-s'
-        args '10.5.18.10'
-        /*args '127.0.0.1'*/
+        /*args '10.5.18.10'*/
+        args '127.0.0.1'
         args '-cport'
         args '3129'
         args '-sport'
@@ -466,7 +461,6 @@ task runConfigServer(dependsOn: 'classes', type: JavaExec) {
     
 task debugConfigServer(dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.client.forms.FServerConfig'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.client.forms.FServerConfig'
@@ -490,7 +484,6 @@ task runTabloRedactor(dependsOn: 'classes', type: JavaExec) {
     
 task debugTabloRedactor(dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.client.TabloRedactor'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.client.TabloRedactor'
@@ -516,7 +509,6 @@ task runUB(dependsOn: 'classes', type: JavaExec) {
     
 task debugUB(dependsOn: 'classes', type: JavaExec) {
     doFirst {
-        debug = true
         main = 'ru.apertum.qsystem.ub485.core.UBForm'
         classpath = sourceSets.main.runtimeClasspath
         args 'ru.apertum.qsystem.ub485.core.UBForm'

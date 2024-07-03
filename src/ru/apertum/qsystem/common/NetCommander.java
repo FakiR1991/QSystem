@@ -1098,7 +1098,7 @@ public class NetCommander {
     }
 
     /**
-     * Переадресовать клиента в другую очередь.
+     * Переадресовать клиента на другую услугу.
      *
      * @param netProperty параметры соединения с сервером
      * @param userId
@@ -1108,6 +1108,7 @@ public class NetCommander {
      * @param resultId
      * @param comments комментарии при редиректе
      */
+    @Deprecated
     public static void redirectCustomer(INetProperty netProperty, long userId, Long customerId, long serviceId, boolean requestBack, String comments, Long resultId) {
         QLog.l().logger().info("Переадресовать клиента в другую очередь.");
         // загрузим ответ
@@ -1120,6 +1121,52 @@ public class NetCommander {
         params.textData = comments;
         try {
             send(netProperty, Uses.TASK_REDIRECT_CUSTOMER, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        }
+    }
+    
+    /**
+     * Переадресовать клиента другому оператору
+     * @param netProperty параметры соединения с сервером
+     * @param userId
+     * @param customerId переключиться на этого при параллельном приеме, NULL если переключаться не надо
+     * @param redirectServiceId
+     * @param redirectUserId идентификатор оператора на которого отправляем
+     * @param requestBack
+     * @param comments комментарии при редиректе
+     * @param resultId 
+     */
+    public static void redirectCustomer(INetProperty netProperty, long userId, Long redirectUserId, Long customerId, long redirectServiceId, boolean requestBack, String comments, Long resultId) {
+        QLog.l().logger().info("Переадресовать клиента в другую очередь.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.redirectUserId = redirectUserId;
+        params.customerId = customerId;
+        params.serviceId = redirectServiceId;
+        params.requestBack = requestBack;
+        params.resultId = resultId;
+        params.textData = comments;
+        try {
+            send(netProperty, Uses.TASK_REDIRECT_CUSTOMER, params);
+        } catch (QException e) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error2"), e);
+        }
+    }
+    
+    /**
+     * Вернуть клиента в очередь из отложенных с повышением приоритета.
+     * @param netProperty
+     * @param customerId 
+     */
+    public static void returnCustomerFromPostpone(INetProperty netProperty, Long customerId) {
+        QLog.l().logger().info("Вернуть клиента в очередь из отложенных.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.customerId = customerId;
+        try {
+            send(netProperty, Uses.TASK_RETURN_CUSTOMER_FROM_POSTPONE, params);
         } catch (QException e) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error2"), e);
         }
@@ -2045,19 +2092,83 @@ public class NetCommander {
      * Изменение статуса перерыва
      *
      * @param netProperty
-     * @param userId id юзера который вызывает
-     * @param lock
+     * @param userId
+     * @param state
      * @return
      */
-    public static boolean setBussy(INetProperty netProperty, long userId, boolean lock) {
+    public static boolean setBussy(INetProperty netProperty, long userId, boolean state) {
         QLog.l().logger().info("Изменение статуса перерыва оператора.");
         final CmdParams params = new CmdParams();
         params.userId = userId;
-        params.requestBack = lock;
+        params.requestBack = state;
         // загрузим ответ
         final String res;
         try {
             res = send(netProperty, Uses.TASK_SET_BUSSY, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetBool rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetBool.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Изменение статуса перерыва
+     *
+     * @param netProperty
+     * @param userId
+     * @param state
+     * @return
+     */
+    public static boolean setTechWork(INetProperty netProperty, long userId, boolean state) {
+        QLog.l().logger().info("Изменение статуса оператора на тех. обслуживание.");
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.requestBack = state;
+        // загрузим ответ
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_SET_TECH_WORK, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetBool rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetBool.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Изменение статуса перерыва
+     *
+     * @param netProperty
+     * @param userId
+     * @param state
+     * @return
+     */
+    public static boolean setContinueServicing(INetProperty netProperty, long userId, boolean state) {
+        QLog.l().logger().info("Изменение статуса оператора на тех. обслуживание.");
+        final CmdParams params = new CmdParams();
+        params.userId = userId;
+        params.requestBack = state;
+        // загрузим ответ
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_SET_CONTINUE_SERVICING, params);
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }

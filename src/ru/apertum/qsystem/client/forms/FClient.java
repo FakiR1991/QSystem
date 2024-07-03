@@ -18,7 +18,7 @@ package ru.apertum.qsystem.client.forms;
 
 import java.awt.AWTException;
 import java.awt.Color;
-import java.awt.Dialog;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.HeadlessException;
 import java.awt.Toolkit;
@@ -50,17 +50,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.TimerTask;
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import org.dom4j.DocumentException;
-import org.jdesktop.application.Action;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTree;
@@ -69,14 +69,14 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import ru.apertum.qsystem.common.Uses;
-import ru.apertum.qsystem.common.QLog;
-import ru.apertum.qsystem.common.model.INetProperty;
 import org.dom4j.io.SAXReader;
+import org.jdesktop.application.Action;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.ResourceMap;
 import ru.apertum.qsystem.About;
@@ -86,13 +86,15 @@ import ru.apertum.qsystem.client.QProperties;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
 import ru.apertum.qsystem.client.help.Helper;
 import ru.apertum.qsystem.client.model.ParallelCellRenderer;
-import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.client.model.QPanel;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.client.model.QTray.MessageType;
 import ru.apertum.qsystem.common.AUDPServer;
 import ru.apertum.qsystem.common.CustomerState;
+import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.QConfig;
+import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation;
 import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation.SelfService;
 import ru.apertum.qsystem.common.cmd.RpcGetSelfSituation.SelfSituation;
@@ -100,13 +102,14 @@ import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.common.exceptions.QException;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.IClientNetProperty;
+import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IStartClient;
 import ru.apertum.qsystem.fx.OrangeClientboard;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser;
-import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 import ru.apertum.qsystem.server.model.UsersStatistic;
+import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 
 /**
  * Created on 11 Сентябрь 2008 г., 16:57
@@ -404,11 +407,13 @@ public final class FClient extends javax.swing.JFrame {
             if (Uses.TASK_REFRESH_POSTPONED_POOL.equals(data)) {
                 //Получаем состояние пула отложенных
                 LinkedList<QCustomer> custs = NetCommander.getPostponedPoolInfo(netProperty);
-                LinkedList<QCustomer> rem = new LinkedList<>();
-                custs.stream().filter((cust) -> (cust.getIsMine() != null && !cust.getIsMine().equals(user.getId()))).forEach((cust) -> {
-                    rem.add(cust);
-                });
-                custs.removeAll(rem);
+                
+                //ДЕЛАЕМ ЧТОБЫ БЫЛИ ВИДНЫ ВСЕ-ВСЕ ТАЛОНЫ
+//                LinkedList<QCustomer> rem = new LinkedList<>();
+//                custs.stream().filter((cust) -> (cust.getIsMine() != null && !cust.getIsMine().equals(user.getId()))).forEach((cust) -> {
+//                    rem.add(cust);
+//                });
+//                custs.removeAll(rem);
                 listPostponed.setModel(QPostponedList.getInstance().loadPostponedList(custs));
                 if (listPostponed.getModel().getSize() != 0) {
                     listPostponed.setSelectedIndex(0);
@@ -528,20 +533,52 @@ public final class FClient extends javax.swing.JFrame {
         });
 
         init(user, netProperty);
+        
+        //добавляем пункт меню Удалить талоны
+        removeTicketsItemMenu = new JMenuItem("Удалить талоны");
+        removeTicketsItemMenu.addActionListener(evt -> {
+            TicketsToRemoveWindow window = new TicketsToRemoveWindow(fClient, true, QConfig.cfg().getUnitId(), netProperty);
+            window.setVisible(true);
+        });
+        removeTicketsItemMenu.setEnabled(false);
+        editMenu.add(removeTicketsItemMenu);
+        
+        //добавляем пункт меню Вернуть в очередь
+        returnCustomerFromPostroneItemMenu = new JMenuItem("Вернуть в очередь");
+        returnCustomerFromPostroneItemMenu.addActionListener(evt -> {
+            if (listPostponed.getSelectedIndex() == -1) {
+                return;
+            }
+            
+            QCustomer cust = (QCustomer) listPostponed.getSelectedValue();
+            
+            if (cust == null) {
+                return;
+            }
+            
+            NetCommander.returnCustomerFromPostpone(netProperty, cust.getId());
+        });
+        returnCustomerFromPostroneItemMenu.setEnabled(true);
+        popupMenuPostpone.add(returnCustomerFromPostroneItemMenu);
 
         // стартуем UDP сервер для обнаружения изменения состояния очередей
         udpServer = new UDPServer(netProperty.getClientPort());
         udpServer.start2();
+        
+        startKostylTimer();
     }
     
+    private JMenuItem removeTicketsItemMenu;
+    private JMenuItem returnCustomerFromPostroneItemMenu;
+    
     private void checkExit() {
-        if (user.isPause()) {
-            JOptionPane.showMessageDialog(this, "Для выхода из программы необходимо убрать Перерыв!");
-            return;
-        }
-        if (this.customer != null) {
+//        if (user.isPause()) {
+//            JOptionPane.showMessageDialog(this, "Для выхода из программы необходимо убрать Перерыв!");
+//            return;
+//        }
+        if (this.customer != null || user.isPause()) {
             if (JOptionPane.showConfirmDialog(this,
-                            "Не рекомендуется завершать работу приложение, так как имеется клиент в стадии обслуживания! Завершить работу приложения?",
+                            "Не рекомендуется завершать работу приложения, если установлен перерыв или клиент находится в обслуживании!\nЗавершить работу приложения?",
                             "Внимание!",
                             JOptionPane.YES_NO_OPTION,
                             JOptionPane.INFORMATION_MESSAGE) != 0) {
@@ -620,7 +657,7 @@ public final class FClient extends javax.swing.JFrame {
         });
         
         btnPushToTalk.setVisible(false);
-        setTitle(Uses.getLocaleMessage("project.name" + FAbout.getCMRC_SUFF()) + " - " + getTitle());
+        setTitle(Uses.getLocaleMessage("project.name" + FAbout.getCMRC_SUFF()) + " - " + getTitle() + " ver. " + newVersion);
 
         try {
             setIconImage(ImageIO.read(FAdmin.class.getResource("/ru/apertum/qsystem/client/forms/resources/client.png")));
@@ -666,11 +703,10 @@ public final class FClient extends javax.swing.JFrame {
                                              KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                                              JComponent.WHEN_IN_FOCUSED_WINDOW);
         labelUser.setText(user.getName() + " - " + (QConfig.cfg().getPointN() != null ? QConfig.cfg().getPointN() : user.getPoint()));
-        ch.setSelected(user.isPause());
-        if(user.isPause())
-        {
-            ch.setForeground(new Color(250, 0, 0));
-            ch.setText(getLocaleMessage("client.pause").toUpperCase());
+        checkboxPause.setSelected(user.isPause());
+        if (user.isPause()) {
+            checkboxPause.setForeground(new Color(250, 0, 0));
+            checkboxPause.setText(getLocaleMessage("client.pause").toUpperCase());
         }
         refreshSituation();
 
@@ -691,65 +727,30 @@ public final class FClient extends javax.swing.JFrame {
         helper.setHelpListener(menuItemHelp);
         helper.enableHelpKey(panelDown, "client");
 
-        ch.setOpaque(false);
-        ch.addActionListener((ActionEvent e) -> {
+        checkboxPause.setOpaque(false);
+        checkboxPause.addActionListener((ActionEvent e) -> {
+            isPauseNeeded = checkboxPause.isSelected();
+            
+            //если кастомер вызван или в обслуживании
             if (this.customer != null) {
-                ch.setSelected(false);
                 return;
             }
-            final boolean state1 = NetCommander.setBussy(netProperty, getUser().getId(), ch.isSelected());
-            user.setPause(state1);
-            ch.setSelected(state1);
-            if (state1) {
-                ch.setForeground(new Color(250, 0, 0));
-                ch.setText(getLocaleMessage("client.pause").toUpperCase());
-                menuItemInvitePostponed1.setEnabled(false);
-                menuItemInvitePostponed.setEnabled(false);
-                menuItemChangeStatusPostponed.setEnabled(false);
-                buttonInvite.setEnabled(false);
-                buttonKill.setEnabled(false);
-                buttonStart.setEnabled(false);
-                buttonRedirect.setEnabled(false);
-                buttonMoveToPostponed.setEnabled(false);
-                buttonFinish.setEnabled(false);
-                buttonSendToBank.setEnabled(false);
-                menuItemInvite.setEnabled(false);
-                menuItemKill.setEnabled(false);
-                menuItemStart.setEnabled(false);
-                menuItemRedirect.setEnabled(false);
-                menuItemMoveToPostponed.setEnabled(false);
-                menuItemFinish.setEnabled(false);
-                buttonSendToBank.setEnabled(false);
-                
-                try {
-                    //снимаем приватность всех кастомеров, так как оператор свалил на перерыв
-                    NetCommander.removePrivacy(netProperty, user.getId());
-                } catch(Exception ex) {
-                    QLog.l().logger().error("Ошибка во время снятия приватности с кастомеров.", ex);
-                }
-                
-                userStatistic.changeState(Uses.PAUSE_STAT, workingPeriod, netProperty);
-            } else {
-                ch.setForeground(new Color(0, 150, 0));
-                ch.setText(getLocaleMessage("client.pause"));  
-                if (customersCountForUser > 0) {
-                    menuItemInvitePostponed1.setEnabled(true);
-                    buttonInvite.setEnabled(true);
-                    menuItemInvite.setEnabled(true);
-                }
-                if (listPostponed.getModel().getSize() > 0) {
-                    menuItemInvitePostponed.setEnabled(true);
-                    menuItemChangeStatusPostponed.setEnabled(true);
-                }
-                
-                
-                
-                //здесь должен перейти переход в новое состояние (4 или 6)
-                //и должно завершиться предыдущее состояние (5)
-                refreshSituation(true);
-            }
+            
+            setBusy(isPauseNeeded);
         });
-        menuBar.add(ch);
+        menuBar.add(checkboxPause);
+        
+        checkboxTechWork.setOpaque(false);
+        checkboxTechWork.addActionListener((ActionEvent e) -> {
+            isTechWork = checkboxTechWork.isSelected();
+            
+            if (this.customer != null) {
+                return;
+            }
+            
+            setTechWork(isTechWork);
+        });
+        menuBar.add(checkboxTechWork);
 
         Font f = new Font("Time New Roman", 0, 16);
         labelMotiv.setFont(f);
@@ -763,9 +764,122 @@ public final class FClient extends javax.swing.JFrame {
         menuItemId.setText("ID=" + user.getId());                           
     }
     
+    private void setTechWork(boolean isBusy) {
+        final boolean state1 = NetCommander.setTechWork(netProperty, getUser().getId(), isBusy);
+        user.setTechWork(state1);
+        checkboxTechWork.setSelected(isBusy);
+        
+        if (isBusy) {
+//            checkboxTechWork.setForeground(new Color(250, 0, 0));
+            menuItemInvitePostponed1.setEnabled(false);
+            menuItemInvitePostponed.setEnabled(false);
+            menuItemChangeStatusPostponed.setEnabled(false);
+            buttonInvite.setEnabled(false);
+            buttonKill.setEnabled(false);
+            buttonStart.setEnabled(false);
+            buttonRedirect.setEnabled(false);
+            buttonMoveToPostponed.setEnabled(false);
+            buttonFinish.setEnabled(false);
+            buttonSendToBank.setEnabled(false);
+            menuItemInvite.setEnabled(false);
+            menuItemKill.setEnabled(false);
+            menuItemStart.setEnabled(false);
+            menuItemRedirect.setEnabled(false);
+            menuItemMoveToPostponed.setEnabled(false);
+            menuItemFinish.setEnabled(false);
+            buttonSendToBank.setEnabled(false);
+
+            userStatistic.changeState(Uses.TECH_STAT, workingPeriod, netProperty);
+        } else {
+//            checkboxTechWork.setForeground(new Color(0, 150, 0));
+            if (customersCountForUser > 0) {
+                menuItemInvitePostponed1.setEnabled(true);
+                buttonInvite.setEnabled(true);
+                menuItemInvite.setEnabled(true);
+            }
+            if (listPostponed.getModel().getSize() > 0) {
+                menuItemInvitePostponed.setEnabled(true);
+                menuItemChangeStatusPostponed.setEnabled(true);
+            }
+                
+            try {
+                setUserParams(user, netProperty);
+            } catch (QException ex) {
+                QLog.l().logger().error("Не удалось сохранить параметры пользователя на сервере после снятия тех. обслуживания.", ex);
+            }
+            
+            //здесь должен перейти переход в новое состояние (4 или 6)
+            //и должно завершиться предыдущее состояние (5)
+            refreshSituation(true);
+        }
+    }
+    
+    private void setBusy(boolean isBusy) {
+        final boolean state1 = NetCommander.setBussy(netProperty, getUser().getId(), isBusy);
+        user.setPause(state1);
+        checkboxPause.setSelected(isBusy);
+        if (isBusy) {
+            checkboxPause.setForeground(new Color(250, 0, 0));
+            checkboxPause.setText(getLocaleMessage("client.pause").toUpperCase());
+            menuItemInvitePostponed1.setEnabled(false);
+            menuItemInvitePostponed.setEnabled(false);
+            menuItemChangeStatusPostponed.setEnabled(false);
+            buttonInvite.setEnabled(false);
+            buttonKill.setEnabled(false);
+            buttonStart.setEnabled(false);
+            buttonRedirect.setEnabled(false);
+            buttonMoveToPostponed.setEnabled(false);
+            buttonFinish.setEnabled(false);
+            buttonSendToBank.setEnabled(false);
+            menuItemInvite.setEnabled(false);
+            menuItemKill.setEnabled(false);
+            menuItemStart.setEnabled(false);
+            menuItemRedirect.setEnabled(false);
+            menuItemMoveToPostponed.setEnabled(false);
+            menuItemFinish.setEnabled(false);
+            buttonSendToBank.setEnabled(false);
+
+            try {
+                //снимаем приватность всех кастомеров, так как оператор свалил на перерыв
+                NetCommander.removePrivacy(netProperty, user.getId());
+            } catch(Exception ex) {
+                QLog.l().logger().error("Ошибка во время снятия приватности с кастомеров.", ex);
+            }
+
+            userStatistic.changeState(Uses.PAUSE_STAT, workingPeriod, netProperty);
+        } else {
+            checkboxPause.setForeground(new Color(0, 150, 0));
+            checkboxPause.setText(getLocaleMessage("client.pause"));  
+            if (customersCountForUser > 0) {
+                menuItemInvitePostponed1.setEnabled(true);
+                buttonInvite.setEnabled(true);
+                menuItemInvite.setEnabled(true);
+            }
+            if (listPostponed.getModel().getSize() > 0) {
+                menuItemInvitePostponed.setEnabled(true);
+                menuItemChangeStatusPostponed.setEnabled(true);
+            }
+                
+            try {
+                setUserParams(user, netProperty);
+            } catch (QException ex) {
+                QLog.l().logger().error("Не удалось сохранить параметры пользователя на сервере после снятия перерыва.", ex);
+            }
+            
+            //здесь должен перейти переход в новое состояние (4 или 6)
+            //и должно завершиться предыдущее состояние (5)
+            refreshSituation(true);
+        }
+    }
+    
+    //переменная используется для установки перерыва во время обслуживания
+    private boolean isPauseNeeded = false;
+    private boolean isTechWork = false;
+    
     private Timer denyTimer;
     private final JLabel labelMotiv = new JLabel();
-    private static final JCheckBox ch = new JCheckBox(getLocaleMessage("client.pause"));
+    private static final JCheckBox checkboxPause = new JCheckBox(getLocaleMessage("client.pause"));
+    private static final JCheckBox checkboxTechWork = new JCheckBox("Тех. обслуж.");
 
     class TimerMotiv implements ActionListener {
         String oldKeys = "";
@@ -815,7 +929,7 @@ public final class FClient extends javax.swing.JFrame {
             final String tts = prob + action + "  " + tt / 1000 / 60 + ":" + (tt / 1000) % 60;
             labelMotiv.setText(tts.substring(tts.length() - 26));
             // тут типа костылик для автообновления
-            if (System.currentTimeMillis() - refreshTime > 1 * 5 * 1000) {
+            if (System.currentTimeMillis() - refreshTime > 5 * 1000) {
                 refreshTime = System.currentTimeMillis();
                 refreshClient();
             }
@@ -893,34 +1007,67 @@ public final class FClient extends javax.swing.JFrame {
 
         final DefaultMutableTreeNode root = new DefaultMutableTreeNode("ROOT");
         final DefaultTreeModel tree = new DefaultTreeModel(root);
-        haveRoll = false;
+        DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer() {
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree, Object value, boolean isSelected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                JComponent c = (JComponent) super.getTreeCellRendererComponent(tree, value, isSelected, expanded, leaf, row, hasFocus);
+                String str = ((DefaultMutableTreeNode) value).getUserObject().toString();
+                int firstIndex = str.lastIndexOf("(") != -1 ? (str.lastIndexOf("(") + 1) : -1;
+                int secondIndex = str.lastIndexOf(")") != -1 ? str.lastIndexOf(")") : -1;
+                
+                if (firstIndex == -1 || secondIndex == -1) {
+                    return this;
+                }
+                
+                String userName = str.substring(str.indexOf("(") + 1, str.indexOf(")"));
+                
+                if (Objects.equals(user.getName(), userName)) {
+                    c.setForeground(new Color(34, 181, 78));
+                    c.setOpaque(true);
+                }
+
+                return c;
+            }
+        };
+        renderer.setBackgroundSelectionColor(new Color(200, 221, 242));
+        treeSituation.setCellRenderer(renderer);
         
         //костыль костыльный, так как нельзя использовать не финальные переменные в лямбда выражениях
         //чтобы посчитать количество исключенных кустомеров
-        class ExcludedCustomersCount {
-            int count = 0;
+        class CustomersCount {
+            int excludedСount = 0;
+            int isMineCount = 0;
             
-            private void increment() {
-                this.count++;
+            private void incrementExcluded() {
+                this.excludedСount++;
             }
             
-            private int getCount() {
-                return this.count;
+            private void incrementIsMine() {
+                this.isMineCount++;
+            }
+            
+            private int getExcludedCount() {
+                return this.excludedСount;
+            }
+            
+            private int getIsMineCount() {
+                return this.isMineCount;
             }
         }
+        
+        final CustomersCount customersCount = new CustomersCount();
         
         // построим новую html с описанием состояния очередей
         for (SelfService serv : plan.getSelfservices()) {
             haveRoll = haveRoll || serv.isRoll(); //есть ли услуга-рулон в наличии.
             int count = serv.getCountWait();
-            final ExcludedCustomersCount excludedCustomersCount = new ExcludedCustomersCount();
             final String serviceName = serv.getServiceName();
 
             final String people = " " + getLocaleMessage("messages.people"); //множественное
             final String mins = getLocaleMessage("fclient.min");
             
             if (count != 0) {
-                //final DefaultMutableTreeNode servNode = new DefaultMutableTreeNode(serviceName + ": " + count + people);
+                //final DefaultMutableTreeNode servNode = new DefaultMutableTreeNode(serviceName + ": " + excludedСount + people);
                 //servNode
                 
                 //root.add(servNode);
@@ -932,27 +1079,34 @@ public final class FClient extends javax.swing.JFrame {
                             if (Objects.equals(QConfig.cfg().getUnitId(), cu.unitId)) {
                                 //если у данного кустомера указано, что он должен быть обслужен конкретным оператором,
                                 //то не отображаем его в очереди для других операторов
-                                if (cu.isMine != null && cu.isMine.compareTo(user.getId()) != 0) {
-                                    excludedCustomersCount.increment();
-                                    return;
+                                //ДЕЛАЕМ ЧТОБЫ ОТОБРАЖАЛИСЬ ВСЕ-ВСЕ ТАЛОНЫ
+//                                if (cu.isMine != null && cu.isMine.compareTo(user.getId()) != 0) {
+//                                if (cu.isMine == null || cu.isMine.compareTo(user.getId()) != 0) {
+//                                    excludedCustomersCount.increment();
+//                                    return;
+//                                }
+                                //среди общей массы талонов считаем количество назначенных данному оператору
+                                if (cu.isMine != null && Objects.equals(cu.isMine, user.getId())) {
+                                    customersCount.incrementIsMine();
                                 }
-                                root.add(new DefaultMutableTreeNode(cu.number + (cu.data == null || cu.data.isEmpty() ? "" : (" \"" + cu.data + "\"")) + (cu.waiting == null ? "" : (" " + cu.waiting + " " + mins + "")) ));
+                                String u = cu.isMine == null ? null : String.valueOf(cu.userName);
+                                root.add(new DefaultMutableTreeNode(cu.number + (cu.data == null || cu.data.isEmpty() ? "" : (" \"" + cu.data + "\"")) + (cu.waiting == null ? "" : (" " + cu.waiting + " " + mins + "")) + (u == null ? "" : (" (" + u + ")") ) ));
                             }
                             //кастомер не в одном зале с оператором - увеличим счётчик исключённых кастомеров
                             else {
-                                excludedCustomersCount.increment();
+                                customersCount.incrementExcluded();
                             }
                         }
                         //если у оператора, либо кастомера пустой unitId - что то пошло не так
                         else {
-                            QLog.l().logger().warn("\nАхтунг!" +
-                                                   "\nПараметр unitId у оператора " + user.getName() + " равен \"" + QConfig.cfg().getUnitId() + "\"" +
+                            QLog.l().logger().warn("\nПараметр unitId у оператора " + user.getName() + " равен \"" + QConfig.cfg().getUnitId() + "\"" +
                                                    "\nПараметр unitId у кастомера с талонов №" + cu.number + " равен \"" + cu.unitId + "\"");
-                            excludedCustomersCount.increment();
+                            customersCount.incrementExcluded();
                         }
                     }
                 );
-                count -= excludedCustomersCount.getCount();
+                
+                count -= customersCount.getExcludedCount();
                 
                 if (count != 0) {
                     temp = temp + "<span style='color:" + (0 == count ? "green" : "red") + "'> - " + serviceName + ": " + count + people
@@ -973,38 +1127,55 @@ public final class FClient extends javax.swing.JFrame {
         temp1 = /*temp1 + */allClients + inCount;
 
         // Обозначим очередь иконкой
-        if (inCount == 0) {
+        if (customersCount.getIsMineCount() == 0) {
             tray.setNewIcon("/ru/apertum/qsystem/client/forms/resources/client.png");
         } else {
             tray.setNewIcon("/ru/apertum/qsystem/client/forms/resources/clientBusy.png");
         }
         // покажим сообщение в трее если очередь была пуста и кто-то приперся
-        if (customersCountForUser == 0 && inCount != 0 && plan.getCustomer() == null) {
+        if (customersCountForUser == 0 && customersCount.getIsMineCount() != 0 && plan.getCustomer() == null) {
             Toolkit.getDefaultToolkit().beep();
             tray.showMessageTray(Uses.getLocaleMessage("project.name" + FAbout.getCMRC_SUFF()), temp1.replaceAll("<br>", "\n"), MessageType.INFO);
             tray.getTrayIcon().getActionListeners()[0].actionPerformed(null);
         }
-        customersCountForUser = inCount;
+        customersCountForUser = customersCount.getIsMineCount();
         // посмотрим, не приехал ли кастомер, который уже вызванный
         // если приехал, то его надо учесть
         setCustomer(plan.getCustomer());
+        
         if (plan.getCustomer() != null) {
             QLog.l().logger().trace("От сервера приехал кастомер, который обрабатывается юзером.");
+        } else if (needContinueServicing) {
+            QLog.l().logger().info("Продолжаем работать.");
+                
+            setKeyRegim(KEYS_CONTINUE_SERVICING);
         } else {
-            //здесь idle
-            if (inCount == 0) {
-                if (customer == null && !user.isPause()) {
-                    userStatistic.changeState(Uses.IDLE_STAT, workingPeriod, netProperty);
+            //если отправили клиента на оплату, но продолжаем работать
+            if (isTechWork) {
+                QLog.l().logger().info("Тех обслуживание.");
+                
+                setKeyRegim(KEYS_CONTINUE_SERVICING);
+            } else {
+                //здесь idle
+                if (customersCount.getIsMineCount() == 0) {
+                    if (customer == null && !user.isPause()) {
+                        userStatistic.changeState(Uses.IDLE_STAT, workingPeriod, netProperty);
+                    }
+                    
+                    //нет клиентов, нечеого вызывать
+                    setKeyRegim(KEYS_OFF);
                 }
-                setKeyRegim(KEYS_OFF);//* нет клиентов, нечеого вызывать*/
-            }
-            //здесь idle2
-            else {
-                if (customer == null && !user.isPause()) {
-                    userStatistic.changeState(Uses.IDLE_STAT_2, workingPeriod, netProperty);
+                //здесь idle2
+                else {
+                    if (customer == null && !user.isPause()) {
+                        userStatistic.changeState(Uses.IDLE_STAT_2, workingPeriod, netProperty);
+                    }
+                    
+                    //в очереди кто-то есть, можно вызвать
+                    setKeyRegim(KEYS_MAY_INVITE);
                 }
-                setKeyRegim(KEYS_MAY_INVITE); //*в очереди кто-то есть, можно вызвать*/
             }
+            
             //нефиг счелкать касторами пока процесс вызывания идет при параллельном приеме
             //но сейчас кастомера вообще нет, так что можно щелкать
             if (user.getParallelAccess()) {
@@ -1039,19 +1210,21 @@ public final class FClient extends javax.swing.JFrame {
         // Ну и обновим модель для списка отложенных
         listPostponed.setModel(QPostponedList.getInstance().loadPostponedList(plan.getPostponedList()));
         LinkedList<QCustomer> custs = plan.getPostponedList();
-        LinkedList<QCustomer> rem = new LinkedList<>();
-        custs.stream().filter((cust) -> (cust.getIsMine() != null && !cust.getIsMine().equals(user.getId()))).forEach((cust) -> {
-            rem.add(cust);
-        });
-        custs.removeAll(rem);
+        
+        //ДЕЛАЕМ ЧТОБЫ БЫЛИ ВИДНЫ ВСЕ-ВСЕ ТАЛОНЫ
+//        LinkedList<QCustomer> rem = new LinkedList<>();
+//        custs.stream().filter((cust) -> (cust.getIsMine() != null && !cust.getIsMine().equals(user.getId()))).forEach((cust) -> {
+//            rem.add(cust);
+//        });
+//        custs.removeAll(rem);
         listPostponed.setModel(QPostponedList.getInstance().loadPostponedList(custs));
         if (listPostponed.getModel().getSize() != 0) {
             listPostponed.setSelectedIndex(0);
         }
         
-        menuItemInvitePostponed.setEnabled(customer == null && listPostponed.getModel().getSize() != 0 && !ch.isSelected());
-        menuItemInvitePostponed1.setEnabled(customer == null && tree.getChildCount(root) != 0 && !ch.isSelected());
-        menuItemChangeStatusPostponed.setEnabled(listPostponed.getModel().getSize() != 0 && !ch.isSelected());
+        menuItemInvitePostponed.setEnabled(customer == null && listPostponed.getModel().getSize() != 0 && !checkboxPause.isSelected());
+        menuItemInvitePostponed1.setEnabled(customer == null && tree.getChildCount(root) != 0 && !checkboxPause.isSelected());
+        menuItemChangeStatusPostponed.setEnabled(listPostponed.getModel().getSize() != 0 && !checkboxPause.isSelected());
         // ну и разрешим параллельный вызов если есть доступ и есть кого вызывать. 
         // И если нет процесса вызывания, этот процесс должен быть завершен и не остался висеть в параллели
         if (user.getParallelAccess() && customer != null && (CustomerState.STATE_WORK.equals(customer.getState()) || CustomerState.STATE_WORK_SECONDARY.equals(customer.getState()))) {
@@ -1059,6 +1232,26 @@ public final class FClient extends javax.swing.JFrame {
         }
         color = plan.getPostponedList().isEmpty() ? "blue" : "purple";
         labelPost.setText("<html><span style='color:" + color + "'>" + plan.getPostponedList().size() + "</span>");
+        
+        //проверка на автоматический вызов талона для оператора
+        //если у юзера нет в обслуживании талонов, юзер не продолжает работать над талоном и нет перерыва
+        if (customer == null && !isTechWork && !user.isPause() && !isTechWork) {
+            startInviteTimer();
+        }
+    }
+    
+    private Timer inviteTimer = null;
+    
+    private void startInviteTimer() {
+        if (inviteTimer == null) {
+            inviteTimer = new Timer(15 * 1000, (ActionEvent e) -> {
+                buttonInvite.doClick();
+                
+                //останавливаем таймер
+                inviteTimer.stop();
+            });
+        }
+        inviteTimer.start();
     }
     
     public void expandAll(JTree tree) {
@@ -1082,11 +1275,12 @@ public final class FClient extends javax.swing.JFrame {
     /**
      * Возможный состояния кнопок 1 - доступна кнопка, 0 - не доступна
      */
-    public static final String KEYS_OFF = "0000000";
-    public static final String KEYS_ALL = "1111111";
-    public static final String KEYS_MAY_INVITE = "1000000";
-    public static final String KEYS_INVITED = "1110000";
-    public static final String KEYS_STARTED = "0001111";
+    public static final String KEYS_OFF =                   "0000000";
+    public static final String KEYS_ALL =                   "1111111";
+    public static final String KEYS_MAY_INVITE =            "1000000";
+    public static final String KEYS_INVITED =               "1110000";
+    public static final String KEYS_STARTED =               "0001111";
+    public static final String KEYS_CONTINUE_SERVICING =    "0000010";
     private String keys_current = KEYS_OFF;
 
     public String getKeys_current() {
@@ -1105,7 +1299,7 @@ public final class FClient extends javax.swing.JFrame {
             regim = KEYS_MAY_INVITE;
             reason = " Because of user have a roll-service.";
         }
-        if (ch.isSelected()) {
+        if (checkboxPause.isSelected()) {
            regim = KEYS_OFF;
            keys_current = KEYS_OFF;
         }
@@ -1175,12 +1369,17 @@ public final class FClient extends javax.swing.JFrame {
                 return;
             }
             try {
+                // Вызываем кастомера
+                final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId(), num, QConfig.cfg().getUnitId());
+                
+                if (cust == null) {
+                    return;
+                }
+                
                 lastInvite = go();
 
                 userStatistic.changeState(Uses.TECH_STAT, workingPeriod, netProperty);
-
-                // Вызываем кастомера
-                final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId(), num, QConfig.cfg().getUnitId());
+                
                 if (cust != null && cust.getPostponPeriod() > 0) {
                     JOptionPane.showMessageDialog(this,
                             getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
@@ -1189,6 +1388,9 @@ public final class FClient extends javax.swing.JFrame {
                 };
 
                 if (cust != null && customer != null) {
+                    isTechWork = false;
+                    setTechWork(isTechWork);
+                    
                     if (cust.getId().equals(customer.getId())) {
                         customer.setRecallCount(cust.getRecallCount());
                     }
@@ -1196,6 +1398,7 @@ public final class FClient extends javax.swing.JFrame {
                 // Показываем обстановку
                 setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
                 
+//                startPostponeTimer(cust);
                 startNotificationTimer();
                 
                 /*if(!denyTimer.isRunning())
@@ -1209,6 +1412,7 @@ public final class FClient extends javax.swing.JFrame {
             }
         }
     }
+    
     private long lastInvite = 0;
     
     /**
@@ -1226,17 +1430,30 @@ public final class FClient extends javax.swing.JFrame {
 
             // Вызываем кастомера
             final QCustomer cust = NetCommander.inviteNextCustomer(netProperty, user.getId());
-            if (cust != null && cust.getPostponPeriod() > 0) {
-                JOptionPane.showMessageDialog(this,
-                        getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
-                        getLocaleMessage("invite.posponed.title"),
-                        JOptionPane.INFORMATION_MESSAGE);
-            };
+//            if (cust != null && cust.getPostponPeriod() > 0) {
+//                JOptionPane.showMessageDialog(this,
+//                        getLocaleMessage("invite.posponed.mess.1") + " " + cust.getPostponPeriod() + " " + getLocaleMessage("invite.posponed.mess.2") + " \"" + cust.getPostponedStatus() + "\".",
+//                        getLocaleMessage("invite.posponed.title"),
+//                        JOptionPane.INFORMATION_MESSAGE);
+//            };
+
             if (cust != null && customer != null) {
                 if (cust.getId().equals(customer.getId())) {
                     customer.setRecallCount(cust.getRecallCount());
                 }
             }
+            
+            
+            
+            //чтобы срабатывало только при первом вызове, но не при повторном нажатии через 10 секунд 
+            if (cust != null && customer == null) {
+                tray.showMessageTray("Очередь", "Вызван талон №" + cust.getNumber(), MessageType.INFO);
+//                startPostponeTimer(cust);
+                startCustomerRecallTimer();
+            }
+            
+            stopInviteTimer();
+            
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             
@@ -1261,6 +1478,10 @@ public final class FClient extends javax.swing.JFrame {
      */
     private Timer notificationTimer = null;
     
+    private Timer customerRecallTimer = null;
+    
+    private Timer postponeTimer = null;
+    
     /**
      * Таймер включается после уведомления оператора
      * о том, что через 15 секунд автоматически
@@ -1272,11 +1493,26 @@ public final class FClient extends javax.swing.JFrame {
         //инициализируем таймер, если null
         if (autoStartCustomerTimer == null) {            
             autoStartCustomerTimer = new Timer(15 * 1000, (ActionEvent e) -> {
-                ((Timer)e.getSource()).stop();
+                autoStartCustomerTimer.stop();
                 buttonStart.doClick();
             });
         }
         autoStartCustomerTimer.start();
+    }
+    
+    private java.util.Timer kostylTimer;
+    
+    //костыль, который будет периодически проверять совпадает ли
+    //состояние оператора в клиенте и на сервере
+    private void startKostylTimer() {
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                NetCommander.setTechWork(netProperty, getUser().getId(), getUser().isTechWork());
+            }
+        };
+        kostylTimer = new java.util.Timer();
+        kostylTimer.scheduleAtFixedRate(task, 10000, 5000);
     }
     
     private void startNotificationTimer() {
@@ -1285,7 +1521,7 @@ public final class FClient extends javax.swing.JFrame {
             notificationTimer = new Timer(45 * 1000, (ActionEvent e) -> {
                 
                 //останавливаем таймер
-                ((Timer)e.getSource()).stop();
+                notificationTimer.stop();
                 
                 //таймер который автоматически начнёт
                 //обслуживание клиента через 15 секунд
@@ -1293,7 +1529,7 @@ public final class FClient extends javax.swing.JFrame {
                 
                 //уведомляем оператора об этом
                 JOptionPane optionPane = new JOptionPane("Прошло 45 секунд с момента вызова клиента, но обслуживание не начато.\n"
-                                                            + "Через 15 секунд автоматически начнётся обслуживнаие клиента.\n"
+                                                            + "Через 15 секунд автоматически начнётся обслуживнание клиента.\n"
                                                             + "Если клиент не явился, то нажмите кнопку «‎Отложить клиента по неявке»‎.",
                                                          JOptionPane.WARNING_MESSAGE);
                 JDialog dialog = optionPane.createDialog("Внимание!");
@@ -1305,12 +1541,55 @@ public final class FClient extends javax.swing.JFrame {
         notificationTimer.start();
     }
     
+    private void startPostponeTimer(QCustomer customer) {
+        int seconds = 60;
+//        int seconds = customer.getRecallCount() > 1 ? 60 : 45;
+        
+        //инициализируем таймер, если null
+        postponeTimer = new Timer(seconds * 1000, (ActionEvent e) -> {
+            //останавливаем таймер
+            postponeTimer.stop();
+            buttonKill.doClick();
+        });
+        postponeTimer.start();
+    }
+    
+    /**
+     * Автоматически повторно вызывает клиента через 10 секунд после первого приглашения
+     */
+    private void startCustomerRecallTimer() {
+        if (customerRecallTimer == null) {
+            customerRecallTimer = new Timer(10 * 1000, (ActionEvent e) -> {
+                buttonInvite.doClick();
+                
+                //останавливаем таймер
+                customerRecallTimer.stop();
+            });
+        }
+        customerRecallTimer.start();
+    }
+    
     private void stopTimers() {
         if (notificationTimer != null) {
             notificationTimer.stop();
         }
         if (autoStartCustomerTimer != null) {
             autoStartCustomerTimer.stop();
+        }
+        if (customerRecallTimer != null) {
+            customerRecallTimer.stop();
+        }
+        if (postponeTimer != null) {
+            postponeTimer.stop();
+        }
+        if (inviteTimer != null) {
+            inviteTimer.stop();
+        }
+    }
+    
+    private void stopInviteTimer() {
+        if (inviteTimer != null) {
+            inviteTimer.stop();
         }
     }
     
@@ -1347,21 +1626,21 @@ public final class FClient extends javax.swing.JFrame {
             fkill = false;
             final long start = go();
             if (customer.getRecallCount() >= 2) {
-                if (JOptionPane.showConfirmDialog(this,
-                                                  "Вы действительно хотите удалить клиента из очереди по причине неявки?",
-                                                  "Удалить клиента по неявке",
-                                                  JOptionPane.YES_NO_OPTION) == 1) {
-                    return;
-                }
+//                if (JOptionPane.showConfirmDialog(this,
+//                                                  "Вы действительно хотите удалить клиента из очереди по причине неявки?",
+//                                                  "Удалить клиента по неявке",
+//                                                  JOptionPane.YES_NO_OPTION) == 1) {
+//                    return;
+//                }
                 NetCommander.killNextCustomer(netProperty, user.getId(), customer.getId());
             } else {
                 // Уточним намерения
-                if (JOptionPane.showConfirmDialog(this,
-                                                  "Вы действительно хотите отложить клиента по неявке?",
-                                                  "Отложить клиента по неявке",
-                                                  JOptionPane.YES_NO_OPTION) == 1) {
-                    return;
-                }
+//                if (JOptionPane.showConfirmDialog(this,
+//                                                  "Вы действительно хотите отложить клиента по неявке?",
+//                                                  "Отложить клиента по неявке",
+//                                                  JOptionPane.YES_NO_OPTION) == 1) {
+//                    return;
+//                }
                 // Убиваем пользователя
                 //NetCommander.killNextCustomer(netProperty, user.getId(), customer.getId());
                 
@@ -1374,12 +1653,21 @@ public final class FClient extends javax.swing.JFrame {
                                                 user.getId(),
                                                 customer.getId(),
                                                 "Отложен по неявке. Вызван: " + (customer.getRecallCount()) + temp, // + ". Услуга: " + customer.getService().getName(),
-                                                10,
+                                                5,
                                                 false,
                                                 false,
                                                 false,
                                                 false);
             }
+            
+            //если требуется установить перерыв, то выполняем, чтобы ниже
+            //в методе setSituation автоматически не вызвался клиент
+            if (isPauseNeeded) {
+                setBusy(isPauseNeeded);
+            } else if (isTechWork) {
+                setTechWork(isTechWork);
+            }
+            
             // получаем новую обстановку
             // получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
@@ -1422,6 +1710,8 @@ public final class FClient extends javax.swing.JFrame {
             //запускают начало обслуживания клиента
             stopTimers();
             
+            removeTicketsItemMenu.setEnabled(true);
+            
             // Поддержка расширяемости плагинами
             extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 3);
             end(start);
@@ -1434,6 +1724,11 @@ public final class FClient extends javax.swing.JFrame {
     
     FSendToBank2 bankForm2;
     boolean movedToBank = false;
+    //нужно ли завершать работу после отправки на оплату
+    boolean needContinueServicing;
+    //костыль... при отправке на оплату нажимается кнопка ФИНИШ и чтобы при поставленной галочке
+    //"не завершать работу" работало нормально
+    int counter = 0;
     
     /**
      * Действие по нажатию кнопки "Отправить на оплату"
@@ -1481,6 +1776,8 @@ public final class FClient extends javax.swing.JFrame {
 
             isMine = bankForm2.isMine();
             needReturnAfterPayment = bankForm2.needReturnAfterPayment();
+//            isTechWork = bankForm2.needContinueServicing();
+            needContinueServicing = bankForm2.needContinueServicing();
             
             QLog.l().logger().info("userId=" + user.getId().toString() + 
                                    ", customerId=" + customer.getId().toString() +
@@ -1521,10 +1818,16 @@ public final class FClient extends javax.swing.JFrame {
                 //флаг указывающий на то, что клиент ушёл в банк
                 //нужно для того чтобы ставить ему нужный статус при завершении работы с ним
                 movedToBank = true;
+                
+                if (needContinueServicing) {
+                    user.setContinueServicing(needContinueServicing);
+                    userStatistic.changeState(Uses.CONTINUE_SERVICING, workingPeriod, netProperty);
+                    NetCommander.setContinueServicing(netProperty, user.getId(), needContinueServicing);
+                    counter = 0;
+                }
 
                 //самостоятельно завершаем работу с кастомером
                 //после его отправки на оплату в банк
-                //P.S. - здесь нажмётся кнопка Завершить приём, тогда и окошко для выбора услуг покажется
                 buttonFinish.doClick();
             } else {
                 String temp = (customer.getRecallCount() > 1) ? " раза" : " раз";
@@ -1543,9 +1846,19 @@ public final class FClient extends javax.swing.JFrame {
                 workingPeriod.setDt(workingPeriod.getDtStop());
                 NetCommander.sendWorkTimeForSave(netProperty, user.getId(), workingPeriod);
                 
+                //если требуется установить перерыв, то выполняем, чтобы ниже
+                //в методе setSituation автоматически не вызвался клиент
+                if (isPauseNeeded) {
+                    setBusy(isPauseNeeded);
+                } else if (needContinueServicing) {
+                    user.setContinueServicing(needContinueServicing);
+                    userStatistic.changeState(Uses.CONTINUE_SERVICING, workingPeriod, netProperty);
+                    NetCommander.setContinueServicing(netProperty, user.getId(), needContinueServicing);
+                }
+                
                 //если отправили не через API в банк, а просто отложили клиента на оплату,
                 //то показываем окно, т.к. выше вызывается код "buttonFinish.doClick()" который покажет окно для выбора услуг
-                showServiceCompletionWindow(user, tempCust);
+//                showServiceCompletionWindow(user, tempCust);
             }
             
             // Показываем обстановку
@@ -1566,11 +1879,50 @@ public final class FClient extends javax.swing.JFrame {
         try {
             //Обозначим результат если требуется
             final long start = go();            
-            // Переводим кастомера в разряд обрабатанных
-            // это должно выкинуть кастомера нафиг, но как обработанного
-            final Long res = setResult();
-            if (res == null) {
+            
+            Long res;
+            
+            counter++;
+            
+            //если при нажатии на кнопку "Завершить приём" у оператора
+            //клиента в обслуживании нет, но он продолжал работать
+            if (customer == null && (isTechWork || (needContinueServicing && counter > 1 ) ) ) {
+                if (needContinueServicing) {
+                    needContinueServicing = false;
+                    NetCommander.setContinueServicing(netProperty, user.getId(), needContinueServicing);
+                }
+                
+                //если требуется установить перерыв, то выполняем, чтобы ниже
+                //в методе setSituation автоматически не вызвался клиент
+                if (isPauseNeeded) {
+                    setBusy(isPauseNeeded);
+                } else if (isTechWork) {
+                    
+//                    TODO: А ТУТ НОРМ ВСЁ? ПО ИДЕЕ ТУТ ПРИ ЗАВЕРШЕНИИ РАБОТЫ НУЖНО ПОСТАВИТЬ ТЕХ ОБСЛУЖИВАНИЕ, НО ПОЧЕМУ FALSE?
+                    
+                    isTechWork = false;
+                    setTechWork(isTechWork);
+                }
+                
+                setKeyRegim(KEYS_OFF);
+                
+                //Получаем новую обстановку
+                //Получаем состояние очередей для юзера
+                setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
+
+                // поддержка расширяемости плагинами
+                extPluginIStartClientPressButton(user, netProperty, getUserPlan(), evt, 6);
+
+                end(start);
+                
                 return;
+            } else {
+                // Переводим кастомера в разряд обрабатанных
+                // это должно выкинуть кастомера нафиг, но как обработанного
+                res = setResult();
+                if (res == null) {
+                    return;
+                }
             }
 
             String resComments = user.getName() + ": \n_______________________\n" + customer.getTempComments();
@@ -1595,6 +1947,16 @@ public final class FClient extends javax.swing.JFrame {
             }
             movedToBank = false;
             
+            removeTicketsItemMenu.setEnabled(false);
+            
+            //если требуется установить перерыв, то выполняем, чтобы ниже
+            //в методе setSituation автоматически не вызвался клиент
+            if (!isTechWork && isPauseNeeded) {
+                setBusy(isPauseNeeded);
+            } else if (isTechWork) {
+                setTechWork(isTechWork);
+            }
+            
             //Получаем новую обстановку
             //Получаем состояние очередей для юзера
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
@@ -1605,7 +1967,7 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-            showServiceCompletionWindow(user, cust);
+//            showServiceCompletionWindow(user, cust);
             
         } catch (HeadlessException | QException th) {
             throw new ClientException(new Exception(th));
@@ -1653,31 +2015,40 @@ public final class FClient extends javax.swing.JFrame {
             // Переводим кастомера в другую услугу
             // это должно выкинуть кастомера в другую очередь с приоритетом "переведенный"
             //Диалог выбора очереди для редиректа
-            final FRedirect dlg = FRedirect.getService(netProperty, this, customer.getTempComments(), false);
+//            final FRedirect dlg = FRedirect.getService(netProperty, this, customer.getTempComments(), false);
+//            
+//            //Если не выбрали, то выходим
+//            if (dlg == null) {
+//                return;
+//            }
             
-            //Если не выбрали, то выходим
-            if (dlg == null) {
+            RedirectionUsersWindow window = new RedirectionUsersWindow(
+                    fClient,
+                    true,
+                    netProperty,
+                    user,
+                    QConfig.cfg().getUnitId(),
+                    QConfig.cfg().getPointType(),
+                    customer.getTempComments()
+            );
+            window.setVisible(true);
+            
+            QUser selectedUser = window.getSelectedUser();
+            
+            if (selectedUser == null) {
                 return;
             }
-            
-            QService service = dlg.getSelectedService();
-            
-            //если выбранная услуга доступна для всех терминалов,
-            //либо в списке доступных имеется нужное значение point
-            if ( !checkAvailabilityService(service) || (service.getStatus() == 0 || service.getStatus() == -1) ) {
-                JOptionPane.showMessageDialog(this, "Выбранная услуга не доступна для обслуживания в вашем отделении!", "Внимание!", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            
-            QCustomer tempCust = customer;
             
             NetCommander.redirectCustomer(netProperty,
                                           user.getId(),
-                                          customer.getId(),
-                                          service.getId(),
-                                          dlg.getRequestBack(),
-                                          user.getName() + ": " + dlg.getTempComments(),
+                                          selectedUser == null ? null : selectedUser.getId(),
+                                          null,
+                                          window.getSelectedService(),
+                                          window.isRedirectBack(),
+                                          user.getName() + ": " + window.getComment(),
                                           res);
+            
+            
             
             // Получаем новую обстановку
             //Получаем состояние очередей для юзера
@@ -1687,7 +2058,7 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-            showServiceCompletionWindow(user, tempCust);
+//            showServiceCompletionWindow(user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }
@@ -1704,7 +2075,7 @@ public final class FClient extends javax.swing.JFrame {
         
         switch (user.getUnitId()) {
             case Uses.UNIT_TIRASPOL_KARL_MARX:
-                //терминалы в Тирасполе имеют point=1
+                //терминалы на КМ имеют point=1
                 terminalPoint = "1";
                 break;
             
@@ -1716,6 +2087,31 @@ public final class FClient extends javax.swing.JFrame {
             case Uses.UNIT_RYBNICA:
                 //терминалы в Рыбнице имеют point=7
                 terminalPoint = "7";
+                break;
+                
+            case Uses.UNIT_TIRASPOL_UNOST:
+                //терминалы на Юности имеют point=8
+                terminalPoint = "8";
+                break;
+                
+            case Uses.UNIT_KAMENKA_LENINA:
+                //терминалы в Каменке имеют point=9
+                terminalPoint = "9";
+                break;
+                
+            case Uses.UNIT_DUBOSSARY:
+                //терминалы в Дубоссарах имеют point=10
+                terminalPoint = "10";
+                break;
+                
+            case Uses.UNIT_GRIGORIOPOL:
+                //терминалы в Григориополе имеют point=11
+                terminalPoint = "11";
+                break;
+                
+            case Uses.UNIT_SLOBODZEYA:
+                //терминалы в Слободзее имеют point=12
+                terminalPoint = "12";
                 break;
             
             default:
@@ -2427,6 +2823,7 @@ public final class FClient extends javax.swing.JFrame {
     
     static UsersStatistic userStatistic = null;
     static UsersStatistic workingPeriod = null;
+    static String newVersion = null;
     
     /**
      * @param args the command line arguments
@@ -2451,7 +2848,7 @@ public final class FClient extends javax.swing.JFrame {
         //текущая версия ПО
         String currentVersion = About.ver;
         //новая версия ПО
-        String newVersion = null;
+        newVersion = null;
         
         try {
             //получаем от сервера актуальную версию ПО
@@ -2471,7 +2868,11 @@ public final class FClient extends javax.swing.JFrame {
         //если есть новая версия, то открываем окно обновления
         if (newVersion != null && currentVersion.compareTo(newVersion) != 0) {
             //FUpdate.openUpdateForm(fClient, true);
-            FUpdate updateForm = new FUpdate(fClient, true);
+            String updateServerIp = QProperties.get().getProperty("section1", "auto_update_server").getValue();
+            
+            System.out.println("AUTO UPDATE IP: " + updateServerIp);
+            
+            FUpdate updateForm = new FUpdate(fClient, true, updateServerIp);
             Uses.setLocation(updateForm);
             updateForm.setVisible(true);
         }
@@ -2510,20 +2911,7 @@ public final class FClient extends javax.swing.JFrame {
         
         while (true) {
             try {
-                Integer pointType = QConfig.cfg().getPointType();
-                Integer unitId = QConfig.cfg().getUnitId();
-                Integer addressRs = QConfig.cfg().getAddressRs();
-                
-                user.setPointType(pointType);
-                user.setUnitId(unitId);
-                user.setAdressRS(addressRs);
-                
-                //обновляем параметры юзера на сервере и обновляем их в БД
-                NetCommander.setUserParamsById(netProperty,
-                                               user.getId(),
-                                               pointType,
-                                               unitId,
-                                               addressRs);
+                setUserParams(user, netProperty);
                 break;
             } catch (Exception e) {
                 if (JOptionPane.showConfirmDialog(fClient,
@@ -2536,6 +2924,9 @@ public final class FClient extends javax.swing.JFrame {
             }
         }
         Uses.showSplash();
+        
+        NetCommander.setContinueServicing(netProperty, user.getId(), false);
+        
         try {
             //Определим, надо ли выводить кастомера на второй экран.
             // Для этого должны быть переданы две координаты для определения этого монитора
@@ -2548,6 +2939,8 @@ public final class FClient extends javax.swing.JFrame {
 
             // Посмотрим, не пытались ли влезть под уже имеющейся в системе ролью
             if (!NetCommander.getSelfServicesCheck(netProperty, user.getId())) {
+                NetCommander.clearShadow(netProperty, user.getId());
+                
                 Uses.closeSplash();
                 JOptionPane.showMessageDialog(null, getLocaleMessage("messages.stop.access_denay.mess"), getLocaleMessage("messages.stop.mess"), JOptionPane.INFORMATION_MESSAGE);
                 System.exit(0);
@@ -2643,7 +3036,7 @@ public final class FClient extends javax.swing.JFrame {
     }
 
     public void refreshSituation() {
-        if (ch.isSelected()) {
+        if (checkboxPause.isSelected()) {
             setKeyRegim(KEYS_OFF);
         }
         refreshSituation(null);
@@ -2660,6 +3053,8 @@ public final class FClient extends javax.swing.JFrame {
                     return;
                 }
                 
+                setUserParams(user, netProperty);
+                
                 isServerWarning = false;
             } else {
                 setSituation(NetCommander.getSelfServices(netProperty, user.getId(), forced));
@@ -2673,6 +3068,23 @@ public final class FClient extends javax.swing.JFrame {
                 tray.showMessageTray(getLocaleMessage("qsys_server_warning"), loc("qsys_server_down"), MessageType.WARNING);
             }
         }
+    }
+    
+    private static void setUserParams(QUser user, INetProperty netProperty) throws QException {
+        Integer pointType = QConfig.cfg().getPointType();
+        Integer unitId = QConfig.cfg().getUnitId();
+        Integer addressRs = QConfig.cfg().getAddressRs();
+
+        user.setPointType(pointType);
+        user.setUnitId(unitId);
+        user.setAdressRS(addressRs);
+
+        //обновляем параметры юзера на сервере и обновляем их в БД
+        NetCommander.setUserParamsById(netProperty,
+                                       user.getId(),
+                                       pointType,
+                                       unitId,
+                                       addressRs);
     }
     
     private boolean isServerWarning = false;
@@ -2719,6 +3131,14 @@ public final class FClient extends javax.swing.JFrame {
                                             false  //needReturnAfterPayment
             );
             
+            //если требуется установить перерыв, то выполняем, чтобы ниже
+            //в методе setSituation автоматически не вызвался клиент
+            if (isPauseNeeded) {
+                setBusy(isPauseNeeded);
+            } else if (isTechWork || isTechWork) {
+                setTechWork(isTechWork);
+            }
+            
             // Показываем обстановку
             setSituation(NetCommander.getSelfServices(netProperty, user.getId()));
             // поддержка расширяемости плагинами
@@ -2726,7 +3146,7 @@ public final class FClient extends javax.swing.JFrame {
             end(start);
             
             //открываем окно для выбора услуг для сохранения
-            showServiceCompletionWindow(user, tempCust);
+//            showServiceCompletionWindow(user, tempCust);
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }

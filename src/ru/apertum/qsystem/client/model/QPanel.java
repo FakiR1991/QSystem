@@ -154,7 +154,17 @@ public class QPanel extends JPanel implements Serializable {
             setLayout(new GridLayout(1, 1));
             add(player);
         }
-       player.setVideoResource(getVideoFileName());
+        player.setVideoResource(getVideoFileName());
+    }
+    
+    private void setVideoPath() {
+        if (player == null) {
+            player = new VideoPlayer();
+            removeAll();
+            setLayout(new GridLayout(1, 1));
+            add(player);
+        }
+        player.setVideoPath(getVideoFileName());
     }
 
     public void refreshVideoSize() {
@@ -169,6 +179,10 @@ public class QPanel extends JPanel implements Serializable {
     public void startVideo() {
         player.setVideoSize(getNativePosition());
         player.start();
+    }
+    
+    public void playMedia() {
+        player.playMedia();
     }
 
     /**
@@ -206,6 +220,15 @@ public class QPanel extends JPanel implements Serializable {
         this.videoFileName = videoFile;
         getPropertySupport().firePropertyChange(PROP_VIDEO_FILE, oldValue, videoFile);
         setVideoFile();
+    }
+    
+    public void setVideoPath(String path) {
+        final File f = new File(path);
+        if (!f.exists()) {
+            throw new ServerException("Файл не сущестувет \"" + path + "\"");
+        }
+        this.videoFileName = path;
+        setVideoPath();
     }
 
     /**

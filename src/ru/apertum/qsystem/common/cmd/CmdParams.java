@@ -117,6 +117,9 @@ public class CmdParams {
     @SerializedName("dt")
     public Date dt;
     @Expose
+    @SerializedName("seconds")
+    public Long seconds;
+    @Expose
     @SerializedName("oper_id")
     public Integer oper_id;
     @Expose
@@ -152,6 +155,9 @@ public class CmdParams {
     @Expose
     @SerializedName("services")
     public List<QService> services;
+    @Expose
+    @SerializedName("redirect_user_id")
+    public Long redirectUserId;
     
     
     /**

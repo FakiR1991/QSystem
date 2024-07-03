@@ -27,8 +27,12 @@ import java.net.*;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -41,10 +45,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -55,17 +62,19 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import ru.apertum.qsystem.About;
 import ru.apertum.qsystem.client.Locales;
-import ru.apertum.qsystem.client.common.WelcomeParams;
 import ru.apertum.qsystem.client.forms.FAbout;
 import ru.apertum.qsystem.common.CodepagePrintStream;
 import ru.apertum.qsystem.common.CustomerState;
+import ru.apertum.qsystem.common.EmailSender;
 import ru.apertum.qsystem.common.GsonPool;
 import ru.apertum.qsystem.common.Mailer;
 import ru.apertum.qsystem.common.QConfig;
-import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.QLog;
+import ru.apertum.qsystem.common.TempTicket;
+import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.cmd.JsonRPC20;
 import ru.apertum.qsystem.common.cmd.RpcGetAdvanceCustomer;
+import ru.apertum.qsystem.common.exceptions.ClientException;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.ATalkingClock;
 import ru.apertum.qsystem.common.model.QCustomer;
@@ -74,18 +83,20 @@ import ru.apertum.qsystem.hibernate.AnnotationSessionFactoryBean;
 import ru.apertum.qsystem.reports.model.QReportsList;
 import ru.apertum.qsystem.reports.model.WebServer;
 import ru.apertum.qsystem.server.controller.Executer;
+import static ru.apertum.qsystem.server.controller.Executer.CLIENT_TASK_LOCK;
 import ru.apertum.qsystem.server.http.JettyRunner;
-import ru.apertum.qsystem.common.EmailSender;
-import ru.apertum.qsystem.common.TempTicket;
-import ru.apertum.qsystem.common.exceptions.ClientException;
-import ru.apertum.qsystem.server.webservice.QueueIntegrationImpl;
 import ru.apertum.qsystem.server.model.QNotificationsInfo;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.QUserList;
-import ru.apertum.qsystem.server.model.postponed.QPostponedList;
 import ru.apertum.qsystem.server.model.postponed.QMovedToBankList;
+import ru.apertum.qsystem.server.model.postponed.QPostponedList;
+import ru.apertum.qsystem.server.webservice.QueueIntegrationImpl;
+import ru.apertum.qsystem.server.webservice.prereg.Filial;
+import ru.apertum.qsystem.server.webservice.prereg.ReserveInterval;
+import ru.apertum.qsystem.server.webservice.prereg.notgenerated.WSCallback;
+import ru.apertum.qsystem.server.webservice.prereg.notgenerated.WS_ServiceImpl;
 
 /**
  * Класс старта и exit инициализации сервера. Организация потоков выполнения заданий.
@@ -105,7 +116,7 @@ public class QServer extends Thread {
     //с уведомлением о сложившейся ситуации
     private static Timer workloadTimer = new Timer(60 * 1000, (ActionEvent e) -> {
         try {
-            checkWorkload();
+//            checkWorkload();
         } catch (Exception ex) {
             QLog.l().logger().trace("WORKLOAD TIMER EXCEPTION:", ex);
         }
@@ -151,11 +162,185 @@ public class QServer extends Thread {
     });
     
     /**
+     * Таймер который проверяет талоны и назначает их операторам.
+     * Ещё назначение происходит во время постановки в очередь клиента.
+     */
+    private static Timer setCustomerToUserTimer = new Timer(5 * 1000, (ActionEvent e) -> {
+        Executer.CLIENT_TASK_LOCK.lock();
+        
+        try {
+            //по каждой услуге идём
+            for (QService service : QServiceTree.getInstance().getNodes()) {
+                if (service.getStatus().compareTo(1) != 0) {
+                    continue;
+                }
+
+                //проходимся по каждому ключу (unitId)
+                for (Map.Entry<Integer, LinkedBlockingDeque<QCustomer>> set : service.getClients().entrySet()) {
+                    //очередной unitId смотрим
+                    Integer uid = set.getKey();
+                    
+                    //клонируем очередь по данной услуге и по данному unitId
+                    PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(service.getClients(uid));
+
+                    //не боимся делать poll, так как это клонированная очередь,
+                    //но нам нужен первый по приоритету клиент
+                    while (tmpQueue.size() > 0) {
+                        //прокручиваем полностью каждого кастомера и сравниваем друг с другом
+                        QCustomer customer = peekCustomer(tmpQueue);
+                        
+                        if (customer != null) {
+                            //если у кастомера ещё нет хозяина
+                            if (customer.getIsMine() == null) {
+                                //выбираем кастомеру хозяина
+                                setCustomerToFreeUser(customer);
+                            }
+                            
+                            //удаляем из клонированной очереди кастомера не зависимо
+                            //от того нашли ему хозяина или у него уже есть хозяин
+                            tmpQueue.remove(customer);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            QLog.l().logger().debug("EXCEPTION TIMER!", ex);
+        } finally {
+            Executer.CLIENT_TASK_LOCK.unlock();
+        }
+    });
+    
+    private static QCustomer peekCustomer(PriorityQueue<QCustomer> queue) {
+        //ещё раз клонируем очередь
+        PriorityQueue<QCustomer> tmpQueue = new PriorityQueue<>(queue);
+        QCustomer customer = null;
+        
+        //не боимся делать poll, так как это клонированная очередь,
+        //но нам нужен первый по приоритету клиент
+        while (tmpQueue.size() > 0) {
+            QCustomer cust = tmpQueue.poll();
+            
+            if (cust == null) {
+                continue; 
+            }
+            
+            //сравниваем приоритеты кастомера текущего цикла и сохранённого
+            if (customer == null || customer.compareTo(cust) == 1) {
+                customer = cust;
+            }
+        }
+        
+        return customer;
+    }
+    
+//    private static Timer setCustomerToUserTimer = new Timer(5 * 1000, (ActionEvent e) -> {
+//        Executer.MOVED_TO_BANK_TASK_LOCK.lock();
+//        try {
+//            //по каждой услуге идём
+//            for (QService service : QServiceTree.getInstance().getNodes()) {
+//                if (service.getStatus().compareTo(1) != 0) {
+//                    continue;
+//                }
+//
+//                //в каждой услуге проверяем очередь по каждому отделению
+//                //если есть клиенты которые не назначены операторам, то
+//                //пробуем найти для них свободного оператора
+//                service.getClients().forEach((uid, customers) -> {
+//                    customers.forEach(customer -> {
+//                        if (customer.getIsMine() == null) {
+//                            setCustomerToFreeUser(customer);
+//                        }
+//                    });
+//                });
+//            }
+//        } catch (Exception ex) {
+//            QLog.l().logger().debug("EXCEPTION TIMER!", ex);
+//        } finally {
+//            Executer.MOVED_TO_BANK_TASK_LOCK.unlock();
+//        }
+//    });
+        
+    //фиксируем если назначили кастомера оператору
+    //на каждого оператора не более одного кастомера
+    //key - userId, value - customerId
+    public static HashMap<Long, Long> usersToCustomers = new HashMap<>();
+            
+    private static boolean checkCustomerForUserInQueue(QUser user) {
+        for (QService service : QServiceTree.getInstance().getNodes()) {
+            if (service.getStatus().compareTo(1) != 0) {
+                continue;
+            }
+            
+            LinkedBlockingDeque<QCustomer> customers = service.getClients(user.getUnitId());
+            
+            for (QCustomer customer : customers) {
+                if (Objects.equals(customer.getIsMine(), user.getId())) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    public static void setCustomerToFreeUser(QCustomer customer) {
+        QUser selectedUser = null;
+        int selectedUsetCoefficient = 0;
+        int maxInactiveTimeSeconds = 0;
+        int inactiveTimeSeconds = 0;
+        Long serviceId = customer.getService().getId();
+        
+        for (QUser user : QUserList.getInstance().getItems()) {
+            boolean isServiceInPlan = user.isServiceInPlan(serviceId);
+            boolean isIncorrectUnitId = !Objects.equals(user.getUnitId(), customer.getUnitId());
+            boolean isEmptyShadow = user.getShadow() == null;
+            boolean isPause = user.isPause();
+            boolean isTechWork = user.isTechWork();
+            boolean isContinueServicing = user.isContinueServicing();
+            boolean isUserHasCustomer = usersToCustomers.get(user.getId()) != null || user.getCustomer() != null || checkCustomerForUserInQueue(user);
+            //задержка после завершения обслуживания клиента 10 секунд
+            boolean isUserDelayOver = user.getCustFinishTime() == null || ((new Date().getTime() - user.getCustFinishTime().getTime()) / 1000) >= 10;
+            boolean isUserBusy = (user.getShadow() != null && user.getShadow().getStartTime() != null) || isPause || isTechWork || isUserHasCustomer || isContinueServicing;
+            
+            if (isIncorrectUnitId || isEmptyShadow || isUserBusy || !isServiceInPlan || !isUserDelayOver) {
+                continue;
+            }
+            
+            Date lastActivityDate = user.getLastPauseDate() != null
+                                        ? user.getLastPauseDate().after(user.getShadow().getFinTime())
+                                              ? user.getLastPauseDate()
+                                              : user.getShadow().getFinTime()
+                                        : user.getShadow().getFinTime();
+            
+            //вычисляем для каждого юзера время бездействия
+            inactiveTimeSeconds = Math.round((new Date().getTime() - lastActivityDate.getTime()) / 1000);
+            
+            //смотрим коэфициент участия кастомера на данную услугу
+            int userCoefficient = user.getPlanService(customer.getService().getId()).getCoefficient();
+            
+            //если приоритет данного оператора больше или время ожидания кастомера больше
+            if (userCoefficient > selectedUsetCoefficient || inactiveTimeSeconds > maxInactiveTimeSeconds) {
+                maxInactiveTimeSeconds = inactiveTimeSeconds;
+                selectedUser = user;
+                selectedUsetCoefficient = userCoefficient;
+            }
+        }
+        
+        if (selectedUser != null) {
+            //назначаем кастомеру оператора
+            customer.setIsMine(selectedUser.getId());
+            //запоминает то, что оператору уже назначен кастомер
+            usersToCustomers.put(selectedUser.getId(), customer.getId());
+        }
+    }
+    
+    /**
      * @param args - первым параметром передается полное имя настроечного XML-файла
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-//        workloadTimer.start();
+        workloadTimer.start();
+        setCustomerToUserTimer.start();
         cleanUpMovedToBankTimer.start();
         
         publishWebService();
@@ -240,6 +425,7 @@ public class QServer extends Thread {
         MainBoard.getInstance().showBoard();
         startPostponedTimer();
         startCleanUpTicketsTimer();
+        startReservedTicketsTimer();
         // test ServerProps.getInstance().getProps().getZoneBoardServAddrList();
         if (!(Uses.FORMAT_HH_MM.format(ServerProps.getInstance().getProps().getStartTime()).equals(Uses.FORMAT_HH_MM.format(ServerProps.getInstance().getProps().getFinishTime())))) {
             /**
@@ -254,6 +440,7 @@ public class QServer extends Thread {
                         QLog.l().logger().info("Очистка всех услуг.");
                         // почистим все услуги от трупов кастомеров с прошлого дня
                         QServer.clearAllQueue();
+                        usersToCustomers = new HashMap<>();
                     }
 
                     // это рассылка дневного отчета
@@ -327,7 +514,7 @@ public class QServer extends Thread {
                 final QServer qServer = new QServer(server.accept());
                 qServer.start();
                 if (QConfig.cfg().isDebug()) {
-                    System.out.println();
+//                    System.out.println();
                 }
             } catch (SocketTimeoutException e) {
                 // ничего страшного, гасим исключение стобы дать возможность отработать входному/выходному потоку
@@ -375,7 +562,8 @@ public class QServer extends Thread {
         }// while
         
         //останавливаем таймер проверки очередей
-//        workloadTimer.stop();
+        workloadTimer.stop();
+        setCustomerToUserTimer.stop();
 
         QLog.l().logger().debug("Закрываем серверный сокет.");
         server.close();
@@ -418,7 +606,30 @@ public class QServer extends Thread {
      */
     private static void publishWebService() {
         loadWebServiceSettings();
+        //АПБ 
         Endpoint.publish(serviceAddress, new QueueIntegrationImpl());
+        System.out.println("APB published");
+        //Предварительная регистрация для приложения Мой IDC
+        Endpoint.publish("http://localhost:9902/prereg", new WS_ServiceImpl(new WSCallback() {
+            @Override
+            public ArrayList<Filial> getFilialList() {
+                System.out.println("getFilialList");
+                return null;
+            }
+
+            @Override
+            public ArrayList<ReserveInterval> getFilialFreeTickets(int id, Date date) {
+                System.out.println("getFilialFreeTickets");
+                return null;
+            }
+
+            @Override
+            public boolean setReserve(int ticketId, int reasonId, int ticketNumber, int myIdcAccId, int juridical, String name1, String name2, String name3, String title, String email, String phone, String comments) {
+                System.out.println("setReserve");
+                return false;
+            }
+        }));
+        System.out.println("MyIDC published");
     }
     
     private static void loadWebServiceSettings() {
@@ -500,8 +711,7 @@ public class QServer extends Thread {
         public double getCustomersToClientsRatioForAbo() {
             if (clientsCountReadyToWorkAbo > 0) {
                 return (double)customersCountAbo / (double)clientsCountReadyToWorkAbo;
-            }
-            else {
+            } else {
                 return 0;
             }
         }
@@ -555,16 +765,15 @@ public class QServer extends Thread {
     }
     
     static HashMap<Integer, WorkloadStatistics> workloadStatsHM = new HashMap<Integer, WorkloadStatistics>();
+    static private int loopNumber = 0;
     
     /**
      * Проверяет загруженность операторов и состояние очередей,
      * чтобы в случае высокой нагрузки отправить email с уведомлением о сложившейся ситуации
      */
     private static void checkWorkload() {
-        workloadStatsHM.clear();
         
-        //фиксируем количество юзеров готовых обслуживать клиентов
-        getCountUsersReadyToWork();
+        System.out.println("\n\nCHECK WORKLOAD!\n\n");
         
         //по каждой услуге обрабатываем инфу об очередях
         for (QService service : QServiceTree.getInstance().getNodes()) {
@@ -572,15 +781,236 @@ public class QServer extends Thread {
                 continue;
             }
             
-            handleCustomersCountAndWaitingTime(service);
+            HashMap<Integer, ArrayList<ClientsApproximateWaitingInfo>> clientsInfo = calcApproximateWaitingTime(service);
+            Set<Integer> uidSet = clientsInfo.keySet();
+            
+            System.out.println();
+            System.out.println("LOOP #" + ++loopNumber);
+            System.out.println();
+            
+            //проходимся циклом по каждому uid и если есть превышение по времени ожидания, то отправляем SMS
+            for (Integer uid : uidSet) {
+                
+                System.out.println("UNIT ID: " + uid);
+                
+                for (ClientsApproximateWaitingInfo entry : clientsInfo.get(uid)) {
+                    
+                    System.out.println("APPROXIMATE WAITING TIME: " + entry.getApproximateWaitingTime());
+                    
+                    //отправляем SMS если предположительное время ожидания больше нормы и если нет таймаута
+                    if (entry.getApproximateWaitingTime() > WAITING_TIME_ALARM && workloadTimeoutHM.get(uid) == null) {
+                        
+//                        1. КОНТАКТЫ ДЛЯ SMS ЛЕЖАТ В БД
+//                        
+//                        отправляем SMS, продумать как;
+//                        посмотреть как отправляются SMS с терминалов;
+//                        уточнить список номеров для отправки SMS;
+//                        сделать таймауты на отправку сообщений;
+
+
+
+                        setWorkloadTimeout(uid);
+                    }
+                }
+                
+                System.out.println();
+                System.out.println("------------------");
+                System.out.println();
+            }
+        }
+    }
+    
+    private final static int WORKING_TIME_STANDARD = 7;
+    private final static int WAITING_TIME_ALARM = 15;
+    
+    /**
+     * Функция вычисляет ориентировочное время ожидания для последнего в очрееди клиента
+     * @param service услуга по которой вычисляем
+     * @return 
+     */
+    private static HashMap<Integer, ArrayList<ClientsApproximateWaitingInfo>> calcApproximateWaitingTime(QService service) {
+        
+        HashMap<Integer, ArrayList<UsersServiceInfo>> usersInfoByUidHM = new HashMap<>();
+        HashMap<Integer, ArrayList<ClientsApproximateWaitingInfo>> clientsInfoByUidHM = new HashMap<>();
+
+        //пройдёмся по операторам, соберём инфу о статусе и времени обслуживания
+        for (QUser user : QUserList.getInstance().getItems()) {
+            
+            if (!usersInfoByUidHM.containsKey(user.getUnitId())) {
+                usersInfoByUidHM.put(user.getUnitId(), new ArrayList<>());
+            }
+            
+            ArrayList<UsersServiceInfo> usersInfoByUid = usersInfoByUidHM.get(user.getUnitId());
+
+            if (user.getShadow() == null) {
+                continue;
+            }
+            else if (user.getShadow().getStartTime() == null) {         
+                //если свободно
+                if (!user.isPause() && !user.isTechWork()) {
+                    //так как оператор свободен, то ставим ему максимум по нормативу,
+                    //чтобы при вычислении у него получался 0 для ожидания приёма
+                    usersInfoByUid.add(new UsersServiceInfo(user, WORKING_TIME_STANDARD));
+                }
+            } else {
+                //если в работе
+                int mins = Math.round((new Date().getTime() - user.getShadow().getStartTime().getTime()) / 1000 / 60);
+                usersInfoByUid.add(new UsersServiceInfo(user, mins));
+            }
         }
         
-        //логгируем статистику по очередям
-        loggingWorkloadStats();
+        //пройдёмся по клиентам имея инфу об операторах
+        service.getClients().forEach((uid, clients) -> {
+            
+            if (!clientsInfoByUidHM.containsKey(uid)) {
+                clientsInfoByUidHM.put(uid, new ArrayList<>());
+            }
+            
+            //берём только тех операторов, которые обслуживают текущую услугу
+            ArrayList<UsersServiceInfo> usersInfoByPointType = (ArrayList<UsersServiceInfo>) usersInfoByUidHM.get(uid)
+                    .stream()
+                    .filter(ui -> Objects.equals(String.valueOf(ui.getUser().getPointType()), service.getPrefix()))
+                    .collect(Collectors.toList());
+            
+            ArrayList<ClientsApproximateWaitingInfo> clientsInfoByUid = clientsInfoByUidHM.get(uid);
+            
+            int iUser = 0;
+            int iMultiplier = 0;
+            
+            for (QCustomer c : clients) {
+                
+                UsersServiceInfo userInfo = usersInfoByPointType.get(iUser++);
+                if (userInfo == null) {
+                    continue;
+                }
+                
+                int remainingTime = userInfo.getMinRemainingTime();
+                int approximateWaitingTime = remainingTime + iMultiplier * WORKING_TIME_STANDARD;
+                
+                System.out.println("client: " + c.getNumber() + ", approx: " + approximateWaitingTime);
+                
+                clientsInfoByUid.add(new ClientsApproximateWaitingInfo(c, approximateWaitingTime));
+                
+                //если один цикл по операторам прошёл, то обнуляем индекс опертора
+                //и увеличиваем множитель для подсчёта ожидания очереди
+                if (iUser >= usersInfoByPointType.size()) {
+                    iUser = 0;
+                    iMultiplier++;
+                }
+            }
+        });
         
-        //анализируем собранные данные и отправляем
-        //уведомления на e-mail-ы, если требуется
-        sendMails();
+        return clientsInfoByUidHM;
+    }
+    
+    private static class ClientsApproximateWaitingInfo {
+        private QCustomer client;
+        private int approximateWaitingTime;
+
+        public ClientsApproximateWaitingInfo(QCustomer client, int approximateWaitingTime) {
+            this.client = client;
+            this.approximateWaitingTime = approximateWaitingTime;
+        }
+
+        public QCustomer getClient() {
+            return client;
+        }
+
+        public void setClient(QCustomer client) {
+            this.client = client;
+        }
+        
+        public int getApproximateWaitingTime() {
+            return approximateWaitingTime;
+        }
+
+        public void setApproximateWaitingTime(int approximateWaitingTime) {
+            this.approximateWaitingTime = approximateWaitingTime;
+        }
+    }
+    
+    private static class UsersServiceInfo {
+        private QUser user;
+        private int minInWork;
+
+        public UsersServiceInfo(QUser user, int minInWork) {
+            this.user = user;
+            this.minInWork = minInWork;
+        }
+
+        public QUser getUser() {
+            return user;
+        }
+
+        public void setUser(QUser user) {
+            this.user = user;
+        }
+
+        public int getMinInWork() {
+            return minInWork;
+        }
+
+        public void setMinInWork(int minInWork) {
+            this.minInWork = minInWork;
+        }
+        
+        public int getMinRemainingTime() {
+            return (WORKING_TIME_STANDARD - minInWork) < 0 ? 1 : (WORKING_TIME_STANDARD - minInWork);
+        }
+    }
+    
+    /**
+     * Количество операторов находящихся в состоянии "В работе" или "Готов".
+     */
+    private static void getCountUsersReadyToWork() {
+        LinkedList<QUser> users = QUserList.getInstance().getItems();
+        
+        //цикл по всем пользователям системы
+        for (QUser user : users) {
+            
+            if (user.getPointType() == null) {
+                continue;
+            }
+            
+            if (user.getShadow() == null) {
+                continue;
+            } else if (user.getShadow().getStartTime() == null) {
+                //перерыв
+                if (user.isPause()) {
+                    continue;
+                }
+                //свободно
+                else {
+                    incrementUsersReadyToWork(user);
+                }
+            }
+            //в работе
+            else {
+                incrementUsersReadyToWork(user);
+            }
+        }
+    }
+    
+    /**
+     * Наращиваем количество юзеров готовых работать в зависимости от unitId и pointType.
+     * @param user Юзер которого анализируем.
+     */
+    private static void incrementUsersReadyToWork(QUser user) {
+        //если ещё нету такого unitId, то создаём
+        if (!workloadStatsHM.containsKey(user.getUnitId())) {
+            workloadStatsHM.put(user.getUnitId(), new WorkloadStatistics());
+        }
+        
+        WorkloadStatistics wls = workloadStatsHM.get(user.getUnitId());
+        
+        //если юзер относится к абон. залу
+        if (user.getPointType().compareTo(QUser.POINT_TYPE_ABO) == 0) {
+            wls.addClientsCountReadyToWorkAbo(1);
+        }
+        //если юзер относится к сервисному центру
+        else if (user.getPointType().compareTo(QUser.POINT_TYPE_SC) == 0) {
+            wls.addClientsCountReadyToWorkSC(1);
+        }
     }
     
     private static void handleCustomersCountAndWaitingTime(QService service) {
@@ -651,60 +1081,6 @@ public class QServer extends Thread {
             
             QLog.l().logger().info(logText);
         });
-    }
-    
-    /**
-     * Количество операторов находящихся в состоянии "В работе" или "Готов".
-     */
-    private static void getCountUsersReadyToWork() {
-        LinkedList<QUser> users = QUserList.getInstance().getItems();
-        
-        //цикл по всем пользователям системы
-        for (QUser user : users) {
-            
-            if (user.getPointType() == null) {
-                continue;
-            }
-            
-            if (user.getShadow() == null) {
-                continue;
-            } else if (user.getShadow().getStartTime() == null) {
-                //перерыв
-                if (user.isPause()) {
-                    continue;
-                }
-                //свободно
-                else {
-                    incrementUsersReadyToWork(user);
-                }
-            }
-            //в работе
-            else {
-                incrementUsersReadyToWork(user);
-            }
-        }
-    }
-    
-    /**
-     * Наращиваем количество юзеров готовых работать в зависимости от unitId и pointType.
-     * @param user Юзер которого анализируем.
-     */
-    private static void incrementUsersReadyToWork(QUser user) {
-        //если ещё нету такого unitId, то создаём
-        if (!workloadStatsHM.containsKey(user.getUnitId())) {
-            workloadStatsHM.put(user.getUnitId(), new WorkloadStatistics());
-        }
-        
-        WorkloadStatistics wls = workloadStatsHM.get(user.getUnitId());
-        
-        //если юзер относится к абон. залу
-        if (user.getPointType().compareTo(QUser.POINT_TYPE_ABO) == 0) {
-            wls.addClientsCountReadyToWorkAbo(1);
-        }
-        //если юзер относится к сервисному центру
-        else if (user.getPointType().compareTo(QUser.POINT_TYPE_SC) == 0) {
-            wls.addClientsCountReadyToWorkSC(1);
-        }
     }
     
     private static final String subject = "Электронная очередь";
@@ -822,15 +1198,12 @@ public class QServer extends Thread {
         }
         
         final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                workloadTimeoutHM.forEach((unitId, date) -> {
-                    if (date != null && getDiffBetweenDatesInMinutes(new Date(), date) >= 10) {
-                        workloadTimeoutHM.remove(unitId);
-                    }
-                });
-            }
+        Runnable runnable = () -> {
+            workloadTimeoutHM.forEach((unitId1, date) -> {
+                if (date != null && getDiffBetweenDatesInMinutes(new Date(), date) >= 10) {
+                    workloadTimeoutHM.remove(unitId1);
+                }
+            });
         };
         scheduler.schedule(runnable, 10, TimeUnit.MINUTES);
     }
@@ -882,6 +1255,114 @@ public class QServer extends Thread {
         return date;
     }
     
+    private static final Connection mySQLConnection = null;
+    
+    public static Connection getMySQLConnection() throws SQLException {
+        if (mySQLConnection != null) {
+            return mySQLConnection;
+        }
+        
+        final String DB_HOST = QConfig.cfg().getServerAddress();
+        final String DB_NAME = "qsystem";
+        final int DB_PORT = 3306;
+        final String MYSQL_CONNECTION_STRING = "jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME;
+        final String DB_USER = "qsystem";
+        final String DB_PASSWORD = "executenonquery";
+        
+        return DriverManager.getConnection(MYSQL_CONNECTION_STRING, DB_USER, DB_PASSWORD);
+    }
+    
+    private static void startReservedTicketsTimer() {
+        //раз в минуту проверяем есть ли зарезервированные талоны которые нужно в очередь добавить
+        Timer checkReservedTicketsTimer = new Timer(60 * 1000, (ActionEvent e) -> {
+//            QLog.l().logger().info("START RESERVE CHECKING");
+            
+            try {
+                Connection con = getMySQLConnection();
+                PreparedStatement stmt = con.prepareStatement(
+                        "SELECT id, ticket_number, reserve_date, unit_id, ticket_id, service_id " +
+                        "FROM reserved_tickets " +
+                        "WHERE deleted IS NULL AND started IS NULL AND DATE_FORMAT(reserve_date, '%Y-%m-%d %H:%i:%s') <= str_to_date(CURRENT_TIMESTAMP, '%Y-%m-%d %H:%i:%s')"
+                );
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    int id = rs.getInt(1);
+                    int ticketNumber = rs.getInt(2);
+                    String reserveDateStr = rs.getString(3);
+                    int unitId = rs.getInt(4);
+                    int ticketId = rs.getInt(5);
+                    long serviceId = rs.getLong(6);
+                    Date reserveDate = null;
+                    if (reserveDateStr != null) {
+                        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        try {
+                            reserveDate = formatter.parse(reserveDateStr);
+                        } catch (ParseException ex) {
+                            QLog.l().logger().error("Ошибка парсинга даты резервирования", ex);
+                        }
+                    }
+                    
+                    QLog.l().logger().info("TICKET_NUMBER: " + ticketNumber);
+                    
+                    //создаём клиента и добавляем в очередь
+                    createCustomer(
+                            ticketNumber,
+                            reserveDate,
+                            unitId,
+                            serviceId
+                            );
+                    
+                    QLog.l().logger().info("DELETING TICKET WITH ID: " + id);
+                    
+                    //удаляем отработанную запись из БД
+                    deleteTicketFromDB(id);
+                    
+                    //меняем статус талона у Евстратенко
+                    Uses.setTicketState(ticketId, Uses.TICKET_IN_QUEUE);
+                }
+            } catch (SQLException ex) {
+                QLog.l().logger().error("Ошибка проверки зарезервированных талонов.", ex);
+            }
+        });
+        checkReservedTicketsTimer.start();
+    }
+    
+    public static void createCustomer(int ticketNumber, Date reserveDate, int unitId, long serviceId) {
+        final QService service = QServiceTree.getInstance().getById(serviceId);
+        final QCustomer customer;
+        //нормальный приоритет
+        int priority = 1;
+        // синхронизируем работу с клиентом
+        CLIENT_TASK_LOCK.lock();
+        try {
+            // Создадим вновь испеченного кастомера
+            customer = new QCustomer(ticketNumber);
+            customer.setUnitId(unitId);
+            customer.setPriority(priority);
+            customer.setState(CustomerState.STATE_WAIT);
+            customer.setService(service);
+            service.addCustomer(customer);
+        } finally {
+            CLIENT_TASK_LOCK.unlock();
+        }
+    }
+    
+    //помечается удалённым
+    public static void deleteTicketFromDB(int id) {
+        try {
+            Connection con = getMySQLConnection();
+            PreparedStatement stmt = con.prepareStatement(
+                    "UPDATE reserved_tickets " +
+                    "SET started = CURRENT_TIMESTAMP " + 
+                    "WHERE id = ?"
+            );
+            stmt.setInt(1, id);
+            stmt.execute();
+        } catch (SQLException e) {
+            QLog.l().logger().error("Ошибка удаления отработанной зарезервированной записи из БД", e);
+        }
+    }
+    
     private static void startCleanUpTicketsTimer() {
         //каждые три часа чистим список использованных билетов
         Timer cleanUpTicketsTimer = new Timer(3 * 60 * 60 * 1000, (ActionEvent e) -> {
@@ -929,12 +1410,12 @@ public class QServer extends Thread {
     }
     
     private static void startPostponedTimer() {
-        Timer timerOut = new Timer(240 * 1000, (ActionEvent e) -> {
+        Timer timerOut = new Timer(90 * 1000, (ActionEvent e) -> {
             
             String connectionString = "jdbc:oracle:thin:@(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1-vip.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node2-vip.int.idknet.com)(PORT = 1521)) (FAILOVER = yes) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = SHARED) (SERVICE_NAME = amar_s1) (FAILOVER_MODE = (TYPE = SELECT) (METHOD = BASIC) (RETRIES = 180) (DELAY = 5))))";
             String strUserID = "qsystem";
             String strPassword = "nyZd6je6R";
-            ArrayList<TempTicket> tickets = new ArrayList<TempTicket>();
+            ArrayList<TempTicket> tickets = new ArrayList<>();
             Connection myConnection = null;
             try {
                 myConnection = DriverManager.getConnection(connectionString, strUserID, strPassword);
@@ -946,7 +1427,7 @@ public class QServer extends Thread {
                 for (int columnNumber = 1; columnNumber <= columnCount; columnNumber++) {
                     String columnName = myResultSet.getMetaData().getColumnName(columnNumber);
                     Object value = myResultSet.getObject(columnName);
-                    QLog.l().logger().info(columnName);
+//                    QLog.l().logger().info(columnName);
                     if (value != null) {
                         while(((ResultSet)value).next()) {
                             tickets.add(new TempTicket(((ResultSet)value).getInt("ID_TICKET"),
@@ -1013,6 +1494,7 @@ public class QServer extends Thread {
                         if (temp.size() > 0) {
                             if (temp.get(0).state == 1) {
                                 QLog.l().logger().debug("Попытаемся кастомера " + temp.get(0).code + " переместить в очередь из отложенных");
+                                
                                 customer.setFinishPostpone(System.currentTimeMillis());
                                 
                                 QLog.l().logger().debug("Сменили время кастомеру " + temp.get(0).code + ". При следующем опросе отложенных он будет вызван");
@@ -1064,7 +1546,7 @@ public class QServer extends Thread {
     @Override
     public void run() {
         try {
-            QLog.l().logger().debug(" Start thread for receiving task. host=" + socket.getInetAddress().getHostAddress() + " ip=" + Arrays.toString(socket.getInetAddress().getAddress()));
+//            QLog.l().logger().debug(" Start thread for receiving task. host=" + socket.getInetAddress().getHostAddress() + " ip=" + Arrays.toString(socket.getInetAddress().getAddress()));
 
             // из сокета клиента берём поток входящих данных
             InputStream is;
@@ -1096,7 +1578,7 @@ public class QServer extends Thread {
             } catch (IllegalArgumentException ex) {
                 throw new ServerException("Ошибка декодирования сетевого сообщения: " + ex);
             }
-            QLog.l().logger().trace("Task:\n" + (data.length() > 200 ? (data.substring(0, 200) + "...") : data));
+//            QLog.l().logger().trace("Task:\n" + (data.length() > 200 ? (data.substring(0, 200) + "...") : data));
 
             /*
              Если по сетке поймали exit, то это значит что запустили останавливающий батник.
@@ -1125,7 +1607,7 @@ public class QServer extends Thread {
             }
 
             // выводим данные:
-            QLog.l().logger().trace("Response:\n" + (answer.length() > 200 ? (answer.substring(0, 200) + "...") : answer));
+//            QLog.l().logger().trace("Response:\n" + (answer.length() > 200 ? (answer.substring(0, 200) + "...") : answer));
             try {
                 // Передача данных ответа
                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
@@ -1150,7 +1632,7 @@ public class QServer extends Thread {
             } catch (IOException e) {
                 QLog.l().logger().trace(e);
             }
-            QLog.l().logger().trace("Response was finished");
+//            QLog.l().logger().trace("Response was finished");
         }
     }
 
@@ -1159,7 +1641,7 @@ public class QServer extends Thread {
      */
     public synchronized static void savePool() {
         final long start = System.currentTimeMillis();
-        QLog.l().logger().info("Save the state.");
+//        QLog.l().logger().info("Save the state.");
         final LinkedList<QCustomer> backup = new LinkedList<>();// создаем список кастомеров в очереди + тех кто в обслуживании
         final LinkedList<QCustomer> parallelBackup = new LinkedList<>();// создаем список сохраняемых Parallel кастомеров
         final LinkedList<Long> pauses = new LinkedList<>();// создаем список юзеров у которых менопауза
@@ -1187,11 +1669,13 @@ public class QServer extends Thread {
         Gson gson = null;
         try {
             gson = GsonPool.getInstance().borrowGson();
+            
             fos.write(gson.toJson(new TempList(backup,
                                                parallelBackup,
                                                QPostponedList.getInstance().getPostponedCustomers(),
                                                QMovedToBankList.getInstance().getMovedToBankCustomers(),
-                                               pauses)).getBytes("UTF-8"));
+                                               pauses,
+                                               usersToCustomers)).getBytes("UTF-8"));
             fos.flush();
             fos.close();
         } catch (IOException ex) {
@@ -1199,7 +1683,7 @@ public class QServer extends Thread {
         } finally {
             GsonPool.getInstance().returnGson(gson);
         }
-        QLog.l().logger().info("Состояние сохранено. Затрачено времени: " + ((double) (System.currentTimeMillis() - start)) / 1000 + " сек.");
+//        QLog.l().logger().info("Состояние сохранено. Затрачено времени: " + ((double) (System.currentTimeMillis() - start)) / 1000 + " сек.");
     }
 
     static public class TempList {
@@ -1217,12 +1701,14 @@ public class QServer extends Thread {
                         LinkedList<QCustomer> parallelBackup,
                         LinkedList<QCustomer> postponed,
                         LinkedList<QCustomer> movedToPayment,
-                        LinkedList<Long> pauses) {
+                        LinkedList<Long> pauses,
+                        HashMap<Long, Long> usersToCustomers) {
             this.backup = backup;
             this.parallelBackup = parallelBackup;
             this.postponed = postponed;
-            this.pauses = pauses;
             this.movedToPayment = movedToPayment;
+            this.pauses = pauses;
+            this.usersToCustomers = usersToCustomers;
         }
         @Expose
         @SerializedName("backup")
@@ -1242,6 +1728,9 @@ public class QServer extends Thread {
         @Expose
         @SerializedName("pauses")
         public LinkedList<Long> pauses = null;
+        @Expose
+        @SerializedName("usersToCustomers")
+        public HashMap<Long, Long> usersToCustomers;
         @Expose
         @SerializedName("date")
         public Long date = new Date().getTime();
@@ -1365,6 +1854,10 @@ public class QServer extends Thread {
                     recList.pauses.stream().map((idUser) -> QUserList.getInstance().getById(idUser)).filter((user) -> (user != null)).forEachOrdered((user) -> {
                         user.setPause(Boolean.TRUE);
                     });
+                    
+                    if (recList.usersToCustomers != null) {
+                        usersToCustomers = recList.usersToCustomers;
+                    }
                 } catch (ServerException ex) {
                     System.err.println("Востановление состояния сервера после изменения конфигурации. " + ex);
                     clearAllQueue();

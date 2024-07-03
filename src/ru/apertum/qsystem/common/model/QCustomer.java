@@ -513,13 +513,17 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
     public void setStartTime(Date date) {
         this.startTime = date;
     }
+    
+    @Expose
+    @SerializedName("call_time")
     private Date callTime;
 
     public void setCallTime(Date date) {
         this.callTime = date;
     }
 
-    @Transient
+    @Column(name = "call_time")
+    @Temporal(TemporalType.TIMESTAMP)
     public Date getCallTime() {
         return callTime;
     }

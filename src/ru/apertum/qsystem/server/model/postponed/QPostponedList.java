@@ -69,7 +69,7 @@ public class QPostponedList extends DefaultListModel {
 
     private QPostponedList() {
         if (QConfig.cfg().isServer()) {
-            timerOut = new Timer(60 * 1000, (ActionEvent e) -> {
+            timerOut = new Timer(30 * 1000, (ActionEvent e) -> {
                 Executer.POSTPONED_TASK_LOCK.lock();
                 try {
                     Executer.CLIENT_TASK_LOCK.lock();

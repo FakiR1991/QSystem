@@ -28,13 +28,10 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -83,7 +80,6 @@ import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.client.Locales;
 import ru.apertum.qsystem.client.QProperties;
 import ru.apertum.qsystem.client.common.ClientNetProperty;
-import static ru.apertum.qsystem.client.forms.FAdmin.getLocaleMessage;
 import ru.apertum.qsystem.client.model.JTreeComboBox;
 import ru.apertum.qsystem.client.model.QTray;
 import ru.apertum.qsystem.common.CustomerState;
@@ -256,6 +252,11 @@ public class FReception extends javax.swing.JFrame {
         }
 
         QTerminal terminal = (QTerminal)jListTerminals.getSelectedValue();
+        
+        if (terminal == null) {
+            return;
+        }
+        
         final String result;
         try {
             result = NetCommander.getWelcomeState(
@@ -277,6 +278,11 @@ public class FReception extends javax.swing.JFrame {
     
     private void showPaperUsage() {
         QTerminal terminal = (QTerminal)jListTerminals.getSelectedValue();
+        
+        if (terminal == null) {
+            return;
+        }
+        
         final String result;
         try {
             result = NetCommander.getWelcomeState(
@@ -582,6 +588,10 @@ public class FReception extends javax.swing.JFrame {
         }
         
         jListTerminals.setModel(lm);
+        
+        if (terminals.size() > 0) {
+            jListTerminals.setSelectedIndex(0);
+        }
     }
     
     private void loadMovedToPaymentList() {
@@ -682,7 +692,7 @@ public class FReception extends javax.swing.JFrame {
     }
     JTreeComboBox comboBoxServices;
     private QService lastSelected = null;
-
+    
     private void setModelForComboBoxServices(DefaultTreeModel model) {
         comboBoxServices = new JTreeComboBox(model);
         panelTreeCmbx.removeAll();
@@ -897,9 +907,13 @@ public class FReception extends javax.swing.JFrame {
                         
                         final int mnt = Math.round((new Date().getTime() - lastActivityDate.getTime()) / 1000 / 60);
                         final boolean toolong = (mnt > standards.getDowntimeMax());
-                        //если перерыв - выставлять перерыв столько-то минут. Если не в сети больше 10 минут, то писать офлайн,  вместо не работает
+                        //если перерыв - выставлять перерыв столько-то минут. Если не в сети больше 10 минут, то писать офлайн, вместо не работает
                         if(greed.get(rowIndex).isPause())
                             return  "<HTML><SPAN STYLE='COLOR:BLUE" + "'> ПЕРЕРЫВ</span>";
+                        else if(greed.get(rowIndex).isTechWork())
+                            return  "<HTML><SPAN STYLE='COLOR:BLUE" + "'> ТЕХ. ОБСЛУЖИВАНИЕ</span>";
+                        else if(greed.get(rowIndex).isContinueServicing())
+                            return  "<HTML><SPAN STYLE='COLOR:BLUE" + "'> ОБСЛ. ПОСЛЕ ОТПРАВ. НА ОПЛ.</span>";
                         else
                             return "<HTML><SPAN STYLE='COLOR:" + (toolong ? "RED" : "GREEN") + "'>" + getLocaleMessage("Free2") + " " + mnt + getLocaleMessage("min.min") + "</span>";
                     } else {
@@ -2365,7 +2379,9 @@ public class FReception extends javax.swing.JFrame {
         //если есть новая версия, то открываем окно обновления
         if (lastDateReception != null && !Objects.equals(currentDateReception, lastDateReception)) {
             //передаём type=2, это означает, что запускаем обновление из FReception
-            FUpdate updateForm = new FUpdate(fReception, true, 2);
+            String updateServerIp = QProperties.get().getProperty("section1", "auto_update_server").getValue();
+            
+            FUpdate updateForm = new FUpdate(fReception, true, 2, updateServerIp);
             Uses.setLocation(updateForm);
             updateForm.setVisible(true);
         }
@@ -2519,6 +2535,14 @@ public class FReception extends javax.swing.JFrame {
             QLog.l().logger().error("Не загрузились пользователи. ", ex); //NOI18N
             return false;
         }
+        
+        LinkedList<QUser> rem = new LinkedList<>();
+        users.stream().filter((user) -> user.getShadow() == null).forEach((user) -> {
+            rem.add(user);
+        });
+        
+        users.removeAll(rem);
+        
         tableUsersMon.setModel(new UsersMonModel(users));
 
         try {

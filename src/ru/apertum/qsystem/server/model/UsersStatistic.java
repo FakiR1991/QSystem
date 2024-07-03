@@ -4,6 +4,10 @@
  * and open the template in the editor.
  */
 package ru.apertum.qsystem.server.model;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -21,11 +25,13 @@ import org.hibernate.annotations.Type;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import ru.apertum.qsystem.QSystem;
 import ru.apertum.qsystem.common.NetCommander;
 import ru.apertum.qsystem.common.QLog;
 import ru.apertum.qsystem.common.Uses;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.common.model.INetProperty;
+import ru.apertum.qsystem.server.QServer;
 import ru.apertum.qsystem.server.Spring;
 
 /**
@@ -189,6 +195,7 @@ public class UsersStatistic {
     /**
      * Изменить состояние оператора
      * @param newState Идентификатор состояние в которое нужно переключить оператора
+     * @param workingPeriod
      * @param netProperty Сетевые параметры для взаимодействия с сервером
      */
     public void changeState(Integer newState, UsersStatistic workingPeriod, INetProperty netProperty) {
@@ -199,6 +206,8 @@ public class UsersStatistic {
         if (currentState != null && newState.equals(currentState)) {
             return;
         }
+        
+        System.err.println("NEW STATE - " + newState);
         
 //        Date currDate = NetCommander.getServerTime(netProperty, getUserId());
         Date currDate = new Date();
@@ -243,15 +252,39 @@ public class UsersStatistic {
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
         try {
-            Spring.getInstance().getHt().saveOrUpdate(this);
+            saveOperation(this);
+//            Spring.getInstance().getHt().saveOrUpdate(this);
         } catch (Exception ex) {
             Spring.getInstance().getTxManager().rollback(status);
             throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
         }
         Spring.getInstance().getTxManager().commit(status);
-        QLog.l().logger().debug("Сохранили. " + getOperationId());
+//        QLog.l().logger().debug("Сохранили. " + getOperationId());
     }
-        
+    
+    private void saveOperation(UsersStatistic stat) {
+        try {
+            Connection con = QServer.getMySQLConnection();
+            PreparedStatement stmt = con.prepareStatement(
+                    "INSERT INTO users_statistic "
+                        + " (user_id, operation_id, dt, dt_start, dt_stop, place_id, unit_id, adress_rs) " +
+                    "VALUES (?,       ?,            ?,  ?,        ?,       ?,        ?,       ?)"
+            );
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            stmt.setLong(1, stat.getUserId());
+            stmt.setInt(2, stat.getOperationId());
+            stmt.setString(3, df.format(stat.getDt()));
+            stmt.setString(4, df.format(stat.getDtStart()));
+            stmt.setString(5, df.format(stat.getDtStop()));
+            stmt.setInt(6, Integer.valueOf(stat.getPlaceId()));
+            stmt.setInt(7, stat.getUnitId());
+            stmt.setInt(8, stat.getAdressRs());
+            stmt.execute();
+            
+        } catch (SQLException ex) {
+            QLog.l().logger().error("Ошибка сохранения операции №" + operation_id, ex);
+        }
+    }
         
     public void Save() {
         saveToSelfDB();
@@ -272,7 +305,7 @@ public class UsersStatistic {
             throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));
         }
         Spring.getInstance().getTxManager().commit(status);
-        QLog.l().logger().debug("Сохранили логин. ");
+//        QLog.l().logger().debug("Сохранили логин. ");
        // System.out.println("++++++++++++++++++++++++++");
        // System.out.println(obj.size());
     }
