@@ -30,9 +30,14 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
     private int pointType;
     private QUser selectedUser;
     private QUser receivedUser;
+    private boolean isCancelled = false;
 
     public QUser getSelectedUser() {
         return selectedUser;
+    }
+    
+    public boolean isCancelled() {
+        return isCancelled;
     }
     
     public boolean isRedirectBack() {
@@ -116,7 +121,7 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
 
         DefaultListModel<QUser> model = new DefaultListModel<>();
         users.forEach(user -> {
-            if ( !Objects.equals(receivedUser.getId(), user.getId()) && user.getShadow() != null ) {
+            if ( !Objects.equals(receivedUser.getId(), user.getId()) && user.getShadow() != null && !user.isTechWork() && !user.isContinueServicing() ) {
                 model.addElement(user);
             }
         });
@@ -267,6 +272,7 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
         selectedUser = null;
+        isCancelled = true;
         setVisible(false);
     }//GEN-LAST:event_cancelButtonActionPerformed
 

@@ -252,8 +252,8 @@ public class UsersStatistic {
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = Spring.getInstance().getTxManager().getTransaction(def);
         try {
-            saveOperation(this);
-//            Spring.getInstance().getHt().saveOrUpdate(this);
+//            saveOperation(this);
+            Spring.getInstance().getHt().saveOrUpdate(this);
         } catch (Exception ex) {
             Spring.getInstance().getTxManager().rollback(status);
             throw new ServerException("Ошибка при сохранении \n" + ex.toString() + "\n" + Arrays.toString(ex.getStackTrace()));

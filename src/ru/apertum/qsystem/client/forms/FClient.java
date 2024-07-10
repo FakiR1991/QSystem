@@ -2035,7 +2035,7 @@ public final class FClient extends javax.swing.JFrame {
             
             QUser selectedUser = window.getSelectedUser();
             
-            if (selectedUser == null) {
+            if (window.isCancelled()) {
                 return;
             }
             
