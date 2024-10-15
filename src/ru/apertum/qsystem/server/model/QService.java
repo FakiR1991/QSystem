@@ -1286,7 +1286,7 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         for (QCustomer customer : getCustomers(unitId)) {
             long waitingDuration = (new Date().getTime() - customer.getStandTime().getTime()) / 1000;
             
-            if (waitingDuration > 10 && number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
+            if (customer.getIsMine() == null && waitingDuration > 10 && number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
                 removeCustomer(customer); // убрать из очереди
                 return customer;
             }

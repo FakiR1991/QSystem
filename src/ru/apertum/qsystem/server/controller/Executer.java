@@ -473,15 +473,19 @@ public final class Executer {
                 // Мерзость. вызов по номеру.
                 if (cmdParams.textData != null && !cmdParams.textData.isEmpty()) {
                     final String num = cmdParams.textData.replaceAll("[^\\p{L}+\\d]", "");
-                    QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress);
+                    QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress + " " + user.getName());
                     for (QService service : QServiceTree.getInstance().getNodes()) {
                         if ( (customer = service.gnawOutCustomerByNumber(num, cmdParams.unitId)) != null ) {
-                            QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress);
+                            QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress + " " + user.getName());
                             break;
                         }
                     }
                     
                     if (customer == null) {
+                        QLog.l().logger().debug(
+                                "Manual inviting cancelled! Customer already linked to user." +
+                                "The user who tried to call the customer is \"" + user.getName() + "\""
+                        );
                         return new RpcInviteCustomer(null);
                     } else {
                         // разберемся с услугами, вдруг вызвали из не своей услуги
@@ -3168,6 +3172,13 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
             QUser user = QUserList.getInstance().getById(cmdParams.userId);
             user.setContinueServicing(cmdParams.requestBack);
+            //после отправки на оплату с галочкой "Не завершать работу"
+            //время оператора при подсчёте простоя не считалась, как работа
+            //если оператор завершает работу после данной галочки, то ставим
+            //если текущую дату, чтобы подсчёт простоя считался с этого момента
+            if (!cmdParams.requestBack) {
+                user.setLastPauseDate(new Date());
+            }
             return new RpcGetBool(cmdParams.requestBack);
         }
     };

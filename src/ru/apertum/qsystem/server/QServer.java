@@ -165,7 +165,7 @@ public class QServer extends Thread {
      * Таймер который проверяет талоны и назначает их операторам.
      * Ещё назначение происходит во время постановки в очередь клиента.
      */
-    private static Timer setCustomerToUserTimer = new Timer(5 * 1000, (ActionEvent e) -> {
+    private static Timer setCustomerToUserTimer = new Timer(4 * 1000, (ActionEvent e) -> {
         Executer.CLIENT_TASK_LOCK.lock();
         
         try {

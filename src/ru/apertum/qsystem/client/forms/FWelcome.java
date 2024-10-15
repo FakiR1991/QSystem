@@ -747,6 +747,7 @@ public class FWelcome extends javax.swing.JFrame {
         JLabel number0 = new JLabel();
         JLabel number1 = new JLabel();
         JLabel number2 = new JLabel();
+        JLabel number3 = new JLabel();
         
         numbersPanel1 = new JPanel();
        // numbersPanel1.setBounds(0,0,1500,1500);
@@ -764,8 +765,14 @@ public class FWelcome extends javax.swing.JFrame {
         
         //если кнопок меньше двух
         if (childCount < 2) {
-            number0.setBounds(0, 15, 900, 290);
-            number0.setText("<html>1198 - единый номер информационной и<br>технической поддержки абонентов IDC по всем<br>услугам связи<br><br>888 - Автоматическая Система<br>Самообслуживания Абонентов [АССА]<br><br>195 - Информация о состоянии лицевого счета<br>местной телефонной сети</html>");
+            number0.setBounds(0, 0, 630, 330);
+            number0.setText(
+                    "<html>"
+                        + "1198 – Бесплатный номер службы поддержки. Рады оказать Вам помощь ежедневно с 8:00 до 22:00.<br><br>"
+                        + "888 – Бесплатный номер системы самообслуживания. Управляйте услугами мобильной связи самостоятельно.<br><br>"
+                        + "Установите мобильное приложение «Мой IDC» и управляйте всеми услугами связи со своего смартфона.<br><br>"
+                        + "Оформляйте «Электронную подпись» в Удостоверяю-<br>щем центре по адресу: г. Тирасполь, ул. К. Маркса, 149 <br>(вход с левой стороны здания)." +
+                    "</html>");
             number0.setForeground(Color.decode("#3b6bb3"));
             number1.setBounds(0, 160, 700, 100);
             number1.setText("");
@@ -773,28 +780,43 @@ public class FWelcome extends javax.swing.JFrame {
             number2.setBounds(0, 60, 900, 70);
             number2.setText("");
             number2.setForeground(Color.decode("#3b6bb3"));
+            
+            number0.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),21));
         } else {
-            number0.setBounds(0, 60, 900, 100);
-            number0.setText("<html>1198 - единый номер информационной и<br>технической поддержки абонентов IDC по всем<br>услугам связи</html>");
+            number0.setBounds(0, 60, 630, 100);
+            number0.setText("<html>1198 – Бесплатный номер службы поддержки. Рады оказать Вам помощь и консультацию <br>ежедневно с 8:00 до 22:00.</html>");
             number0.setForeground(Color.decode("#3b6bb3"));
-            number1.setBounds(0, 160, 700, 100);
-            number1.setText("<html>888 - Автоматическая Система<br>Самообслуживания Абонентов [АССА]</html>");
+            number1.setBounds(0, 190, 630, 140);
+            number1.setText("<html>Установите мобильное приложение «Мой IDC» и <br>управляйте всеми услугами связи со своего смартфона.</html>");
             number1.setForeground(Color.decode("#3b6bb3"));
-            number2.setBounds(0, 60, 900, 70);
-            number2.setText("<html>195 - Информация о состоянии лицевого счета<br>местной телефонной сети</html>");
+            number2.setBounds(0, 60, 630, 100);
+            number2.setText("<html>888 – Бесплатный номер системы само-<br>обслуживания. Звоните и управляйте услугами мобильной связи самостоятельно.</html>");
             number2.setForeground(Color.decode("#3b6bb3"));
+            number3.setBounds(0, 190, 630, 140);
+            number3.setText("<html>Оформляйте «Электронную подпись» в Удостоверяющем центре по адресу: <br>\"г. Тирасполь, ул. К. Маркса, 149\" (вход с левой стороны здания).</html>");
+            number3.setForeground(Color.decode("#3b6bb3"));
+            
+            number0.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
+//            number0.setBounds(0, 60, 900, 100);
+//            number0.setText("<html>1198 - единый номер информационной и<br>технической поддержки абонентов IDC по всем<br>услугам связи</html>");
+//            number0.setForeground(Color.decode("#3b6bb3"));
+//            number1.setBounds(0, 160, 700, 100);
+//            number1.setText("<html>888 - Автоматическая Система<br>Самообслуживания Абонентов [АССА]</html>");
+//            number1.setForeground(Color.decode("#3b6bb3"));
+//            number2.setBounds(0, 60, 900, 70);
+//            number2.setText("<html>195 - Информация о состоянии лицевого счета<br>местной телефонной сети</html>");
+//            number2.setForeground(Color.decode("#3b6bb3"));
         }
         
-        
-        number0.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
         number1.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
         number2.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
+        number3.setFont(new Font(number1.getFont().getName(), number1.getFont().getStyle(),24));
        
         
         numbersPanel1.add(number0);
         numbersPanel1.add(number1);
-        //numbersPanel1.add(number2);
         numbersPanel2.add(number2);
+        numbersPanel2.add(number3);
        // numbersPanel2.add(number4);
        // numbersPanel2.add(number5);
        // numbersPanel2.add(number6);
