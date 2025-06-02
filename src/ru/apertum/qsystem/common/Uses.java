@@ -89,6 +89,8 @@ public final class Uses {
     public static final int POINT_TYPE_ABO = 1;
     //тип рабочего места - СЦ (сервисный центр)
     public static final int POINT_TYPE_SC = 2;
+    //тип рабочего места - Консультант
+    public static final int POINT_TYPE_CONSULTANT = 3;
     
     public static final long SERVICE_ABO_ID = 1623262601371L;
     public static final long SERVICE_SC_ID = 1623262612931L;

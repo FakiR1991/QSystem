@@ -372,6 +372,46 @@ public class NetCommander {
         }
         return rpc.getResult();
     }
+
+    /**
+     * Постановка в очередь, но конкретному оператору.
+     *
+     * @param netProperty netProperty параметры соединения с сервером
+     * @param serviceId услуга, в которую пытаемся встать
+     * @param password пароль того кто пытается выполнить задание
+     * @param priority приоритет.
+     * @param inputData
+     * @param unitId идентификатор зала из которого поступил кастомер
+     * @param userId bдентификатор оператора которому назначится талон
+     * @return Созданный кастомер.
+     */
+    public static QCustomer standInService(INetProperty netProperty, long serviceId, String password, int priority, String inputData, Integer unitId, long userId) {
+        QLog.l().logger().info("Встать в очередь.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.serviceId = serviceId;
+        params.password = password;
+        params.priority = priority;
+        params.textData = inputData;
+        params.unitId = unitId;
+        params.userId = userId;
+        String res = null;
+        try {
+            res = send(netProperty, Uses.TASK_STAND_IN, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcStandInService rpc;
+        try {
+            rpc = gson.fromJson(res, RpcStandInService.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
     
     public static LinkedList<QUnit> getUnits(INetProperty netProperty) {
         QLog.l().logger().info("Встать в очередь.");

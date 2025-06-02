@@ -241,10 +241,10 @@ public final class Executer {
             super.process(cmdParams, ipAdress, IP);
             
             if (cmdParams.unitId == null) {
-                QLog.l().logger().error("UnitId is null. What is going on?!");
+                QLog.l().logger().error("UnitId is null. What is going on?");
             } else if (cmdParams.unitId == 0) {
-                QLog.l().logger().warn("\nWTF? Идентификатор зала равен нулю - unitId=" + cmdParams.unitId + "." +
-                                       "\nВидимо, нужно у bat-ника терминала (ipAdress=" + ipAdress + ") добавить параметр unitid.");
+                QLog.l().logger().warn("\nИдентификатор зала равен нулю - unitId=" + cmdParams.unitId + "." +
+                                       "\nМожет быть у bat-ника терминала (ipAdress=" + ipAdress + ") нужно добавить параметр unitid.");
             }
             
             final QService service = QServiceTree.getInstance().getById(cmdParams.serviceId);
@@ -273,6 +273,12 @@ public final class Executer {
                 
                 // Введенные кастомером данные
                 customer.setInput_data(cmdParams.textData);
+                
+                //если указан параметр userId, то сразу назначаем талон оператору
+                if (cmdParams.userId != null && cmdParams.userId > 0) {
+                    customer.setUser(QUserList.getInstance().getById(cmdParams.userId));
+                    QLog.l().logger().info("Консультант назначил талон пользователю с id=" + cmdParams.userId);
+                }
                 
                 //добавим нового пользователя
                 (service.getLink() != null ? service.getLink() : service).addCustomer(customer);
@@ -475,7 +481,7 @@ public final class Executer {
                     final String num = cmdParams.textData.replaceAll("[^\\p{L}+\\d]", "");
                     QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress + " " + user.getName());
                     for (QService service : QServiceTree.getInstance().getNodes()) {
-                        if ( (customer = service.gnawOutCustomerByNumber(num, cmdParams.unitId)) != null ) {
+                        if ( (customer = service.gnawOutCustomerByNumber(user, num, cmdParams.unitId)) != null ) {
                             QLog.l().logger().debug("Warning! Corruption was detected! \"" + num + "\"" + " " + ipAdress + " " + user.getName());
                             break;
                         }
@@ -967,7 +973,7 @@ public final class Executer {
             
             LinkedList<QUser> users = new LinkedList<>();
             
-            //если передан pointType равный 1 или 2, тогда возвращаем список фильтруя по переданному значения,
+            //если передан pointType равный 1, 2 или 3, тогда возвращаем список фильтруя по переданному значения,
             //иначе просто сравниваем чтобы совпадал unitId, т.е. пользователей с любым pointType
             if (cmdParams.pointType == null) {
                 for (QUser user : QUserList.getInstance().getItems()) {
@@ -979,6 +985,7 @@ public final class Executer {
                 switch (cmdParams.pointType) {
                     case Uses.POINT_TYPE_ABO:
                     case Uses.POINT_TYPE_SC:
+                    case Uses.POINT_TYPE_CONSULTANT:
                         for (QUser user : QUserList.getInstance().getItems()) {
                             if (Objects.equals(user.getPointType(), cmdParams.pointType)
                                 && Objects.equals(user.getUnitId(), cmdParams.unitId)) {
@@ -1675,7 +1682,6 @@ public final class Executer {
         @Override
         public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
-            // вот он все это творит
             final QUser user = QUserList.getInstance().getById(cmdParams.userId);
             //переключение на кастомера при параллельном приеме, должен приехать customerID
             if (cmdParams.customerId != null) {
@@ -1688,7 +1694,6 @@ public final class Executer {
                 }
             }
             
-            // вот над этим пациентом
             final QCustomer customer = user.getCustomer();
             // если отложили бессрочно и поставили галку, то можно видеть только отложенному
             customer.setIsMine(cmdParams.isMine != null && cmdParams.isMine ? cmdParams.userId : null);

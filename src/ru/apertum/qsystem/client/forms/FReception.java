@@ -39,6 +39,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ServiceLoader;
@@ -47,6 +48,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -2710,9 +2712,15 @@ public class FReception extends javax.swing.JFrame {
     public void setInLine() {
         final QService service = (QService) treeServices.getLastSelectedPathComponent();
         if (service != null && service.isLeaf()) {
-
             if (service.getPreInfoHtml() != null && !service.getPreInfoHtml().isEmpty()) {
                 JOptionPane.showMessageDialog(this, service.getPreInfoHtml(), "!!!", JOptionPane.INFORMATION_MESSAGE); //NOI18N
+            }
+            
+            //выбираем кому назначить данный талон
+            QUser user = selectUserForNewTicket();
+            if (user == null) {
+                JOptionPane.showMessageDialog(this, "Не выбран пользователь которому назначится талон! Талон не создан.", "Информация", JOptionPane.INFORMATION_MESSAGE);
+                return;
             }
 
             //Если услуга требует ввода данных пользователем, то нужно получить эти данные из диалога ввода
@@ -2726,12 +2734,37 @@ public class FReception extends javax.swing.JFrame {
 
             final QCustomer customer;
             try {
-                customer = NetCommander.standInService(netProperty, service.getId(), "1", service.getDefaultPriority(), inputData, unit.getId().intValue()); //NOI18N
+                customer = NetCommander.standInService(netProperty, service.getId(), "1", service.getDefaultPriority(), inputData, unit.getId().intValue(), user.getId()); //NOI18N
             } catch (Exception ex) {
                 throw new ClientException(getLocaleMessage("admin.print_ticket_error") + " " + ex);
             }
+            
            // FWelcome.printTicket(customer, ((QService) treeServices.getModel().getRoot()).getTextToLocale(QService.Field.NAME));
             JOptionPane.showMessageDialog(this, getLocaleMessage("admin.print_ticket.title") + " \"" + service.getName() + "\". " + getLocaleMessage("admin.print_ticket.title_1") + " \"" + customer.getFullNumber()+ "\".", getLocaleMessage("admin.print_ticket.caption"), JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
+    private QUser selectUserForNewTicket() {
+        Integer unitId = unit == null ? null : unit.getId().intValue();
+        LinkedList<QUser> usersList = NetCommander.getUsers(netProperty, unitId, Uses.POINT_TYPE_CONSULTANT);
+        
+        if (usersList == null || usersList.size() == 0) {
+            return null;
+        }
+        
+        QUser user = (QUser)JOptionPane.showInputDialog(fReception,
+                "Выберите оператора которому назначится талон:",
+                "Выбор оператора",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                usersList.toArray(),
+                usersList.toArray()[0]);
+        
+        //если нажали "Сancel"
+        if (user == null) {
+            return null;
+        } else {
+            return user;
         }
     }
 

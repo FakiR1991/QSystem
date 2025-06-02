@@ -105,6 +105,25 @@ public class QueueIntegrationImpl implements QueueIntegration {
                 QLog.l().logger().info("Т. № " + ticketId + ". Создали нового клиента. " + new Date().toString());
                 
                 initFromApb = true;
+            } else {
+                Long userId = null;
+                //проходимся по всем операторам и ищем того, который сидит на нужном рабочем месте
+                for (QUser user : QUserList.getInstance().getItems()) {
+                    int userPoint = (user != null && user.getShadow() != null && user.getPoint() != null && !user.getPoint().isEmpty())
+                            ? Integer.valueOf(user.getPoint())
+                            : -1;
+                    //если это оператор, который сидит в нужном отделении и на нужном месте
+                    if (user != null && Objects.equals(user.getUnitId(), unitId) && Objects.equals(userPoint, pointIdTo)) {
+                        userId = user.getId();
+                        break;
+                    }
+                }
+                
+                QLog.l().logger().info("Т. № " + ticketId + ". Клиент должен был вернуться после оплаты на рабочее место №" + pointIdTo +
+                        ". Определили, что на этом месте работает оператор id=" + (userId == null ? "<НЕ НАЙДЕН>" : userId));
+                
+                //назначаем клиента оператору
+                customer.setIsMine(userId);
             }
 
             //не получилось создать нового кустомера и поставить его в услугу
@@ -143,7 +162,7 @@ public class QueueIntegrationImpl implements QueueIntegration {
             //состояние - "жду после оплаты"
             if (!initFromApb) {
                 //вроде как только что встал в очередь, ну и время проставим, а то ожидание будет огромное
-                //только что встал типо; просто время нахождения в отложенных не считается как ожидание очереди, иначе в statistic ожидание огромное
+                //типа только что встал; просто время нахождения в отложенных не считается как ожидание очереди, иначе в statistic ожидание огромное
                 customer.setStandTime(new Date());
                 customer.setState(CustomerState.STATE_WAIT_AFTER_PAYMENT);
                 

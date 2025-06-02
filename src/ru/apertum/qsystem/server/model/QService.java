@@ -1282,11 +1282,12 @@ public class QService extends DefaultMutableTreeNode implements ITreeIdGetter, T
         return false;
     }
 
-    public QCustomer gnawOutCustomerByNumber(String number, Integer unitId) {
+    public QCustomer gnawOutCustomerByNumber(QUser user, String number, Integer unitId) {
         for (QCustomer customer : getCustomers(unitId)) {
             long waitingDuration = (new Date().getTime() - customer.getStandTime().getTime()) / 1000;
             
-            if (customer.getIsMine() == null && waitingDuration > 10 && number.equalsIgnoreCase(String.format("%03d", customer.getNumber()))) {
+            if (    Objects.equals(customer.getIsMine(), user.getId()) ||
+                    ( customer.getIsMine() == null && waitingDuration > 10 && number.equalsIgnoreCase(String.format("%03d", customer.getNumber())))    ) {
                 removeCustomer(customer); // убрать из очереди
                 return customer;
             }
