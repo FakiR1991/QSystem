@@ -2748,7 +2748,7 @@ public class FReception extends javax.swing.JFrame {
         Integer unitId = unit == null ? null : unit.getId().intValue();
         LinkedList<QUser> usersList = NetCommander.getUsers(netProperty, unitId, Uses.POINT_TYPE_CONSULTANT);
         
-        if (usersList == null || usersList.size() == 0) {
+        if (usersList == null || usersList.isEmpty()) {
             return null;
         }
         

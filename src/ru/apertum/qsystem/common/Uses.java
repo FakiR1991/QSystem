@@ -94,6 +94,7 @@ public final class Uses {
     
     public static final long SERVICE_ABO_ID = 1623262601371L;
     public static final long SERVICE_SC_ID = 1623262612931L;
+    public static final long SERVICE_CONSULTATION_ID = 1748935835194L;
     
     //идентификаторы в системе Евстратенко (Oracle)
     public static final int FREE_RESERVE = 0;

@@ -276,7 +276,8 @@ public final class Executer {
                 
                 //если указан параметр userId, то сразу назначаем талон оператору
                 if (cmdParams.userId != null && cmdParams.userId > 0) {
-                    customer.setUser(QUserList.getInstance().getById(cmdParams.userId));
+//                    customer.setUser(QUserList.getInstance().getById(cmdParams.userId));
+                    customer.setIsMine(cmdParams.userId);
                     QLog.l().logger().info("Консультант назначил талон пользователю с id=" + cmdParams.userId);
                 }
                 
@@ -987,6 +988,7 @@ public final class Executer {
                     case Uses.POINT_TYPE_SC:
                     case Uses.POINT_TYPE_CONSULTANT:
                         for (QUser user : QUserList.getInstance().getItems()) {
+                            
                             if (Objects.equals(user.getPointType(), cmdParams.pointType)
                                 && Objects.equals(user.getUnitId(), cmdParams.unitId)) {
                                 users.add(user);

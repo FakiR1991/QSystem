@@ -151,7 +151,7 @@ public final class FClient extends javax.swing.JFrame {
             textAreaComments.setText("");
             return;
         }
-        QLog.l().logger().trace("Установливаем кастомера работающему клиенту и выводем его.");
+        QLog.l().logger().trace("Установливаем кастомера работающему клиенту и выводим его.");
         // выведем на экран некую инфу о приглашенном кастомере
         final String textCust = String.format("%03d", customer.getNumber());
         // Выведем номер вызванного.
@@ -1085,6 +1085,7 @@ public final class FClient extends javax.swing.JFrame {
 //                                    excludedCustomersCount.increment();
 //                                    return;
 //                                }
+                                
                                 //среди общей массы талонов считаем количество назначенных данному оператору
                                 if (cu.isMine != null && Objects.equals(cu.isMine, user.getId())) {
                                     customersCount.incrementIsMine();

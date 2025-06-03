@@ -301,8 +301,16 @@ public class QServer extends Thread {
             //задержка после завершения обслуживания клиента 10 секунд
             boolean isUserDelayOver = user.getCustFinishTime() == null || ((new Date().getTime() - user.getCustFinishTime().getTime()) / 1000) >= 10;
             boolean isUserBusy = (user.getShadow() != null && user.getShadow().getStartTime() != null) || isPause || isTechWork || isUserHasCustomer || isContinueServicing;
+            //консультантам назначаем только услугу консультации
+            boolean isConsultant = user.getPointType() == Uses.POINT_TYPE_CONSULTANT;
+            boolean isConsultation = customer.getService().getId() == Uses.SERVICE_CONSULTATION_ID;
             
-            if (isIncorrectUnitId || isEmptyShadow || isUserBusy || !isServiceInPlan || !isUserDelayOver) {
+            if (isIncorrectUnitId ||
+                isEmptyShadow ||
+                isUserBusy ||
+                !isServiceInPlan ||
+                !isUserDelayOver ||
+                (isConsultant && !isConsultation)) {
                 continue;
             }
             

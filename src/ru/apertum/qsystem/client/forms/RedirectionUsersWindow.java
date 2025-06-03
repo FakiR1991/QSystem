@@ -55,6 +55,9 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
                 
             case Uses.POINT_TYPE_SC:
                 return Uses.SERVICE_SC_ID;
+            
+            case Uses.POINT_TYPE_CONSULTANT:
+                return Uses.SERVICE_CONSULTATION_ID;
                 
             default:
                 return Uses.SERVICE_ABO_ID;
@@ -91,6 +94,10 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
                 
             case Uses.POINT_TYPE_SC:
                 scRadioButton.setSelected(true);
+                break;
+                
+            case Uses.POINT_TYPE_CONSULTANT:
+                consultantRadioButton.setSelected(true);
                 break;
                 
             default:
@@ -161,6 +168,7 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
         redirectBackCheckbox = new javax.swing.JCheckBox();
         aboRadioButton = new javax.swing.JRadioButton();
         scRadioButton = new javax.swing.JRadioButton();
+        consultantRadioButton = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -218,6 +226,13 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
             }
         });
 
+        consultantRadioButton.setText("консультант");
+        consultantRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                consultantRadioButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -234,12 +249,14 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
                     .addComponent(redirectBackCheckbox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(aboRadioButton)
                                 .addGap(18, 18, 18)
-                                .addComponent(scRadioButton))
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel2))
+                                .addComponent(scRadioButton)
+                                .addGap(18, 18, 18)
+                                .addComponent(consultantRadioButton)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -259,7 +276,8 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(aboRadioButton)
-                    .addComponent(scRadioButton))
+                    .addComponent(scRadioButton)
+                    .addComponent(consultantRadioButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(redirectButton)
@@ -299,11 +317,17 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
         selectedUser = null;
     }//GEN-LAST:event_formWindowClosing
 
+    private void consultantRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_consultantRadioButtonActionPerformed
+        pointType = Uses.POINT_TYPE_CONSULTANT;
+        refreshUsers();
+    }//GEN-LAST:event_consultantRadioButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JRadioButton aboRadioButton;
     private javax.swing.ButtonGroup buttonGroup;
     private javax.swing.JButton cancelButton;
     private javax.swing.JTextArea commentTextArea;
+    private javax.swing.JRadioButton consultantRadioButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;

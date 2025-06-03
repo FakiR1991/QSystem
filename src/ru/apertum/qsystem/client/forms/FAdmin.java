@@ -1291,7 +1291,7 @@ public class FAdmin extends javax.swing.JFrame {
         settings.put(CLIENT_AUTO_REQUEST, checkBoxClientAuto.isSelected() ? "1" : "0");
         settings.put("server_plugin_stat", serverPluginStat);
         if (QConfig.cfg().isTestServer()) {
-            settings.put("service_address", "http://10.5.0.79:9901/queue");
+            settings.put("service_address", "http://localhost:9901/queue");
         } else {
             settings.put("service_address", "http://10.5.18.10:9901/queue");
         }

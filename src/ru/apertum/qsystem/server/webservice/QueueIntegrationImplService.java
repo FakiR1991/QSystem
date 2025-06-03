@@ -20,7 +20,7 @@ import javax.xml.ws.WebServiceFeature;
  */
 @WebServiceClient(name = "QueueIntegrationImplService",
                   targetNamespace = "http://webservice.server.qsystem.apertum.ru/",
-                  wsdlLocation = "http://10.5.0.79:9901/queue?wsdl")
+                  wsdlLocation = "http://localhost:9901/queue?wsdl")
 public class QueueIntegrationImplService extends Service {
     private final static URL UCIMPLSERVICE_WSDL_LOCATION;
     private final static WebServiceException UCIMPLSERVICE_EXCEPTION;
@@ -31,7 +31,7 @@ public class QueueIntegrationImplService extends Service {
         WebServiceException e = null;
         try 
         {
-            url = new URL("http://10.5.0.79:9901/queue?wsdl");
+            url = new URL("http://localhost:9901/queue?wsdl");
         } 
         catch (MalformedURLException ex) 
         {
