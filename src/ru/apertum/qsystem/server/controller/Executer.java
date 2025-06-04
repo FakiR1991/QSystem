@@ -1568,6 +1568,66 @@ public final class Executer {
         }
     };
     
+    /**
+     * Удалить привязку билета к оператору
+     */
+    final Task removePrivacyFromTicketReceptionTask = new Task(Uses.TASK_REMOVE_PRIVACY_FROM_TICKET_FRECEPTION) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            //ищем кастомера в очереди
+            QCustomer customer = getCustomerById(cmdParams.customerId, cmdParams.unitId);
+            
+            //ищем в отложенных
+            if (customer == null) {
+                customer = QPostponedList.getInstance().getById(cmdParams.customerId);
+            }
+            
+            //ищем в списке ушедших на оплату
+            if (customer == null) {
+                customer = QMovedToBankList.getInstance().getById(cmdParams.customerId);
+            }
+            
+            if (customer == null) {
+                final QUser tempUser = new QUser();
+                QUserList.getInstance().getItems().stream().filter(user -> Objects.equals(user.getUnitId(), cmdParams.unitId)).forEach(user -> {
+                    if (user.getCustomer() != null && Objects.equals(user.getCustomer().getId(), cmdParams.customerId)) {
+                        tempUser.setName(user.getName());
+                    }
+                });
+                
+                if (tempUser.getName() != null) {
+                    return new RpcGetSrt("Талон находится в обслуживании у оператора " + tempUser.getName());
+                } else {
+                    return new RpcGetSrt("Выбранный талон не найден, обновите список талонов.");
+                }
+            }
+            
+            QLog.l().logger().warn("УДАЛЕНИЕ ПРИВЯЗКИ ТАЛОНА К ОПРЕАТОРУ: талон " + customer.getPrefix() + "-" + customer.getNumber() + ", ip: " + ipAdress);
+            
+            //убираем привязку талона к оператору
+            if (customer.getIsMine() == null) {
+                return new RpcGetSrt("Талон не имеет привязки к оператору.");
+            } else {
+                customer.setIsMine(null);
+                return new RpcGetSrt("Привязка талона к оператору успешно удалена.");
+            }
+        }
+        
+        private QCustomer getCustomerById(Long customerId, Integer unitId) {
+            for (QService service : QServiceTree.getInstance().getNodes()) {
+                for (QCustomer customer : service.getClients(unitId)) {
+                    if (customer.getId().equals(customerId)) {
+                        return customer;
+                    }
+                }
+            }
+            return null;
+        }
+    };
+    
     private static final HashMap<String, Date> KILLED_CUSTOMERS = new HashMap<>();
     /**
      * Начать работу с вызванноым кастомером.

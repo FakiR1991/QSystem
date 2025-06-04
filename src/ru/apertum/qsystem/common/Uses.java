@@ -320,6 +320,7 @@ public final class Uses {
     public static final String TASK_REMOVE_PRIVACY = "Снять приватность кастомеров";
     public static final String TASK_CLEAR_SHADOW = "Очистить shadow юзера";
     public static final String TASK_KILL_CUSTOMER_FRECEPTION = "FReception - удалить клиента из очереди";
+    public static final String TASK_REMOVE_PRIVACY_FROM_TICKET_FRECEPTION = "FReception - удалить привязку талона к оператору";
     public static final String TASK_CUSTOMER_TO_POSTPON = "Клиента в пул отложенных";
     public static final String TASK_CUSTOMER_TO_BANK = "Клиента на оплату в банк";
     public static final String TASK_POSTPON_CHANGE_STATUS = "Сменить статус отложенному";

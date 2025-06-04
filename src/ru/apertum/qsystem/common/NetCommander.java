@@ -961,6 +961,7 @@ public class NetCommander {
      *
      * @param netProperty параметры соединения с сервером
      * @param customerId тот, кого удаляем
+     * @param unitId id отделения
      */
     public static String killCustomer(INetProperty netProperty, Long customerId, Integer unitId) {
         QLog.l().logger().info("FReception - удаление кастомера из очереди.");
@@ -973,6 +974,39 @@ public class NetCommander {
         final String res;
         try {
             res = send(netProperty, Uses.TASK_KILL_CUSTOMER_FRECEPTION, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetSrt rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetSrt.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("command_error2"));
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * FReception - удаление привязки талона к оператору
+     *
+     * @param netProperty параметры соединения с сервером
+     * @param customerId id талона
+     * @param unitId id отделения
+     */
+    public static String removePrivacyFromTicket(INetProperty netProperty, Long customerId, Integer unitId) {
+        QLog.l().logger().info("FReception - удаление привязки талона к оператору.");
+        // загрузим ответ
+        final CmdParams params = new CmdParams();
+        params.customerId = customerId;
+        params.unitId = unitId;
+        
+        
+        final String res;
+        try {
+            res = send(netProperty, Uses.TASK_REMOVE_PRIVACY_FROM_TICKET_FRECEPTION, params);
         } catch (QException ex) {// вывод исключений
             throw new ClientException(Locales.locMes("command_error"), ex);
         }

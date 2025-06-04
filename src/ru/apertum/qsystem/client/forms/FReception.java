@@ -225,6 +225,14 @@ public class FReception extends javax.swing.JFrame {
         }
     }
     
+    private void removePrivacyFromTicket() {
+        if (jListTickets.getSelectedValue() != null) {
+            removePrivacyFromTicket((QCustomer)jListTickets.getSelectedValue());
+        } else {
+            JOptionPane.showMessageDialog(fReception, "Выделите талон из списка, чтобы убрать его привязку к оператору", "Внимание", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    
     private void removeTicket(QCustomer customer) {
         try {
             if (JOptionPane.showConfirmDialog(this,
@@ -236,6 +244,26 @@ public class FReception extends javax.swing.JFrame {
             String result = NetCommander.killCustomer(netProperty,
                                                       customer.getId(),
                                                       customer.getUnitId());
+            
+            JOptionPane.showMessageDialog(fReception, result, "Внимание", JOptionPane.INFORMATION_MESSAGE);
+            
+            loadTickets();
+        } catch (Exception th) {
+            throw new ClientException(new Exception(th));
+        }
+    }
+    
+    private void removePrivacyFromTicket(QCustomer customer) {
+        try {
+            if (JOptionPane.showConfirmDialog(this,
+                                              "Вы действительно хотите удалить привязку талона к оператору?",
+                                              "Удалить привязку талона к оператору",
+                                              JOptionPane.YES_NO_OPTION) == 1) {
+                return;
+            }
+            String result = NetCommander.removePrivacyFromTicket(netProperty,
+                                                                 customer.getId(),
+                                                                 customer.getUnitId());
             
             JOptionPane.showMessageDialog(fReception, result, "Внимание", JOptionPane.INFORMATION_MESSAGE);
             
@@ -378,6 +406,7 @@ public class FReception extends javax.swing.JFrame {
         jPopupMenuTickets = new javax.swing.JPopupMenu();
         
         jPopupMenuItemRemoveTicket = new javax.swing.JMenuItem();
+        jPopupMenuItemRemovePrivacyFromTicket = new javax.swing.JMenuItem();
         jPopupMenuItemEditPriority = new javax.swing.JMenuItem();
         jPopupMenuItemRefreshList = new javax.swing.JMenuItem();
         jPopupMenuItemChangeState = new javax.swing.JMenuItem();
@@ -387,6 +416,7 @@ public class FReception extends javax.swing.JFrame {
         jListTickets = new javax.swing.JList<>();
         
         jButtonRemoveTicket = new javax.swing.JButton();
+        jButtonDeleteUserFromTicket = new javax.swing.JButton();
         jButtonChangePriority = new javax.swing.JButton();
         jButtonRefreshTickets = new javax.swing.JButton();
         
@@ -396,6 +426,7 @@ public class FReception extends javax.swing.JFrame {
         jPopupMenuItemRefreshList.setText("Обновить список");
         jPopupMenuItemEditPriority.setText("Изменить приоритет");
         jPopupMenuItemRemoveTicket.setText("Удалить из очереди");
+        jPopupMenuItemRemovePrivacyFromTicket.setText("Удалить привязку");
         jPopupMenuItemChangeState.setText("Изменить статус");
         
         jPopupMenuTickets.add(jPopupMenuItemRefreshList);
@@ -403,6 +434,7 @@ public class FReception extends javax.swing.JFrame {
         jPopupMenuTickets.add(jPopupMenuItemEditPriority);
         jPopupMenuTickets.add(jPopupMenuItemChangeState);
         jPopupMenuTickets.add(jPopupMenuItemRemoveTicket);
+        jPopupMenuTickets.add(jPopupMenuItemRemovePrivacyFromTicket);
         
         jPopupMenuItemRefreshList.addMouseListener(new MouseAdapter() {
             @Override
@@ -419,6 +451,15 @@ public class FReception extends javax.swing.JFrame {
                 super.mouseReleased(e);
                 
                 removeTicket();
+            }
+        });
+        
+        jPopupMenuItemRemovePrivacyFromTicket.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                
+                removePrivacyFromTicket();
             }
         });
         
@@ -443,6 +484,11 @@ public class FReception extends javax.swing.JFrame {
         jButtonRemoveTicket.setText("Удалить из очереди");
         jButtonRemoveTicket.addActionListener((ActionEvent evt) -> {
             removeTicket();
+        });
+        
+        jButtonDeleteUserFromTicket.setText("Убрать привязку");
+        jButtonDeleteUserFromTicket.addActionListener((ActionEvent evt) -> {
+            removePrivacyFromTicket();
         });
         
         jButtonChangePriority.setText("Изменить приоритет");
@@ -472,6 +518,8 @@ public class FReception extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonRemoveTicket)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButtonDeleteUserFromTicket)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonRefreshTickets)
                 .addContainerGap())
         );
@@ -482,6 +530,7 @@ public class FReception extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
                 .addGroup(jPanelTicketsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButtonRemoveTicket)
+                    .addComponent(jButtonDeleteUserFromTicket)
                     .addComponent(jButtonChangePriority)
                     .addComponent(jButtonRefreshTickets))
                 .addContainerGap())
@@ -3066,10 +3115,12 @@ public class FReception extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollTickets;
     private javax.swing.JList jListTickets;
     private javax.swing.JButton jButtonRemoveTicket;
+    private javax.swing.JButton jButtonDeleteUserFromTicket;
     private javax.swing.JButton jButtonChangePriority;
     private javax.swing.JButton jButtonRefreshTickets;
     private javax.swing.JPopupMenu jPopupMenuTickets;
     private javax.swing.JMenuItem jPopupMenuItemRemoveTicket;
+    private javax.swing.JMenuItem jPopupMenuItemRemovePrivacyFromTicket;
     private javax.swing.JMenuItem jPopupMenuItemRefreshList;
     private javax.swing.JMenuItem jPopupMenuItemChangeState;
     private javax.swing.JMenuItem jPopupMenuItemEditPriority;
