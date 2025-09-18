@@ -20,7 +20,7 @@ import ru.apertum.qsystem.server.model.QUser;
  *
  * @author zaikov
  */
-public class RedirectionUsersWindow extends javax.swing.JDialog {
+public class FRedirectionUsersWindow extends javax.swing.JDialog {
     
     private final INetProperty netProperty;
     private final String comment;
@@ -64,7 +64,7 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
         }
     }
     
-    public RedirectionUsersWindow(java.awt.Frame parent, boolean modal, INetProperty netProperty, QUser user, int unitId, int pointType, String comment) {
+    public FRedirectionUsersWindow(java.awt.Frame parent, boolean modal, INetProperty netProperty, QUser user, int unitId, int pointType, String comment) {
         super(parent, modal);
         initComponents();
         
@@ -226,6 +226,7 @@ public class RedirectionUsersWindow extends javax.swing.JDialog {
             }
         });
 
+        buttonGroup.add(consultantRadioButton);
         consultantRadioButton.setText("консультант");
         consultantRadioButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

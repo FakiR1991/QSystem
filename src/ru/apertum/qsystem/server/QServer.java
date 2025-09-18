@@ -104,6 +104,9 @@ import ru.apertum.qsystem.server.webservice.prereg.notgenerated.WS_ServiceImpl;
  * @author Evgeniy Egorov
  */
 public class QServer extends Thread {
+    public static String amar1ConnectionString = "jdbc:oracle:thin:@(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1-vip.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node2-vip.int.idknet.com)(PORT = 1521)) (FAILOVER = yes) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = SHARED) (SERVICE_NAME = amar_s1) (FAILOVER_MODE = (TYPE = SELECT) (METHOD = BASIC) (RETRIES = 180) (DELAY = 5))))";
+    public static String amar1DbUser = "qsystem";
+    public static String amar1UserPass = "nyZd6je6R";
 
     private final Socket socket;
     private static volatile boolean globalExit = false;
@@ -1266,7 +1269,7 @@ public class QServer extends Thread {
     private static final Connection mySQLConnection = null;
     
     public static Connection getMySQLConnection() throws SQLException {
-        if (mySQLConnection != null) {
+        if (mySQLConnection != null && mySQLConnection.isValid(3)) {
             return mySQLConnection;
         }
         
@@ -1420,13 +1423,10 @@ public class QServer extends Thread {
     private static void startPostponedTimer() {
         Timer timerOut = new Timer(90 * 1000, (ActionEvent e) -> {
             
-            String connectionString = "jdbc:oracle:thin:@(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1-vip.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node1.int.idknet.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = amar-node2-vip.int.idknet.com)(PORT = 1521)) (FAILOVER = yes) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = SHARED) (SERVICE_NAME = amar_s1) (FAILOVER_MODE = (TYPE = SELECT) (METHOD = BASIC) (RETRIES = 180) (DELAY = 5))))";
-            String strUserID = "qsystem";
-            String strPassword = "nyZd6je6R";
             ArrayList<TempTicket> tickets = new ArrayList<>();
             Connection myConnection = null;
             try {
-                myConnection = DriverManager.getConnection(connectionString, strUserID, strPassword);
+                myConnection = DriverManager.getConnection(amar1ConnectionString, amar1DbUser, amar1UserPass);
                 Statement sqlStatement = myConnection.createStatement();
 
                 ResultSet myResultSet = sqlStatement.executeQuery("select bs.qsys.get_ticket_list from dual");

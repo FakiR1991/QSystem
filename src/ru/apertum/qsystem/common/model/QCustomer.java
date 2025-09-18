@@ -30,10 +30,18 @@ import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.results.QResult;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.ServiceLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Transient;
@@ -45,8 +53,10 @@ import ru.apertum.qsystem.common.CustomerState;
 import ru.apertum.qsystem.common.QConfig;
 import ru.apertum.qsystem.common.exceptions.ServerException;
 import ru.apertum.qsystem.extra.IChangeCustomerStateEvent;
+import ru.apertum.qsystem.server.QServer;
 import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.IidGetter;
+import ru.apertum.qsystem.server.model.QDeviceSelected;
 import ru.apertum.qsystem.server.model.response.QRespEvent;
 
 /**
@@ -74,6 +84,19 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         setStandTime(new Date()); // действия по инициализации при постановке
         // все остальные всойства кастомера об услуге куда попал проставятся в самой услуге при помещении кастомера в нее
         QLog.l().logger().debug("Создали кастомера с номером " + number);
+    }
+    
+    @Expose
+    @SerializedName("selected_devices")
+    private LinkedList<QDeviceSelected> selectedDevices;
+    
+    @Transient
+    public LinkedList<QDeviceSelected> getSelectedDevices() {
+        return selectedDevices;
+    }
+
+    public void setSelectedDevices(LinkedList<QDeviceSelected> selectedDevices) {
+        this.selectedDevices = selectedDevices;
     }
     
     @Expose
@@ -354,6 +377,60 @@ public final class QCustomer implements Comparable<QCustomer>, Serializable, Iid
         }
         Spring.getInstance().getTxManager().commit(status);
         QLog.l().logger().debug("Сохранили.");
+        
+        //сохраняем список оборудования с которым был перенаправлен клиент, если есть
+        if (selectedDevices != null && selectedDevices.size() > 0) {
+            try {
+                saveClientDevices();
+            } catch (SQLException ex) {
+                throw new ServerException("Ошибка при сохранении списка оборудования \n" + ex.getMessage());
+            }
+        }
+    }
+    
+    private void saveClientDevices() throws SQLException {
+        Connection con = null;
+        try {
+            con = QServer.getMySQLConnection();
+            con.setAutoCommit(false);
+//            con.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            try (PreparedStatement stmt = con.prepareStatement(
+                    "INSERT INTO devices_to_clients " +
+                    "   (client_id, redirection_time, model_id, maker_id, device_type_id, full_name, count) " +
+                    "VALUES " +
+                    "   (?,         ?,                ?,        ?,        ?,              ?,         ?)"
+            )) {
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                
+                for (QDeviceSelected selectedDevice : getSelectedDevices()) {
+                    stmt.setLong(1, getId());
+                    stmt.setString(2, df.format(getFinishTime()));
+                    stmt.setInt(3, selectedDevice.getDevice().getModelId());
+                    stmt.setInt(4, selectedDevice.getDevice().getMakerId());
+                    stmt.setInt(5, selectedDevice.getDeviceType().getDeviceTypeId());
+                    stmt.setString(6, selectedDevice.getDevice().getFullName());
+                    stmt.setInt(7, selectedDevice.getCount());
+                    stmt.addBatch();
+                }
+                
+                stmt.executeBatch();
+                stmt.clearBatch();
+            }
+            con.commit();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            if (con != null) {
+                con.rollback();
+            }
+        } catch (SQLException e) {
+            if (con != null) {
+                con.rollback();
+            }
+            QLog.l().logger().error("Ошибка сохранения оборудования — client_id: " + getId() + ", ticket_number: " + getFullNumber(), e);
+        } finally {
+            if (con != null) {
+                con.close();
+            }
+        }
     }
 
     @Transient

@@ -289,6 +289,8 @@ public final class Uses {
     public static final String TASK_FOR_ALL_SITE = "Для всех сайтов домена";
     public static final String TASK_STAND_IN = "Поставить в очередь";
     public static final String TASK_GET_UNITS = "Загрузка списка отделений";
+    public static final String TASK_GET_DEVICE_TYPES = "Загрузка списка типов устройств";
+    public static final String TASK_GET_DEVICES = "Загрузка списка устройств";
     public static final String TASK_STAND_COMPLEX = "Поставить в несколько очередей";
     public static final String TASK_ADVANCE_STAND_IN = "Поставить в очередь предварительно";
     public static final String TASK_ADVANCE_CHECK_AND_STAND = "Поставить предварительно записанного";

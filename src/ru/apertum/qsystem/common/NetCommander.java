@@ -35,7 +35,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 import javax.swing.tree.TreeNode;
 import static org.apache.http.HttpHeaders.USER_AGENT;
@@ -56,6 +55,8 @@ import ru.apertum.qsystem.common.cmd.RpcGetAllSessions;
 import ru.apertum.qsystem.common.cmd.RpcGetAuthorizCustomer;
 import ru.apertum.qsystem.common.cmd.RpcGetBool;
 import ru.apertum.qsystem.common.cmd.RpcGetDateTime;
+import ru.apertum.qsystem.common.cmd.RpcGetDeviceTypesList;
+import ru.apertum.qsystem.common.cmd.RpcGetDevicesList;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfWeek;
 import ru.apertum.qsystem.common.cmd.RpcGetInfoTree;
@@ -89,6 +90,9 @@ import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.http.CommandHandler;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
+import ru.apertum.qsystem.server.model.QDeviceType;
+import ru.apertum.qsystem.server.model.QDevice;
+import ru.apertum.qsystem.server.model.QDeviceSelected;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QServiceTree;
@@ -426,6 +430,61 @@ public class NetCommander {
         final RpcGetUnitsList rpc;
         try {
             rpc = gson.fromJson(res, RpcGetUnitsList.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Получить список типов устройств для консультантов.
+     * @param netProperty
+     * @return 
+     */
+    public static LinkedList<QDeviceType> getDeviceTypesList(INetProperty netProperty) {
+        QLog.l().logger().info("Получение списка типов устройств.");
+        // загрузим ответ
+        String res = null;
+        try {
+            res = send(netProperty, Uses.TASK_GET_DEVICE_TYPES, null);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetDeviceTypesList rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetDeviceTypesList.class);
+        } catch (JsonSyntaxException ex) {
+            throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
+        } finally {
+            GsonPool.getInstance().returnGson(gson);
+        }
+        return rpc.getResult();
+    }
+    
+    /**
+     * Получить список устройств для консультантов.
+     * @param netProperty
+     * @param deviceTypeId id типа устройсва полученного после вызова функции Uses.TASK_GET_DEVICE_TYPES
+     * @return 
+     */
+    public static LinkedList<QDevice> getDevicesList(INetProperty netProperty, int deviceTypeId) {
+        QLog.l().logger().info("Получение списка устройств.");
+        // загрузим ответ
+        String res = null;
+        final CmdParams params = new CmdParams();
+        params.deviceTypeId = deviceTypeId;
+        try {
+            res = send(netProperty, Uses.TASK_GET_DEVICES, params);
+        } catch (QException ex) {// вывод исключений
+            throw new ClientException(Locales.locMes("command_error"), ex);
+        }
+        final Gson gson = GsonPool.getInstance().borrowGson();
+        final RpcGetDevicesList rpc;
+        try {
+            rpc = gson.fromJson(res, RpcGetDevicesList.class);
         } catch (JsonSyntaxException ex) {
             throw new ClientException(Locales.locMes("bad_response") + "\n" + ex.toString());
         } finally {
@@ -1203,7 +1262,8 @@ public class NetCommander {
     /**
      * Переадресовать клиента другому оператору
      * @param netProperty параметры соединения с сервером
-     * @param userId
+     * @param userId оператор который перенаправляет
+     * @param selectedDevices список устройств выбранных консультантом для перенаправления
      * @param customerId переключиться на этого при параллельном приеме, NULL если переключаться не надо
      * @param redirectServiceId
      * @param redirectUserId идентификатор оператора на которого отправляем
@@ -1211,11 +1271,12 @@ public class NetCommander {
      * @param comments комментарии при редиректе
      * @param resultId 
      */
-    public static void redirectCustomer(INetProperty netProperty, long userId, Long redirectUserId, Long customerId, long redirectServiceId, boolean requestBack, String comments, Long resultId) {
+    public static void redirectCustomer(INetProperty netProperty, long userId, LinkedList<QDeviceSelected> selectedDevices, Long redirectUserId, Long customerId, long redirectServiceId, boolean requestBack, String comments, Long resultId) {
         QLog.l().logger().info("Переадресовать клиента в другую очередь.");
         // загрузим ответ
         final CmdParams params = new CmdParams();
         params.userId = userId;
+        params.selectedDevices = selectedDevices;
         params.redirectUserId = redirectUserId;
         params.customerId = customerId;
         params.serviceId = redirectServiceId;
@@ -1863,7 +1924,7 @@ public class NetCommander {
      * Присвоить экземпляру юзера на сервере некоторые параметры
      * @param netProperty
      * @param userId - идентификатор пользователя
-     * @param pointType - идентификатор типа места в зале (1 - абон. зал, 2 - СЦ)
+     * @param pointType - идентификатор типа места в зале (1 - абон. зал, 2 - СЦ, 3 - Консультант)
      * @param unitId - идентификатор зала (г. Тирасполь, г. Бендеры и т.д.)
      * @param addressRs - идентификатор для вывода на монитор (параметр определяет на какой монитор будет выведена информация)
      */

@@ -51,6 +51,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -106,6 +108,8 @@ import ru.apertum.qsystem.common.model.INetProperty;
 import ru.apertum.qsystem.common.model.QCustomer;
 import ru.apertum.qsystem.extra.IStartClient;
 import ru.apertum.qsystem.fx.OrangeClientboard;
+import ru.apertum.qsystem.server.model.QDevice;
+import ru.apertum.qsystem.server.model.QDeviceSelected;
 import ru.apertum.qsystem.server.model.QService;
 import ru.apertum.qsystem.server.model.QUser;
 import ru.apertum.qsystem.server.model.UsersStatistic;
@@ -138,6 +142,59 @@ public final class FClient extends javax.swing.JFrame {
     * Номер окна пользователя
     */
     private static String placeId = null;
+    
+    private int getLongestMakerTextLength(LinkedList<QDeviceSelected> devices) {
+        int length = 0;
+        for (QDeviceSelected device : devices) {
+            if (device.getDevice().getMakerName().length() > length) {
+                length = device.getDevice().getMakerName().length();
+            }
+        }
+        int columnNameLength = "Производитель".length();
+        return columnNameLength > length ? 0 : (length - columnNameLength);
+    }
+    
+    private int getLongestModelTextLength(LinkedList<QDeviceSelected> devices) {
+        int length = 0;
+        for (QDeviceSelected device : devices) {
+            if (device.getDevice().getModelName().length() > length) {
+                length = device.getDevice().getModelName().length();
+            }
+        }
+        int columnNameLength = "Модель".length();
+        return columnNameLength > length ? 0 : (length - columnNameLength);
+    }
+    
+    private int getMakerSpacesLength(LinkedList<QDeviceSelected> devices, String maker) {
+        int length = 0;
+        for (QDeviceSelected device : devices) {
+            if (device.getDevice().getMakerName().length() > length) {
+                length = device.getDevice().getMakerName().length();
+            }
+        }
+        int columnNameLength = "Производитель".length();
+        length = columnNameLength > length ? columnNameLength : length;
+        return length - maker.length();
+    }
+    
+    private int getModelSpacesLength(LinkedList<QDeviceSelected> devices, String model) {
+        int length = 0;
+        for (QDeviceSelected device : devices) {
+            if (device.getDevice().getModelName().length() > length) {
+                length = device.getDevice().getModelName().length();
+            }
+        }
+        
+        int columnNameLength = "Модель".length();
+        length = columnNameLength > length ? columnNameLength : length;
+        return length - model.length();
+    }
+    
+    private String getRepeatedString(int lenght, String symbol) {
+        return IntStream.range(0, lenght)
+                        .mapToObj(i -> symbol)
+                        .collect(Collectors.joining()); 
+    }
 
     /**
      * Устанавливаем кастомера для работы. Не может быть NULL
@@ -198,8 +255,35 @@ public final class FClient extends javax.swing.JFrame {
                : "")
             + "<span style='font-size:14.0pt;color:gray'> " + s + "</span>"
             + "</div>");
-        textAreaComments.setText(customer.getTempComments());
+        
+        String comment = "";
+        if (customer.getSelectedDevices() != null && customer.getSelectedDevices().size() > 0) {
+            textAreaComments.setForeground(Color.decode("#57A639"));
+            comment += "Выбранное оборудование:\n\n";
+            comment += "Производитель" + getRepeatedString(getLongestMakerTextLength(customer.getSelectedDevices()) + 3, " ");
+            comment += "Модель" + getRepeatedString(getLongestModelTextLength(customer.getSelectedDevices()) + 3, " ");
+            comment += "Кол-во\n";
+            
+            comment += "-------------" + getRepeatedString(getLongestMakerTextLength(customer.getSelectedDevices()) + 3, "-");
+            comment += "------" + getRepeatedString(getLongestModelTextLength(customer.getSelectedDevices()) + 3, "-");
+            comment += "------\n";
+            for (QDeviceSelected selectedDevice : customer.getSelectedDevices()) {
+                String maker = selectedDevice.getDevice().getMakerName();
+                String model = selectedDevice.getDevice().getModelName();
+                
+                comment +=
+                        maker + getRepeatedString(getMakerSpacesLength(customer.getSelectedDevices(), maker) + 3, " ") +
+                        model + getRepeatedString(getModelSpacesLength(customer.getSelectedDevices(), model) + 3, " ") +
+                        selectedDevice.getCount() + "\n";
+            }
+        } else {
+            textAreaComments.setForeground(Color.RED);
+            comment = customer.getTempComments();
+        }
+        
+        textAreaComments.setText(comment);
         textAreaComments.setCaretPosition(0);
+        
         // прикроем кнопки, которые недоступны на этом этапе работы с кастомером.
         // тут в зависимости от состояния кастомера открываем разные наборы кнопок
         switch (customer.getState()) {
@@ -537,7 +621,7 @@ public final class FClient extends javax.swing.JFrame {
         //добавляем пункт меню Удалить талоны
         removeTicketsItemMenu = new JMenuItem("Удалить талоны");
         removeTicketsItemMenu.addActionListener(evt -> {
-            TicketsToRemoveWindow window = new TicketsToRemoveWindow(fClient, true, QConfig.cfg().getUnitId(), netProperty);
+            FTicketsToRemoveWindow window = new FTicketsToRemoveWindow(fClient, true, QConfig.cfg().getUnitId(), netProperty);
             window.setVisible(true);
         });
         removeTicketsItemMenu.setEnabled(false);
@@ -633,7 +717,7 @@ public final class FClient extends javax.swing.JFrame {
         initComponents();
         initManuallyAddedComponents();
         textAreaComments.setForeground(Color.RED);
-        textAreaComments.setFont(new Font("Times New Roman", Font.BOLD, 16));
+        textAreaComments.setFont(new Font("Consolas", Font.BOLD, 14));
         listPostponed.addMouseListener( new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
@@ -778,6 +862,7 @@ public final class FClient extends javax.swing.JFrame {
             buttonKill.setEnabled(false);
             buttonStart.setEnabled(false);
             buttonRedirect.setEnabled(false);
+            buttonSelectDevices.setEnabled(false);
             buttonMoveToPostponed.setEnabled(false);
             buttonFinish.setEnabled(false);
             buttonSendToBank.setEnabled(false);
@@ -828,6 +913,7 @@ public final class FClient extends javax.swing.JFrame {
             buttonKill.setEnabled(false);
             buttonStart.setEnabled(false);
             buttonRedirect.setEnabled(false);
+            buttonSelectDevices.setEnabled(false);
             buttonMoveToPostponed.setEnabled(false);
             buttonFinish.setEnabled(false);
             buttonSendToBank.setEnabled(false);
@@ -1276,12 +1362,12 @@ public final class FClient extends javax.swing.JFrame {
     /**
      * Возможный состояния кнопок 1 - доступна кнопка, 0 - не доступна
      */
-    public static final String KEYS_OFF =                   "0000000";
-    public static final String KEYS_ALL =                   "1111111";
-    public static final String KEYS_MAY_INVITE =            "1000000";
-    public static final String KEYS_INVITED =               "1110000";
-    public static final String KEYS_STARTED =               "0001111";
-    public static final String KEYS_CONTINUE_SERVICING =    "0000010";
+    public static final String KEYS_OFF =                   "00000000";
+    public static final String KEYS_ALL =                   "11111111";
+    public static final String KEYS_MAY_INVITE =            "10000000";
+    public static final String KEYS_INVITED =               "11100000";
+    public static final String KEYS_STARTED =               "00011111";
+    public static final String KEYS_CONTINUE_SERVICING =    "00000010";
     private String keys_current = KEYS_OFF;
 
     public String getKeys_current() {
@@ -1313,9 +1399,10 @@ public final class FClient extends javax.swing.JFrame {
         buttonKill.setEnabled('1' == regim.charAt(1));
         buttonStart.setEnabled('1' == regim.charAt(2));
         buttonRedirect.setEnabled('1' == regim.charAt(3));
-        buttonMoveToPostponed.setEnabled('1' == regim.charAt(4));
-        buttonFinish.setEnabled('1' == regim.charAt(5));
-        buttonSendToBank.setEnabled('1' == regim.charAt(6));
+	buttonSelectDevices.setEnabled(QConfig.cfg().getPointType() == Uses.POINT_TYPE_CONSULTANT && '1' == regim.charAt(4));
+        buttonMoveToPostponed.setEnabled('1' == regim.charAt(5));
+        buttonFinish.setEnabled('1' == regim.charAt(6));
+        buttonSendToBank.setEnabled('1' == regim.charAt(7));
 
         menuItemInvite.setEnabled('1' == regim.charAt(0));
         menuItemKill.setEnabled('1' == regim.charAt(1));
@@ -2023,7 +2110,7 @@ public final class FClient extends javax.swing.JFrame {
 //                return;
 //            }
             
-            RedirectionUsersWindow window = new RedirectionUsersWindow(
+            FRedirectionUsersWindow window = new FRedirectionUsersWindow(
                     fClient,
                     true,
                     netProperty,
@@ -2038,10 +2125,32 @@ public final class FClient extends javax.swing.JFrame {
             
             if (window.isCancelled()) {
                 return;
+            };
+            
+            LinkedList<QDeviceSelected> selectedDevices = null;
+            
+            //только для консультантов
+            if (QConfig.cfg().getPointType() == Uses.POINT_TYPE_CONSULTANT) {
+                //если не выбрано оборудование перед отправкой, то предупреждаем
+                if (selectDevicesWindow == null || (selectDevicesWindow.getSelectedDevices() == null || selectDevicesWindow.getSelectedDevices().size() <= 0) ) {
+                    if (JOptionPane.showConfirmDialog(
+                            fClient,
+                            "Оборудование не выбрано! Продолжить?",
+                            "Внимание!",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE) != 0) {
+                        return;
+                    }
+
+                    selectedDevices = null;
+                } else {
+                    selectedDevices = selectDevicesWindow.getSelectedDevices();
+                }
             }
             
             NetCommander.redirectCustomer(netProperty,
                                           user.getId(),
+                                          selectedDevices,
                                           selectedUser == null ? null : selectedUser.getId(),
                                           null,
                                           window.getSelectedService(),
@@ -2063,6 +2172,17 @@ public final class FClient extends javax.swing.JFrame {
         } catch (Throwable th) {
             throw new ClientException(new Exception(th));
         }
+    }
+    
+    FSelectDevice selectDevicesWindow;
+    
+    @Action
+    public void selectDevices(ActionEvent evt) {
+//        if (selectDevicesWindow == null) {
+//            selectDevicesWindow = new FSelectDevice(this, true, netProperty);
+//        }
+        selectDevicesWindow = new FSelectDevice(this, true, netProperty);
+        selectDevicesWindow.setVisible(true);
     }
     
     /**
@@ -2177,6 +2297,7 @@ public final class FClient extends javax.swing.JFrame {
         buttonStart = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         buttonRedirect = new javax.swing.JButton();
+		buttonSelectDevices = new javax.swing.JButton();
         buttonMoveToPostponed = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         labelNextNumber = new javax.swing.JTextPane();
@@ -2267,7 +2388,7 @@ public final class FClient extends javax.swing.JFrame {
         menuItemInvitePostponed1.setAction(actionMap.get("inviteCustomer")); // NOI18N
         menuItemInvitePostponed1.setLabel(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FClient.class).getString("menuItemInvitePostponed1.label")); // NOI18N
         menuItemInvitePostponed1.setName("menuItemInvitePostponed1"); // NOI18N
-        popupMenuClients.add(menuItemInvitePostponed1);
+        //popupMenuClients.add(menuItemInvitePostponed1);
 
         setTitle(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FClient.class).getString("Form.title")); // NOI18N
         setIconImage(getIconImage());
@@ -2370,6 +2491,10 @@ public final class FClient extends javax.swing.JFrame {
         buttonRedirect.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FClient.class).getString("buttonRedirect.text")); // NOI18N
         buttonRedirect.setName("buttonRedirect"); // NOI18N
 
+        buttonSelectDevices.setAction(actionMap.get("selectDevices")); // NOI18N
+        buttonSelectDevices.setText("Выбрать оборудование"); // NOI18N
+        buttonSelectDevices.setName("buttonSelectDevices"); // NOI18N
+
         buttonMoveToPostponed.setAction(actionMap.get("moveToPOstponed")); // NOI18N
         buttonMoveToPostponed.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(FClient.class).getString("buttonMoveToPostponed.text")); // NOI18N
         buttonMoveToPostponed.setName("buttonMoveToPostponed"); // NOI18N
@@ -2404,6 +2529,7 @@ public final class FClient extends javax.swing.JFrame {
                     .addComponent(buttonInvite, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonKill, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonStart, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+					.addComponent(buttonSelectDevices, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonRedirect, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonSendToBank, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -2421,6 +2547,8 @@ public final class FClient extends javax.swing.JFrame {
                 .addComponent(buttonKill)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonStart)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(buttonSelectDevices)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonRedirect)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -3220,6 +3348,7 @@ public final class FClient extends javax.swing.JFrame {
     private javax.swing.JButton buttonInvite;
     private javax.swing.JButton buttonKill;
     private javax.swing.JButton buttonMoveToPostponed;
+	private javax.swing.JButton buttonSelectDevices;
     private javax.swing.JButton buttonRedirect;
     private javax.swing.JButton buttonSendToBank;
     private javax.swing.JButton buttonStart;

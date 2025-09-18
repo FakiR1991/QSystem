@@ -17,7 +17,6 @@
 package ru.apertum.qsystem.common.exceptions;
 
 import javax.swing.JOptionPane;
-import ru.apertum.qsystem.client.Locales;
 
 /**
  * Этот класс исключения использовать для програмной генерации исклюсений.

@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import ru.apertum.qsystem.server.model.QDeviceSelected;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
 
@@ -47,6 +48,12 @@ public class CmdParams {
     public CmdParams(String params) {
         initFromString(params);
     }
+    @Expose
+    @SerializedName("selected_devices_list")
+    public LinkedList<QDeviceSelected> selectedDevices;
+    @Expose
+    @SerializedName("device_type_id")
+    public Integer deviceTypeId;
     @Expose
     @SerializedName("service_id")
     public Long serviceId;

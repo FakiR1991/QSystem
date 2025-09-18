@@ -184,6 +184,9 @@
     </Component>
     <Component class="javax.swing.JRadioButton" name="consultantRadioButton">
       <Properties>
+        <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
+          <ComponentRef name="buttonGroup"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="&#x43a;&#x43e;&#x43d;&#x441;&#x443;&#x43b;&#x44c;&#x442;&#x430;&#x43d;&#x442;"/>
       </Properties>
       <Events>

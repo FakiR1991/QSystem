@@ -17,13 +17,8 @@
 package ru.apertum.qsystem.server.controller;
 
 import com.agroprombank.services.QMSServiceSoapProxy;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -73,6 +68,8 @@ import ru.apertum.qsystem.common.cmd.RpcGetAllSessions;
 import ru.apertum.qsystem.common.cmd.RpcGetAuthorizCustomer;
 import ru.apertum.qsystem.common.cmd.RpcGetBool;
 import ru.apertum.qsystem.common.cmd.RpcGetDateTime;
+import ru.apertum.qsystem.common.cmd.RpcGetDeviceTypesList;
+import ru.apertum.qsystem.common.cmd.RpcGetDevicesList;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfDay;
 import ru.apertum.qsystem.common.cmd.RpcGetGridOfWeek;
 import ru.apertum.qsystem.common.cmd.RpcGetInfoTree;
@@ -106,6 +103,8 @@ import ru.apertum.qsystem.server.ServerProps;
 import ru.apertum.qsystem.server.Spring;
 import ru.apertum.qsystem.server.model.QAdvanceCustomer;
 import ru.apertum.qsystem.server.model.QAuthorizationCustomer;
+import ru.apertum.qsystem.server.model.QDeviceType;
+import ru.apertum.qsystem.server.model.QDevice;
 import ru.apertum.qsystem.server.model.QPlanService;
 import ru.apertum.qsystem.server.model.QProperty;
 import ru.apertum.qsystem.server.model.QService;
@@ -960,6 +959,46 @@ public final class Executer {
         public RpcGetUnitsList process(CmdParams cmdParams, String ipAdress, byte[] IP) {
             super.process(cmdParams, ipAdress, IP);
             return new RpcGetUnitsList(QUnitList.getInstance().getItems());
+        }
+    };
+    
+    /**
+     * Получить список типов устройств
+     */
+    final Task getDeviceTypesList = new Task(Uses.TASK_GET_DEVICE_TYPES) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            LinkedList<QDeviceType> deviceTypesList;
+            try {
+                deviceTypesList = QDeviceType.getDeviceTypesList();
+            } catch (SQLException e) {
+                return new JsonRPC20Error(-1, e.getMessage());
+            }
+            
+            return new RpcGetDeviceTypesList(deviceTypesList);
+        }
+    };
+    
+    /**
+     * Получить список устройств
+     */
+    final Task getDevicesList = new Task(Uses.TASK_GET_DEVICES) {
+
+        @Override
+        public AJsonRPC20 process(CmdParams cmdParams, String ipAdress, byte[] IP) {
+            super.process(cmdParams, ipAdress, IP);
+            
+            LinkedList<QDevice> devicesList;
+            try {
+                devicesList = QDevice.getDevicesList(cmdParams.deviceTypeId);
+            } catch (SQLException e) {
+                return new JsonRPC20Error(-1, e.getMessage());
+            }
+            
+            return new RpcGetDevicesList(devicesList);
         }
     };
     
@@ -2127,6 +2166,11 @@ public final class Executer {
             }
             
             final QCustomer customer = user.getCustomer();
+            
+            //если передан список оборудования с которым произошло перенаправление клиента
+            if (cmdParams.selectedDevices != null) {
+                customer.setSelectedDevices(cmdParams.selectedDevices);
+            }
             
             //сбрасываем количество вызовов
             customer.setRecallCount(0);

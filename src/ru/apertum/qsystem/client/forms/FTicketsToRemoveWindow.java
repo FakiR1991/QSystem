@@ -21,14 +21,14 @@ import ru.apertum.qsystem.common.model.QCustomer;
  *
  * @author zaikov
  */
-public class TicketsToRemoveWindow extends javax.swing.JDialog {
+public class FTicketsToRemoveWindow extends javax.swing.JDialog {
 
     private LinkedList<QCustomer> tickets;
     private final IClientNetProperty netProperty;
     private final Integer unitId;
     private Timer refreshTicketsTimer;
     
-    public TicketsToRemoveWindow(java.awt.Frame parent, boolean modal, Integer unitId, IClientNetProperty netProperty) {
+    public FTicketsToRemoveWindow(java.awt.Frame parent, boolean modal, Integer unitId, IClientNetProperty netProperty) {
         super(parent, modal);
         initComponents();
         
