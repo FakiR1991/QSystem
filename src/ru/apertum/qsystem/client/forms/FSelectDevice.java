@@ -8,6 +8,7 @@ package ru.apertum.qsystem.client.forms;
 import java.util.Iterator;
 import java.util.LinkedList;
 import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
@@ -27,7 +28,9 @@ import ru.apertum.qsystem.server.model.QDeviceSelected;
  */
 public class FSelectDevice extends javax.swing.JDialog {
     private final INetProperty netProperty;
-    private LinkedList<QDevice> devices;
+    //список оборудования загруженный при переключении типа оборудования
+    private LinkedList<QDevice> loadedDevicesList;
+    //список оборудования добавленного для талона
     private LinkedList<QDeviceSelected> selectedDevices = new LinkedList<>();
 
     public LinkedList<QDeviceSelected> getSelectedDevices() {
@@ -129,7 +132,7 @@ public class FSelectDevice extends javax.swing.JDialog {
         }
         devicesTable.setModel(model);
         
-        this.devices = devices;
+        this.loadedDevicesList = devices;
     }
 
     /**
@@ -382,8 +385,13 @@ public class FSelectDevice extends javax.swing.JDialog {
         }
         
         QDeviceType deviceType = deviceTypesList.getSelectedValue();
-        QDevice selectedDevice = devices.get(selectedRow);
+        QDevice selectedDevice = getSelectedDevice();
         int count = (int) devicesCountSpinner.getValue();
+        
+        if (selectedDevice == null) {
+            JOptionPane.showMessageDialog(this, "Не удалось добавить выбранное оборудование", "Ошибка", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         
         selectedDevices.add(new QDeviceSelected(selectedDevice, deviceType, count));
         ((DefaultTableModel) selectedDevicesTable.getModel()).addRow(
@@ -395,6 +403,24 @@ public class FSelectDevice extends javax.swing.JDialog {
         );
     }//GEN-LAST:event_addButtonActionPerformed
 
+    private QDevice getSelectedDevice() {
+        int selectedRow = devicesTable.getSelectedRow();
+        
+        String selectedMaker = (String) devicesTable.getValueAt(selectedRow, 0);
+        String selectedModel = (String) devicesTable.getValueAt(selectedRow, 1);
+        
+        for (QDevice loadedDevice : loadedDevicesList) {
+            String deviceMaker = loadedDevice.getMakerName();
+            String deviceModel = loadedDevice.getModelName();
+            
+            if (deviceMaker.equalsIgnoreCase(selectedMaker) && deviceModel.equalsIgnoreCase(selectedModel)) {
+                return loadedDevice;
+            }
+        }
+        
+        return null;
+    }
+    
     private void deviceTypesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_deviceTypesListValueChanged
         QDeviceType selectedDeviceType = deviceTypesList.getSelectedValue();
         if (selectedDeviceType != null) {

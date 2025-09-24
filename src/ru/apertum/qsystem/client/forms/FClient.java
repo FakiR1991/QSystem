@@ -259,6 +259,10 @@ public final class FClient extends javax.swing.JFrame {
         String comment = "";
         if (customer.getSelectedDevices() != null && customer.getSelectedDevices().size() > 0) {
             textAreaComments.setForeground(Color.decode("#57A639"));
+            
+            if (customer.getTempComments() != null && customer.getTempComments().length() > 0) {
+                comment += customer.getTempComments() + "\n\n";
+            }
             comment += "Выбранное оборудование:\n\n";
             comment += "Производитель" + getRepeatedString(getLongestMakerTextLength(customer.getSelectedDevices()) + 3, " ");
             comment += "Модель" + getRepeatedString(getLongestModelTextLength(customer.getSelectedDevices()) + 3, " ");
