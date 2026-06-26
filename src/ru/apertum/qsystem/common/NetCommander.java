@@ -143,6 +143,7 @@ public class NetCommander {
                 data = QConfig.cfg().getHttpRequestType() ? sendPost(netProperty, message, jsonRpc) : sendGet(netProperty, jsonRpc);
             } else {
                 QLog.l().logger().trace("Task \"" + jsonRpc.getMethod() + "\" on " + netProperty.getAddress().getHostAddress() + ":" + netProperty.getPort() + "#\n" + message);
+                    
                 final Socket socket = new Socket(Proxy.NO_PROXY);
                 try {
                     socket.connect(new InetSocketAddress(netProperty.getAddress(), netProperty.getPort()), 15000);

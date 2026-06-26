@@ -57,7 +57,7 @@ public class QDeviceType implements Serializable {
     public static LinkedList<QDeviceType> getDeviceTypesList() throws SQLException {
         LinkedList<QDeviceType> deviceTypesList = new LinkedList<>();
         
-        DriverManager.setLoginTimeout(3);
+//        DriverManager.setLoginTimeout(3);
 
         try (Connection con = DriverManager.getConnection(amar1ConnectionString, amar1DbUser, amar1UserPass)) {
             try (CallableStatement stmt = con.prepareCall("{ ? = call bs.qsys.get_device_type_list }")) {

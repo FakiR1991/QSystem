@@ -422,6 +422,10 @@ public class FSelectDevice extends javax.swing.JDialog {
     }
     
     private void deviceTypesListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_deviceTypesListValueChanged
+        if (evt.getValueIsAdjusting()) {
+            return;
+        }
+        
         QDeviceType selectedDeviceType = deviceTypesList.getSelectedValue();
         if (selectedDeviceType != null) {
             loadDevices(selectedDeviceType.getDeviceTypeId());
